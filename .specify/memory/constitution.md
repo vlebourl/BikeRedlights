@@ -1,26 +1,26 @@
 <!--
 Sync Impact Report - Constitution Update
 =========================================
-Version Change: 1.0.1 → 1.2.0
+Version Change: 1.2.0 → 1.3.0
 Amended: 2025-11-02
 
 Amendment Summary:
-- MINOR update: Added project documentation tracking requirements (TODO.md, RELEASE.md)
-- MINOR update: Added commit frequency and size requirements (small, regular commits)
-- New mandatory workflows: Progress tracking, release documentation, and incremental commits
-- All features must update TODO.md and RELEASE.md automatically
-- Commits must be small and frequent, not waiting for full feature completion
+- MINOR update: Added release pattern and workflow requirements
+- New mandatory workflow: Specify session → PR → Release → APK build
+- Defines versioning pattern (vMAJOR.MINOR.PATCH) for all releases
+- Establishes GitHub-based PR workflow and release automation
 
 Modified Sections:
-- Development Workflow: Added "Project Documentation Tracking (NON-NEGOTIABLE)" subsection
-- Development Workflow: Added "Commit Frequency & Size (NON-NEGOTIABLE)" subsection
-- Code Review Requirements: Added TODO.md, RELEASE.md, and commit frequency verification items
+- Development Workflow: Added "Release Pattern & Workflow (NON-NEGOTIABLE)" subsection
+- Code Review Requirements: Added release preparation verification items
 
 Added Requirements:
-- TODO.md: Unified progress tracking for active features and pending work
-- RELEASE.md: Unified release notes and feature tracking across versions
-- Small commits: Maximum ~200 lines, single logical changes, frequent throughout development
-- Conventional commit messages: <type>(<scope>): <subject> format
+- Each /speckit.specify session MUST end with a release
+- Semantic versioning for all releases (vMAJOR.MINOR.PATCH)
+- PR-based workflow: feature branch → PR → merge → release
+- Signed release APK MUST be built and attached to GitHub release
+- RELEASE.md MUST be updated with version details before release
+- Git tags MUST be created with release notes
 
 Principles (Unchanged):
 1. Modern Android Stack (Kotlin, Jetpack Compose, Material 3)
@@ -34,12 +34,12 @@ Principles (Unchanged):
 Templates Status:
 ✅ plan-template.md - No updates required
 ✅ spec-template.md - No updates required
-✅ tasks-template.md - Updated: Added TODO.md/RELEASE.md update tasks to setup and polish phases
-✅ CLAUDE.md - Updated: Added "Project Documentation Tracking" section with workflow and examples
+✅ tasks-template.md - Updated: Added "Phase N+1: Release Preparation" with PR and release tasks
+✅ CLAUDE.md - Updated: Added "Release Pattern & Workflow" section with PR/release steps
 
-Documentation Created:
-✅ TODO.md - Created with initial template and structure
-✅ RELEASE.md - Created with v0.1.0 initial setup entry
+Documentation Status:
+✅ TODO.md - Exists, no updates needed
+✅ RELEASE.md - Exists, ready for version tracking
 
 Follow-up TODOs:
 - None - all requirements implemented
@@ -334,6 +334,7 @@ Before merge, ALL of the following MUST be verified:
 - **Commits are small and frequent** (reviewed git history)
 - **TODO.md updated** with current feature status (MANDATORY)
 - **RELEASE.md updated** with feature entry in Unreleased section (MANDATORY)
+- **Release preparation complete** (version numbers, tag, APK build ready) if ending specify session
 
 ### Offline-First Design
 
@@ -381,6 +382,77 @@ reliably in real-world conditions.
 - Test with interrupted location (GPS signal loss)
 - Test battery drain over extended sessions (2+ hours)
 
+### Release Pattern & Workflow (NON-NEGOTIABLE)
+
+**Specify Session Release Requirement:**
+- Each `/speckit.specify` session MUST end with a release
+- Each release MUST increment the version number following semantic versioning (vMAJOR.MINOR.PATCH)
+- Release version MUST be determined based on changes in the session
+
+**Semantic Versioning Rules:**
+- **MAJOR (vX.0.0)**: Breaking changes, incompatible API changes, major feature overhauls
+- **MINOR (v1.X.0)**: New features, backward-compatible additions, new user-facing functionality
+- **PATCH (v1.0.X)**: Bug fixes, performance improvements, small backward-compatible changes
+
+**Pull Request Workflow (GitHub Origin Configured):**
+1. Work is performed on a feature branch (e.g., `001-speed-detection`, `002-red-light-warning`)
+2. All commits on the branch follow small, frequent commit pattern
+3. At session end, push feature branch to GitHub: `git push origin <branch-name>`
+4. Create Pull Request (PR) on GitHub with detailed description
+5. PR description MUST include:
+   - Feature summary and implementation details
+   - Link to feature specification in `.specify/specs/`
+   - Emulator testing confirmation
+   - Breaking changes (if any)
+6. PR MUST be reviewed for constitution compliance
+7. Once approved and merged to `main`, release is created
+
+**Release Creation (After PR Merge):**
+1. Update `RELEASE.md` by moving "Unreleased" items to new version section
+2. Update `app/build.gradle.kts` with new `versionCode` and `versionName`
+3. Commit version bump: `git commit -m "chore: bump version to vX.Y.Z"`
+4. Create annotated git tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z: <summary>"`
+5. Push tag to GitHub: `git push origin vX.Y.Z`
+6. Build signed release APK:
+   ```bash
+   ./gradlew assembleRelease
+   # Signed APK: app/build/outputs/apk/release/app-release.apk
+   ```
+7. Create GitHub Release:
+   - Tag: vX.Y.Z
+   - Title: "vX.Y.Z - <Feature Name>"
+   - Body: Copy content from RELEASE.md version section
+   - Attach signed APK: `BikeRedlights-vX.Y.Z.apk`
+
+**Release Notes Content (from RELEASE.md):**
+- Version number and release date
+- Features added (user-facing changes)
+- Bugs fixed (issues resolved)
+- Breaking changes (with migration guidance if applicable)
+- Internal changes (architecture improvements, refactoring)
+
+**Release Checklist:**
+- [ ] All tests passing (unit, integration, UI)
+- [ ] Emulator testing completed and validated
+- [ ] RELEASE.md updated with version section
+- [ ] app/build.gradle.kts version codes updated
+- [ ] Git tag created with release notes
+- [ ] Signed release APK built successfully
+- [ ] GitHub Release created with APK attached
+- [ ] Release notes match RELEASE.md content
+
+**Example Version Progression:**
+- v0.1.0: Initial project setup
+- v0.2.0: Add speed detection feature
+- v0.3.0: Add red light warning system
+- v0.3.1: Fix GPS accuracy bug in speed detection
+- v1.0.0: First stable release with core features complete
+
+**Rationale:** Structured releases ensure every feature is properly versioned, documented,
+and packaged for distribution. The PR-based workflow enables code review and quality gates
+before release. GitHub releases with signed APKs provide a clear download and installation
+path for users. This is critical for a safety app where version traceability matters.
+
 ## Governance
 
 ### Amendment Process
@@ -409,4 +481,4 @@ This constitution supersedes all other practices. When CLAUDE.md and the constit
 conflict, the constitution takes precedence. When the constitution is silent, defer to
 CLAUDE.md.
 
-**Version**: 1.2.0 | **Ratified**: 2025-11-02 | **Last Amended**: 2025-11-02
+**Version**: 1.3.0 | **Ratified**: 2025-11-02 | **Last Amended**: 2025-11-02
