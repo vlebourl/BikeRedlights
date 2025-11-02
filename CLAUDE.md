@@ -393,6 +393,77 @@ git commit -m "feat(domain): add SpeedDetectionUseCase with threshold checks"
 # And so on...
 ```
 
+### Pushing to Remote (GitHub) - IMPORTANT
+
+**When to Push**:
+- Push regularly throughout development (don't let local work pile up)
+- After every 2-5 commits or at end of work session
+- Before switching branches or taking breaks
+- Before requesting code review
+- **CRITICAL**: Before ending work for the day
+
+**First-Time Branch Push**:
+```bash
+# Create feature branch
+git checkout -b 001-speed-detection
+
+# Make some commits
+git commit -m "feat(domain): add speed detection use case"
+git commit -m "feat(data): implement location repository"
+
+# Push branch to GitHub for the first time (sets upstream tracking)
+git push -u origin 001-speed-detection
+
+# Subsequent pushes on this branch
+git push
+```
+
+**Regular Push Workflow**:
+```bash
+# After making commits locally
+git add .
+git commit -m "feat(ui): create speed display composable"
+
+# Push to GitHub immediately
+git push
+
+# Or push multiple commits at once
+git push origin 001-speed-detection
+```
+
+**Why Push Frequently**:
+- ✅ Backs up your work to GitHub (protects against local disk failure)
+- ✅ Makes work visible to team/collaborators
+- ✅ Enables early feedback and code review
+- ✅ Allows working from multiple machines
+- ✅ Creates audit trail of development progress
+
+**Force Push (Use with EXTREME Caution)**:
+```bash
+# Only if you're the only developer on the branch
+# And you've rebased or amended commits
+git push --force-with-lease origin 001-speed-detection
+
+# NEVER force push to main!
+```
+
+**Checking Remote Status**:
+```bash
+# See if you have unpushed commits
+git status
+
+# See commit differences
+git log origin/001-speed-detection..HEAD
+
+# Verify branch tracking
+git branch -vv
+```
+
+**Push Cadence Recommendation**:
+- Development: Push after every 2-3 commits or 1-2 hours of work
+- Before PR: Ensure all commits are pushed
+- During review: Push fixes immediately after committing
+
 ### Release Pattern & Workflow (MANDATORY)
 
 **Each Specify Session MUST End with a Release**: Every `/speckit.specify` session concludes with a versioned release following semantic versioning.
