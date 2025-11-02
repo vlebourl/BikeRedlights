@@ -246,11 +246,11 @@ adb shell "cmd location providers send-extra-command gps 'set_velocity' '5.56,0,
 
 ### Tasks
 
-- [ ] T026 [P] [US2] Create LocationDisplay composable in `ui/components/LocationDisplay.kt`. Accept locationData: LocationData? parameter. Display latitude and longitude with 6 decimal places ("Lat: %.6f", "Lng: %.6f"). Show accuracy as "±X.X m" if available. Use Column with Text components (Material3.typography.bodyLarge for coords, bodyMedium for accuracy). Show "Acquiring GPS..." when locationData is null. Add semantics for accessibility.
+- [X] T026 [P] [US2] Create LocationDisplay composable in `ui/components/LocationDisplay.kt`. Accept locationData: LocationData? parameter. Display latitude and longitude with 6 decimal places ("Lat: %.6f", "Lng: %.6f"). Show accuracy as "±X.X m" if available. Use Column with Text components (Material3.typography.bodyLarge for coords, bodyMedium for accuracy). Show "Acquiring GPS..." when locationData is null. Add semantics for accessibility.
 
-- [ ] T027 [US2] Update SpeedTrackingScreen.kt to include LocationDisplay component. Add below SpeedDisplay with Spacer(modifier = Modifier.height(32.dp)). Pass uiState.locationData to LocationDisplay. Ensure SpeedTrackingContent composable includes both SpeedDisplay and LocationDisplay in Column layout.
+- [X] T027 [US2] Update SpeedTrackingScreen.kt to include LocationDisplay component. Add below SpeedDisplay with Spacer(modifier = Modifier.height(32.dp)). Pass uiState.locationData to LocationDisplay. Ensure SpeedTrackingContent composable includes both SpeedDisplay and LocationDisplay in Column layout.
 
-- [ ] T028 [US2] Write LocationDisplayTest in `androidTest/.../ui/components/LocationDisplayTest.kt`. Test: coordinates displayed with 6 decimal places, accuracy shown when available, "Acquiring GPS..." shown when locationData null, coordinate update when locationData changes. Use Compose Test Rule.
+- [X] T028 [US2] Write LocationDisplayTest in `androidTest/.../ui/components/LocationDisplayTest.kt`. Test: coordinates displayed with 6 decimal places, accuracy shown when available, "Acquiring GPS..." shown when locationData null, coordinate update when locationData changes. Use Compose Test Rule.
 
 **Completion Criteria (User Story 2)**:
 - [ ] Latitude and longitude displayed with 6 decimal precision

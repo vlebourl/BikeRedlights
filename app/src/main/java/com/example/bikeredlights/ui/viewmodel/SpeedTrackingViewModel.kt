@@ -3,6 +3,7 @@ package com.example.bikeredlights.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bikeredlights.domain.model.GpsStatus
+import com.example.bikeredlights.domain.repository.LocationRepository
 import com.example.bikeredlights.domain.usecase.TrackLocationUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,9 +25,11 @@ import kotlinx.coroutines.launch
  * - Location tracking continues during rotation without restart
  * - Flow collection automatically cancels when ViewModel is cleared
  *
+ * @param locationRepository Repository providing location updates
  * @param trackLocationUseCase Use case providing speed measurements
  */
 class SpeedTrackingViewModel(
+    private val locationRepository: LocationRepository,
     private val trackLocationUseCase: TrackLocationUseCase
 ) : ViewModel() {
 
@@ -43,15 +46,29 @@ class SpeedTrackingViewModel(
     /**
      * Starts location tracking and speed calculation.
      *
-     * Should be called after location permission is granted. Launches a coroutine
-     * in viewModelScope that collects location updates and transforms them into
-     * UI state. The coroutine automatically cancels when ViewModel is cleared.
+     * Should be called after location permission is granted. Launches coroutines
+     * in viewModelScope that collect location updates and speed measurements.
+     * The coroutines automatically cancel when ViewModel is cleared.
      *
      * Error handling:
      * - SecurityException → sets gpsStatus to Unavailable with error message
      * - Other exceptions → captured in catch block and logged
      */
     fun startLocationTracking() {
+        // Collect location data for coordinates display
+        viewModelScope.launch {
+            locationRepository.getLocationUpdates()
+                .catch { exception ->
+                    // Handle location errors silently (speed tracking handles primary errors)
+                }
+                .collect { locationData ->
+                    _uiState.update { currentState ->
+                        currentState.copy(locationData = locationData)
+                    }
+                }
+        }
+
+        // Collect speed measurements
         viewModelScope.launch {
             trackLocationUseCase()
                 .catch { exception ->

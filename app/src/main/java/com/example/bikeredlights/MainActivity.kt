@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
         val trackLocationUseCase = TrackLocationUseCase(
             locationRepository = locationRepository
         )
-        val factory = SpeedTrackingViewModelFactory(trackLocationUseCase)
+        val factory = SpeedTrackingViewModelFactory(locationRepository, trackLocationUseCase)
         viewModel = ViewModelProvider(this, factory)[SpeedTrackingViewModel::class.java]
 
         setContent {

@@ -2,8 +2,10 @@ package com.example.bikeredlights.ui.viewmodel
 
 import app.cash.turbine.test
 import com.example.bikeredlights.domain.model.GpsStatus
+import com.example.bikeredlights.domain.model.LocationData
 import com.example.bikeredlights.domain.model.SpeedMeasurement
 import com.example.bikeredlights.domain.model.SpeedSource
+import com.example.bikeredlights.domain.repository.LocationRepository
 import com.example.bikeredlights.domain.usecase.TrackLocationUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
@@ -35,6 +37,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class SpeedTrackingViewModelTest {
 
+    private lateinit var locationRepository: LocationRepository
     private lateinit var trackLocationUseCase: TrackLocationUseCase
     private lateinit var viewModel: SpeedTrackingViewModel
 
@@ -43,7 +46,10 @@ class SpeedTrackingViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
+        locationRepository = mockk()
         trackLocationUseCase = mockk()
+        // Default: location repository returns empty flow
+        every { locationRepository.getLocationUpdates() } returns flowOf()
     }
 
     @After
@@ -54,7 +60,7 @@ class SpeedTrackingViewModelTest {
     @Test
     fun `initial state has no permission and Acquiring GPS status`() = runTest {
         // Given: ViewModel created
-        viewModel = SpeedTrackingViewModel(trackLocationUseCase)
+        viewModel = SpeedTrackingViewModel(locationRepository, trackLocationUseCase)
 
         // When: Observing initial state
         viewModel.uiState.test {
@@ -80,7 +86,7 @@ class SpeedTrackingViewModelTest {
             source = SpeedSource.GPS
         )
         every { trackLocationUseCase() } returns flowOf(speedMeasurement)
-        viewModel = SpeedTrackingViewModel(trackLocationUseCase)
+        viewModel = SpeedTrackingViewModel(locationRepository, trackLocationUseCase)
 
         // When: Permission is granted
         viewModel.uiState.test {
@@ -106,7 +112,7 @@ class SpeedTrackingViewModelTest {
     @Test
     fun `onPermissionDenied updates state with error message`() = runTest {
         // Given: ViewModel created
-        viewModel = SpeedTrackingViewModel(trackLocationUseCase)
+        viewModel = SpeedTrackingViewModel(locationRepository, trackLocationUseCase)
 
         // When: Permission is denied
         viewModel.uiState.test {
@@ -131,7 +137,7 @@ class SpeedTrackingViewModelTest {
             source = SpeedSource.GPS
         )
         every { trackLocationUseCase() } returns flowOf(speedMeasurement)
-        viewModel = SpeedTrackingViewModel(trackLocationUseCase)
+        viewModel = SpeedTrackingViewModel(locationRepository, trackLocationUseCase)
 
         // When: Starting location tracking
         viewModel.uiState.test {
@@ -156,7 +162,7 @@ class SpeedTrackingViewModelTest {
             source = SpeedSource.UNKNOWN
         )
         every { trackLocationUseCase() } returns flowOf(speedMeasurement)
-        viewModel = SpeedTrackingViewModel(trackLocationUseCase)
+        viewModel = SpeedTrackingViewModel(locationRepository, trackLocationUseCase)
 
         // When: Starting location tracking
         viewModel.uiState.test {
@@ -180,7 +186,7 @@ class SpeedTrackingViewModelTest {
             source = SpeedSource.GPS
         )
         every { trackLocationUseCase() } returns flowOf(speedMeasurement)
-        viewModel = SpeedTrackingViewModel(trackLocationUseCase)
+        viewModel = SpeedTrackingViewModel(locationRepository, trackLocationUseCase)
 
         // When: Starting location tracking
         viewModel.uiState.test {
@@ -201,7 +207,7 @@ class SpeedTrackingViewModelTest {
         every { trackLocationUseCase() } returns flow {
             throw SecurityException("Location permission not granted")
         }
-        viewModel = SpeedTrackingViewModel(trackLocationUseCase)
+        viewModel = SpeedTrackingViewModel(locationRepository, trackLocationUseCase)
 
         // When: Starting location tracking
         viewModel.uiState.test {
@@ -221,7 +227,7 @@ class SpeedTrackingViewModelTest {
         every { trackLocationUseCase() } returns flow {
             throw RuntimeException("GPS hardware failure")
         }
-        viewModel = SpeedTrackingViewModel(trackLocationUseCase)
+        viewModel = SpeedTrackingViewModel(locationRepository, trackLocationUseCase)
 
         // When: Starting location tracking
         viewModel.uiState.test {
@@ -247,7 +253,7 @@ class SpeedTrackingViewModelTest {
             source = SpeedSource.GPS
         )
         every { trackLocationUseCase() } returns flowOf(speedMeasurement)
-        viewModel = SpeedTrackingViewModel(trackLocationUseCase)
+        viewModel = SpeedTrackingViewModel(locationRepository, trackLocationUseCase)
 
         // When: Permission granted and speed updates received
         viewModel.uiState.test {
@@ -279,7 +285,7 @@ class SpeedTrackingViewModelTest {
             source = SpeedSource.GPS
         )
         every { trackLocationUseCase() } returns flowOf(speedMeasurement)
-        viewModel = SpeedTrackingViewModel(trackLocationUseCase)
+        viewModel = SpeedTrackingViewModel(locationRepository, trackLocationUseCase)
 
         // When: Permission denied then granted
         viewModel.uiState.test {

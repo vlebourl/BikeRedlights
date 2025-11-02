@@ -3,7 +3,9 @@ package com.example.bikeredlights.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -14,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.Lifecycle
+import com.example.bikeredlights.ui.components.LocationDisplay
 import com.example.bikeredlights.ui.components.PermissionRequiredContent
 import com.example.bikeredlights.ui.components.SpeedDisplay
 import com.example.bikeredlights.ui.permissions.LocationPermissionHandler
@@ -73,9 +76,10 @@ fun SpeedTrackingScreen(
                 contentAlignment = Alignment.Center
             ) {
                 if (uiState.hasLocationPermission) {
-                    // Permission granted: show speed display
+                    // Permission granted: show speed and location display
                     SpeedTrackingContent(
-                        speedMeasurement = uiState.speedMeasurement
+                        speedMeasurement = uiState.speedMeasurement,
+                        locationData = uiState.locationData
                     )
                 } else {
                     // Permission not granted: show permission required content
@@ -89,15 +93,16 @@ fun SpeedTrackingScreen(
 /**
  * Content composable for speed tracking screen when permission is granted.
  *
- * Displays the current speed in a centered layout. This composable is separated
- * to allow for future expansion with additional UI elements (GPS status, location
- * coordinates) in subsequent user stories.
+ * Displays the current speed and GPS position in a centered layout. This composable
+ * shows both User Story 1 (speed) and User Story 2 (GPS coordinates) content.
  *
  * @param speedMeasurement Current speed measurement, null before first GPS fix
+ * @param locationData Current GPS location data, null before first GPS fix
  */
 @Composable
 private fun SpeedTrackingContent(
-    speedMeasurement: com.example.bikeredlights.domain.model.SpeedMeasurement?
+    speedMeasurement: com.example.bikeredlights.domain.model.SpeedMeasurement?,
+    locationData: com.example.bikeredlights.domain.model.LocationData?
 ) {
     Column(
         modifier = Modifier
@@ -108,6 +113,12 @@ private fun SpeedTrackingContent(
     ) {
         SpeedDisplay(
             speedMeasurement = speedMeasurement
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        LocationDisplay(
+            locationData = locationData
         )
     }
 }
