@@ -891,3 +891,10 @@ When working on this project:
 ---
 
 **This document is a living standard. Update as Android development practices evolve.**
+
+## Active Technologies
+- Kotlin 2.0.21 with Jetpack Compose + Play Services Location 21.3.0, Jetpack Compose (BOM 2024.11.00), Material 3 (001-speed-tracking)
+- None for MVP (no persistence of location data) (001-speed-tracking)
+
+## Recent Changes
+- 001-speed-tracking: Added Kotlin 2.0.21 with Jetpack Compose + Play Services Location 21.3.0, Jetpack Compose (BOM 2024.11.00), Material 3
