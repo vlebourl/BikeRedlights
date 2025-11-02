@@ -48,71 +48,59 @@ _Features and changes completed but not yet released_
 
 ---
 
-## v0.1.0 - Initial Setup (2025-11-02)
+## v0.0.0 - Buildable Skeleton (2025-11-02)
 
-### Project Initialization
+### Project Skeleton
 
-**Status**: Development started
-**Focus**: Establishing development standards and project governance
+**Status**: ✅ COMPLETE - Builds, installs, and launches successfully
+**Focus**: Establish buildable foundation with all dependencies configured
+**APK Size**: 62MB (debug)
+**Tested On**: Pixel 9 Pro Emulator (Android 15 / API 35)
 
 ### ✨ Features Added
-- Project structure with Android Studio configuration
-- Git repository initialization
-- Development standards documentation
+- Buildable Android project with Gradle 8.13 + AGP 8.7.3 + Kotlin 2.0.21
+- Jetpack Compose + Material 3 Dynamic Color theme
+  - Light and dark mode support
+  - Red color scheme for safety (BikeRedlights theme)
+  - Welcome screen with "v0.0.0" display
+- Clean Architecture folder structure created:
+  - `ui/` (theme, screens, components, navigation)
+  - `domain/` (models, use cases, repository interfaces)
+  - `data/` (repositories, local, remote)
+  - `di/` (dependency injection - ready for Hilt)
+- All required dependencies configured (Compose, Room, Coroutines, DataStore, WorkManager, Location Services)
+- Location permissions declared in manifest
+- Application class configured
 
-### 📚 Documentation
-- **CLAUDE.md**: Comprehensive Android development standards
-  - Kotlin-first development with Jetpack Compose
-  - MVVM + Clean Architecture patterns
-  - Material Design 3 Expressive compliance
-  - Testing requirements (80%+ coverage)
-  - Security & privacy guidelines for location data
-  - Performance & battery efficiency standards
-  - Accessibility requirements (WCAG AA)
-  - Emulator testing workflow
+### 🐛 Known Issues
+- **Hilt DI temporarily disabled** due to Gradle plugin compatibility issues
+  - Error: `'java.lang.String com.squareup.javapoet.ClassName.canonicalName()'`
+  - Root cause: AGP 8.7.3 + Kotlin 2.0.21 + Hilt 2.48 incompatibility
+  - **Resolution plan**: Re-enable in v0.1.0 after upstream fix or workaround
+  - Code is ready: TODO markers in `BikeRedlightsApplication.kt` and `MainActivity.kt`
+- No actual features - placeholder welcome screen only
 
-- **Constitution v1.3.0**: Project governance and core principles
-  - 7 core principles (NON-NEGOTIABLE standards)
-  - Android-specific coding standards
-  - Development workflow requirements
-  - Mandatory emulator testing before merge
-  - Automatic TODO.md and RELEASE.md tracking
-  - Code review checklist
+### 📚 Documentation Added
+- **Java 17 requirement documented** in CLAUDE.md (Development Environment section)
+- Project governance finalized (Constitution v1.3.0)
+- TODO.md and RELEASE.md templates established
 
-- **TODO.md**: Unified progress tracking
-- **RELEASE.md**: This file - version and feature tracking
+### 🛠️ Technology Stack (Configured)
+- **Language**: Kotlin 2.0.21
+- **Build**: AGP 8.7.3, Gradle 8.13
+- **UI**: Jetpack Compose BOM 2024.11.00 + Material Design 3
+- **Architecture**: MVVM + Clean Architecture (folder structure ready)
+- **Async**: Coroutines 1.9.0 + Flow/StateFlow
+- **DI**: Dagger Hilt (dependencies declared, plugin temporarily disabled)
+- **Database**: Room 2.6.1
+- **Preferences**: DataStore 1.1.1
+- **Location**: Play Services Location 21.3.0
+- **Testing**: JUnit, MockK 1.13.13, Turbine 1.2.0, Truth 1.4.4
 
-### 🏗️ Architecture
-- Defined Clean Architecture layers:
-  - UI Layer: Jetpack Compose screens and components
-  - ViewModel Layer: State management with StateFlow
-  - Domain Layer: Pure Kotlin business logic (use cases)
-  - Data Layer: Repositories and data sources
-
-- Project structure:
-  ```
-  app/
-  ├── ui/          # Jetpack Compose UI
-  ├── domain/      # Business logic
-  ├── data/        # Data sources
-  └── di/          # Dependency injection
-  ```
-
-### 🛠️ Technology Stack
-- **Language**: Kotlin
-- **UI**: Jetpack Compose + Material Design 3
-- **Architecture**: MVVM + Clean Architecture
-- **Async**: Coroutines + Flow/StateFlow
-- **DI**: Dagger Hilt
-- **Database**: Room
-- **Preferences**: DataStore
-- **Testing**: JUnit 5, MockK, Turbine, Compose Test
-
-### 🎯 Next Steps
-- Implement core speed detection feature
-- Set up GPS location tracking
-- Create initial UI theme and components
-- Implement red light warning system
+### 🎯 Next Steps (v0.1.0+)
+1. Resolve Hilt Gradle plugin compatibility and re-enable DI
+2. Implement first MVP feature (speed detection or GPS tracking)
+3. Add actual tests (unit + instrumented)
 
 ---
 
@@ -120,7 +108,8 @@ _Features and changes completed but not yet released_
 
 | Version | Release Date | Status | Notes |
 |---------|--------------|--------|-------|
-| v0.1.0  | 2025-11-02   | In Development | Initial setup and standards |
+| v0.0.0  | 2025-11-02   | ✅ Released | Buildable skeleton - tested on emulator |
+| v0.1.0  | TBD          | Planned | First MVP feature (+ Hilt DI re-enabled) |
 
 ---
 

@@ -45,6 +45,22 @@ _(No features currently planned)_
 
 _Features completed and merged_
 
+### v0.0.0 - Buildable Project Skeleton
+- **Completed**: 2025-11-02
+- **Description**: Established buildable Android project foundation with all dependencies configured
+- **Status**: ✅ Builds, installs on emulator, and launches successfully (Pixel 9 Pro / Android 15)
+- **Details**:
+  - Configured Gradle 8.13 + AGP 8.7.3 + Kotlin 2.0.21
+  - Set up Jetpack Compose + Material 3 Dynamic Color theme
+  - Created Clean Architecture folder structure (ui, domain, data, di)
+  - Configured all required dependencies (Compose, Room, Coroutines, DataStore, WorkManager, Location Services)
+  - Added location permissions to manifest
+  - Created welcome screen displaying v0.0.0
+  - Documented Java 17 requirement in CLAUDE.md
+  - **Known Issue**: Hilt DI temporarily disabled due to Gradle plugin compatibility (will fix in v0.1.0)
+- **APK Size**: 62MB (debug)
+- **Git Tag**: v0.0.0
+
 ### Documentation Completeness Review & Fixes
 - **Completed**: 2025-11-02
 - **Description**: Comprehensive review and systematic fixes of all project documentation and governance files

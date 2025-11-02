@@ -16,6 +16,40 @@
   - Non-public fields: prefix with `m` (e.g., `mUserPreferences`)
   - Static fields: prefix with `s` (e.g., `sInstance`)
 
+## 💻 Development Environment
+
+### Java Development Kit (JDK)
+
+**Required**: Java 17 (OpenJDK 17)
+
+**Installation (macOS with Homebrew)**:
+```bash
+# Install OpenJDK 17
+brew install openjdk@17
+
+# Set environment variables (add to ~/.zshrc or ~/.bash_profile)
+export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"
+export JAVA_HOME="/opt/homebrew/opt/openjdk@17"
+
+# Reload shell configuration
+source ~/.zshrc
+
+# Verify installation
+java -version  # Should show OpenJDK 17
+```
+
+**Note for Intel Macs**: Use `/usr/local/opt/openjdk@17` instead of `/opt/homebrew/opt/openjdk@17`
+
+**Build Configuration**:
+- Project uses Java 17 for compilation (`app/build.gradle.kts:44-49`)
+- `sourceCompatibility` and `targetCompatibility` set to `JavaVersion.VERSION_17`
+- `kotlinOptions.jvmTarget` set to `"17"`
+
+**Why Java 17?**
+- Kotlin 2.0+ requires Java 17 minimum
+- Android Gradle Plugin 8.7+ recommends Java 17
+- Better performance and modern language features
+
 ## 🏗️ Architecture Pattern
 
 ### MVVM + Clean Architecture
