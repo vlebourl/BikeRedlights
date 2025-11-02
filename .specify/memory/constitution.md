@@ -1,16 +1,18 @@
 <!--
 Sync Impact Report - Constitution Update
 =========================================
-Version Change: INITIAL → 1.0.0
-Created: 2025-11-02
+Version Change: 1.0.0 → 1.0.1
+Amended: 2025-11-02
 
-New Constitution Ratification:
-- First constitution for BikeRedlights project
-- Based on CLAUDE.md Android development standards (November 2025)
-- Aligned with Material Design 3 Expressive guidelines
-- Incorporates MVVM + Clean Architecture principles
+Amendment Summary:
+- PATCH update: Added emulator testing requirement to Development Workflow
+- No principle changes or additions
+- Clarifies mandatory emulator validation step for completed features
 
-Principles Established:
+Modified Sections:
+- Development Workflow: Added "Emulator Testing Requirement" subsection
+
+Principles (Unchanged):
 1. Modern Android Stack (Kotlin, Jetpack Compose, Material 3)
 2. Clean Architecture & MVVM Pattern
 3. Compose-First UI Development
@@ -20,18 +22,18 @@ Principles Established:
 7. Accessibility & Inclusive Design
 
 Templates Status:
-✅ plan-template.md - Reviewed, Constitution Check section aligns
-✅ spec-template.md - Reviewed, requirements structure compatible
-✅ tasks-template.md - Reviewed, task organization aligns with principles
-⚠️ PENDING: Update templates to reference BikeRedlights-specific constraints
+✅ plan-template.md - No updates required
+✅ spec-template.md - No updates required
+✅ tasks-template.md - Updated: Added emulator testing task to polish phase
+✅ CLAUDE.md - Updated: Added emulator testing section, updated checklist, updated Notes for Claude
 
 Follow-up TODOs:
-- None - all placeholders filled
+- None
 
 Notes:
-- This constitution establishes governance for an Android bike safety app
-- Prioritizes user safety, location privacy, and offline-first design
-- Enforces latest November 2025 Android development standards
+- Emulator testing ensures features work on actual Android runtime before merge
+- Complements existing test coverage requirements (Principle IV)
+- Rationale: Catches platform-specific issues not visible in unit tests
 -->
 
 # BikeRedlights Constitution
@@ -254,6 +256,32 @@ Before merge, ALL of the following MUST be verified:
 **Rationale:** A red light warning that arrives 10 seconds late due to network latency
 could cause an accident. Offline-first is a safety requirement.
 
+### Emulator Testing Requirement (NON-NEGOTIABLE)
+
+**Mandatory Validation Step:**
+- When a feature reaches "working" status (implementation complete, unit tests passing),
+  a debug build MUST be installed and tested on an Android emulator
+- Testing MUST verify the feature functions correctly in the Android runtime environment
+- Emulator testing MUST be completed before code is considered merge-ready
+
+**Emulator Configuration:**
+- Use the latest stable Android emulator (API level matching targetSdk)
+- Test on at least one phone form factor (e.g., Pixel 6 or similar)
+- Enable location simulation for location-dependent features
+
+**Validation Checklist:**
+- App installs successfully
+- Feature UI renders correctly
+- Feature functionality works as expected
+- No runtime crashes or ANR events
+- Location permissions flow works (if applicable)
+- Dark mode displays correctly (if UI changes included)
+
+**Rationale:** Unit and integration tests validate logic, but emulator testing catches
+Android framework integration issues, UI rendering problems, and runtime behavior that
+only manifests on actual Android. This is critical for safety features that must work
+reliably in real-world conditions.
+
 ### Testing Conditions
 
 **BikeRedlights-Specific Testing:**
@@ -291,4 +319,4 @@ This constitution supersedes all other practices. When CLAUDE.md and the constit
 conflict, the constitution takes precedence. When the constitution is silent, defer to
 CLAUDE.md.
 
-**Version**: 1.0.0 | **Ratified**: 2025-11-02 | **Last Amended**: 2025-11-02
+**Version**: 1.0.1 | **Ratified**: 2025-11-02 | **Last Amended**: 2025-11-02

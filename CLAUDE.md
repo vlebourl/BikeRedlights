@@ -218,6 +218,42 @@ fun `when speed exceeds threshold, red light warning is shown`() = runTest {
 }
 ```
 
+### Emulator Testing (MANDATORY)
+
+**When Required**: Every completed feature MUST be tested on an Android emulator before merge.
+
+**Setup**:
+- Use the latest stable Android emulator (API level matching targetSdk)
+- Test on at least one phone form factor (e.g., Pixel 6)
+- Enable location simulation for location-dependent features
+
+**Validation Checklist**:
+- ✅ App installs successfully via `./gradlew installDebug`
+- ✅ Feature UI renders correctly
+- ✅ Feature functionality works as expected
+- ✅ No runtime crashes or ANR events
+- ✅ Location permissions flow works (if applicable)
+- ✅ Dark mode displays correctly (toggle in emulator)
+- ✅ Rotation handling works (if applicable)
+- ✅ Back navigation behaves correctly
+
+**Quick Start Emulator**:
+```bash
+# List available emulators
+emulator -list-avds
+
+# Start emulator (replace with your AVD name)
+emulator -avd Pixel_6_API_34 &
+
+# Install debug build
+./gradlew installDebug
+
+# View logs
+adb logcat | grep BikeRedlights
+```
+
+**Why This Matters**: Unit tests validate logic, but emulator testing catches Android framework integration issues, UI rendering problems, and runtime behavior that only appears on actual Android. For a safety-critical app like BikeRedlights, this is non-negotiable.
+
 ## 🚀 Performance Guidelines
 
 ### General
@@ -262,6 +298,7 @@ Before submitting code, verify:
 - ✅ Accessibility features are implemented
 - ✅ No memory leaks (check with Profiler)
 - ✅ Tests are written and passing
+- ✅ **Debug build tested on emulator** (MANDATORY)
 - ✅ Lint warnings are addressed
 - ✅ No new dependencies without justification
 
@@ -313,6 +350,7 @@ When working on this project:
 5. **Think about offline-first** - bikes may go through areas with poor connectivity
 6. **Battery efficiency matters** - location tracking can drain battery
 7. **Test in various conditions** - different speeds, GPS accuracy levels, lighting conditions
+8. **Always test on emulator** - when a feature is "working", install debug build and validate on emulator before considering it complete
 
 ---
 
