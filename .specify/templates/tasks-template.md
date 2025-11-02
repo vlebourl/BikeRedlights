@@ -51,6 +51,8 @@ description: "Task list template for feature implementation"
 - [ ] T001 Create project structure per implementation plan
 - [ ] T002 Initialize [language] project with [framework] dependencies
 - [ ] T003 [P] Configure linting and formatting tools
+- [ ] T004 Add feature to TODO.md "In Progress" section with start date
+- [ ] T005 Add feature to RELEASE.md "Unreleased" section with brief description
 
 ---
 
@@ -151,6 +153,8 @@ Examples of foundational tasks (adjust based on your project):
 **Purpose**: Improvements that affect multiple user stories
 
 - [ ] TXXX [P] Documentation updates in docs/
+- [ ] TXXX Update TODO.md with completed feature status (move to Completed section)
+- [ ] TXXX Update RELEASE.md with detailed feature entry (ensure all changes documented)
 - [ ] TXXX Code cleanup and refactoring
 - [ ] TXXX Performance optimization across all stories
 - [ ] TXXX [P] Additional unit tests (if requested) in tests/unit/
@@ -248,5 +252,6 @@ With multiple developers:
 - Each user story should be independently completable and testable
 - Verify tests fail before implementing
 - Commit after each task or logical group
+- **TODO.md and RELEASE.md MUST be updated automatically** during feature lifecycle (no user request needed)
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
