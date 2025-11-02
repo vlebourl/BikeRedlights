@@ -274,6 +274,41 @@ transparency, and maintains project history. Automatic updates eliminate documen
 drift and provide real-time visibility into project status without manual intervention.
 This is critical for solo developers and teams alike.
 
+### Branch Naming Convention
+
+**Format**: `###-feature-name` where:
+- `###` = Sequential three-digit number (e.g., 001, 002, 003)
+- `feature-name` = Kebab-case description of the feature
+
+**Examples**:
+- ✅ `001-speed-detection`
+- ✅ `002-red-light-warning`
+- ✅ `003-map-integration`
+- ✅ `004-user-settings`
+- ❌ `speedDetection` (missing number, not kebab-case)
+- ❌ `1-feature` (number not zero-padded)
+- ❌ `Speed_Detection` (not kebab-case)
+
+**Numbering**:
+- Start at 001 for first feature
+- Increment sequentially (002, 003, etc.)
+- Number represents feature order, not priority
+- Multiple parallel branches increment from the last assigned number
+
+**Creating a Feature Branch**:
+```bash
+# Always branch from main
+git checkout main
+git pull origin main
+
+# Create and switch to feature branch
+git checkout -b 001-speed-detection
+```
+
+**Rationale**: Consistent branch naming enables easy sorting, clear feature identification,
+and automatic cross-referencing between branches, specs, and tasks. The numeric prefix
+ensures chronological ordering in git branch lists.
+
 ### Commit Frequency & Size (NON-NEGOTIABLE)
 
 **Small, Regular Commits Required:**
