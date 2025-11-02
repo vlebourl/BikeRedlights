@@ -1,0 +1,132 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  lint:
+    name: Run Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run Kotlin Lint
+        run: ./gradlew lintDebug
+
+      - name: Upload lint results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-results
+          path: app/build/reports/lint-results-debug.html
+
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run unit tests
+        run: ./gradlew test
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: app/build/reports/tests/testDebugUnitTest/
+
+      - name: Upload test coverage (if JaCoCo configured)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-results
+          path: app/build/reports/jacoco/
+
+  build:
+    name: Build Debug APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+  constitution-check:
+    name: Constitution Compliance Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for TODO.md updates
+        run: |
+          if git diff origin/main HEAD --name-only | grep -q "TODO.md"; then
+            echo "✅ TODO.md updated in this PR"
+          else
+            echo "⚠️ Warning: TODO.md may need updating per Constitution v1.3.0"
+          fi
+
+      - name: Check for RELEASE.md updates
+        run: |
+          if git diff origin/main HEAD --name-only | grep -q "RELEASE.md"; then
+            echo "✅ RELEASE.md updated in this PR"
+          else
+            echo "⚠️ Warning: RELEASE.md may need updating per Constitution v1.3.0"
+          fi
+
+      - name: Check commit message format
+        run: |
+          git log origin/main..HEAD --format=%s | while read msg; do
+            if echo "$msg" | grep -qE "^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .+"; then
+              echo "✅ Commit message follows convention: $msg"
+            else
+              echo "⚠️ Warning: Commit may not follow conventional format: $msg"
+            fi
+          done

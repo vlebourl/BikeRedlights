@@ -138,9 +138,32 @@ patterns lead to performance degradation and battery drain.
 - ktlint for code formatting
 - All lint warnings MUST be addressed before merge
 
+**Test Requirements by Feature Type:**
+
+**Safety-Critical Features** (NON-NEGOTIABLE):
+- Speed detection, red light warnings, location tracking, collision alerts
+- MUST have 90%+ test coverage
+- ALL edge cases MUST be tested (GPS loss, low battery, offline mode)
+- Tests are NEVER optional for safety features
+- Integration tests MUST cover real-world scenarios
+
+**Non-Critical Features**:
+- Settings UI, theme customization, analytics (non-safety), help screens
+- SHOULD have 70%+ test coverage
+- Tests may be deferred with explicit approval in spec.md
+- Mark in spec: "Test Coverage: Deferred (Non-Critical Feature, Technical Debt)"
+- Must be revisited before v1.0.0 release
+
+**Test Deferral Process**:
+1. Feature MUST be explicitly marked non-critical in spec.md
+2. Add to technical debt tracking in TODO.md
+3. Document why tests are deferred (time constraints, low risk, etc.)
+4. Set deadline for test implementation (e.g., before v1.0.0)
+
 **Rationale:** BikeRedlights involves user safety on roads. Insufficient testing could
 result in missed red light warnings, putting cyclists at risk. High test coverage is
-non-negotiable for safety-critical features.
+non-negotiable for safety-critical features. Non-critical features have flexibility,
+but all features must eventually be tested before production release.
 
 ### V. Security & Privacy (NON-NEGOTIABLE)
 
@@ -487,6 +510,32 @@ reliably in real-world conditions.
 and packaged for distribution. The PR-based workflow enables code review and quality gates
 before release. GitHub releases with signed APKs provide a clear download and installation
 path for users. This is critical for a safety app where version traceability matters.
+
+### Branch Protection (GitHub Configuration)
+
+**Main Branch Protection** (Recommended):
+- Require pull request before merging to `main`
+- Require at least 1 approval (if team size > 1)
+- Require status checks to pass before merging (if CI/CD configured)
+- Do not allow force pushes to `main`
+- Do not allow branch deletion
+
+**Configuration Steps**:
+1. Go to GitHub repository → Settings → Branches
+2. Click "Add rule" for branch name pattern: `main`
+3. Enable: "Require a pull request before merging"
+4. Enable: "Require status checks to pass" (if CI/CD exists)
+5. Enable: "Do not allow bypassing" (strict enforcement)
+6. Save changes
+
+**Why This Matters**:
+- Prevents accidental commits directly to main
+- Ensures code review for all changes
+- Enforces CI/CD checks before merge
+- Protects against force push disasters
+
+**Solo Developer Note**: Even for solo projects, branch protection encourages discipline
+and prevents mistakes. PRs provide a final review checkpoint before merging.
 
 ## Governance
 
