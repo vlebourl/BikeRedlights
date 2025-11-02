@@ -252,6 +252,43 @@ emulator -avd Pixel_6_API_34 &
 adb logcat | grep BikeRedlights
 ```
 
+**GPS Location Simulation** (Critical for BikeRedlights):
+
+Emulator → Extended Controls (...) → Location tab
+
+**Option 1: Single Point**:
+1. Enter latitude/longitude manually
+2. Click "Send" to set location
+3. Example: 37.422, -122.084 (Google campus)
+
+**Option 2: GPX/KML Route**:
+1. Select "GPX/KML" tab
+2. Load GPX file with route points
+3. Click "Play" to simulate movement
+4. Adjust speed slider for different cycling speeds
+
+**Option 3: ADB Commands**:
+```bash
+# Send single location (latitude, longitude)
+adb emu geo fix -122.084 37.422
+
+# Simulate movement route
+adb shell "echo 'geo fix -122.084000 37.422000' | nc localhost 5554"
+adb shell "echo 'geo fix -122.085000 37.423000' | nc localhost 5554"
+adb shell "echo 'geo fix -122.086000 37.424000' | nc localhost 5554"
+```
+
+**Testing Speed Detection**:
+1. Create GPX file with points at increasing distances
+2. Set playback speed to match cycling speed (10-25 mph)
+3. Observe speed detection in app
+4. Verify thresholds trigger correctly
+
+**Testing GPS Signal Loss**:
+1. Disable location in emulator settings
+2. Verify app handles gracefully (doesn't crash)
+3. Re-enable and verify app recovers
+
 **Why This Matters**: Unit tests validate logic, but emulator testing catches Android framework integration issues, UI rendering problems, and runtime behavior that only appears on actual Android. For a safety-critical app like BikeRedlights, this is non-negotiable.
 
 ### Project Documentation Tracking (MANDATORY)
@@ -546,6 +583,63 @@ git push origin v0.2.0
 
 **Why This Matters**: Structured releases ensure traceability for a safety-critical app. Every feature is properly versioned, documented, and available as a signed APK for installation. The PR workflow enables code review before release.
 
+### Post-Release Workflow
+
+After GitHub Release is published, complete these steps:
+
+**1. Pull Latest Main**:
+```bash
+# Switch to main and get the latest code
+git checkout main
+git pull origin main
+```
+
+**2. Verify Tag**:
+```bash
+# List all tags
+git tag --list
+
+# Show tag details
+git show v0.2.0
+
+# Verify tag is pushed to GitHub
+git ls-remote --tags origin
+```
+
+**3. Test Installation** (Manual QA):
+- Download APK from GitHub Release page
+- Install on physical device or clean emulator:
+  ```bash
+  adb install BikeRedlights-v0.2.0.apk
+  ```
+- Launch app and verify feature works
+- Test upgrade path (if not first release)
+
+**4. Branch Cleanup** (Optional):
+```bash
+# Delete local feature branch
+git branch -d 001-speed-detection
+
+# Delete remote feature branch (optional, keep for audit trail)
+git push origin --delete 001-speed-detection
+```
+
+**5. Update TODO.md**:
+- Ensure feature is moved to "Completed" section
+- Add completion date
+- Mark any follow-up tasks or technical debt
+
+**6. Announce Release** (if applicable):
+- Post to team chat/Slack
+- Email stakeholders
+- Update project dashboard
+- Social media (if public project)
+
+**7. Monitor for Issues**:
+- Watch GitHub issues for crash reports
+- Check Play Console crash logs (if published to Play Store)
+- Monitor user feedback
+
 ### Version Code Calculation (Android-Specific)
 
 **Formula**: `versionCode = MAJOR * 10000 + MINOR * 100 + PATCH`
@@ -656,6 +750,71 @@ Before submitting code, verify:
 - Unit test execution
 - Build verification
 - Test coverage reporting
+
+### Dependency Scanning & Updates
+
+**Tool**: GitHub Dependabot (enabled by default in GitHub repositories)
+
+**Monthly Review Process** (Constitution Requirement):
+
+1. **Check Dependabot Alerts**:
+   - Go to GitHub → Security → Dependabot alerts
+   - Review any security vulnerabilities
+   - Prioritize critical/high severity issues
+
+2. **Manual Dependency Check**:
+   ```bash
+   # Check for outdated dependencies
+   ./gradlew dependencyUpdates
+
+   # Or use this plugin in build.gradle.kts:
+   # id("com.github.ben-manes.versions") version "0.50.0"
+   ```
+
+3. **Update Dependencies**:
+   - Edit `gradle/libs.versions.toml`
+   - Update version numbers for outdated libraries
+   - Focus on security patches first, then feature updates
+
+4. **Test After Updates**:
+   ```bash
+   # Run all tests
+   ./gradlew test
+
+   # Build project
+   ./gradlew assembleDebug
+
+   # Test on emulator
+   ./gradlew installDebug
+   # Manual testing of critical flows
+   ```
+
+5. **Commit Updates**:
+   ```bash
+   git add gradle/libs.versions.toml
+   git commit -m "chore(deps): update dependencies
+
+   - Update Kotlin to 1.9.22
+   - Update Compose BOM to 2024.01.00
+   - Fix security vulnerability in okhttp (CVE-2024-XXXX)
+
+   All tests passing. Tested on emulator."
+   ```
+
+**Dependency Update Strategy**:
+- **Security patches**: Apply immediately
+- **Major version bumps**: Test thoroughly, may require code changes
+- **Minor/patch updates**: Apply monthly
+- **Breaking changes**: Document in RELEASE.md, plan migration
+
+**Security Scanning**:
+```bash
+# Check for known vulnerabilities
+./gradlew dependencyCheckAnalyze
+
+# Review security report
+open build/reports/dependency-check-report.html
+```
 
 ## 📚 Resources
 
