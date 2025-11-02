@@ -11,17 +11,37 @@ _Features and changes completed but not yet released_
 - None yet
 
 ### 🐛 Bugs Fixed
-- None yet
+- Fixed ProGuard configuration violation (enabled minification per Constitution v1.3.0)
 
 ### 💥 Breaking Changes
 - None yet
 
 ### 📚 Documentation
+- **Comprehensive Documentation Review & Fixes** (2025-11-02):
+  - Created APK signing documentation (`.specify/docs/apk-signing.md`)
+  - Created PR template (`.github/pull_request_template.md`)
+  - Enhanced CLAUDE.md with:
+    - Git push guidance and cadence recommendations
+    - Emulator GPS simulation instructions
+    - Version code calculation rules
+    - Post-release workflow documentation
+    - Dependency scanning process
+  - Updated Constitution v1.3.0 with:
+    - Branch naming convention (`###-feature-name`)
+    - Test requirements by feature type (safety-critical vs non-critical)
+    - Branch protection guidelines
+  - Updated version references (v1.1.0 → v1.3.0) across all files
+  - Added comprehensive ProGuard rules for BikeRedlights dependencies
 - Added CLAUDE.md with November 2025 Android development standards
-- Ratified BikeRedlights Constitution v1.1.0
+- Ratified BikeRedlights Constitution v1.3.0
 - Established project documentation tracking (TODO.md, RELEASE.md)
 
 ### 🔧 Internal Changes
+- Created CI/CD workflow (`.github/workflows/pr-checks.yml`) for:
+  - Kotlin lint checks
+  - Debug APK build verification
+  - Constitution compliance checks
+  - **Note**: Testing is manual (emulator/physical device) per project standards
 - Initial project setup with Specify template
 - Configured MVVM + Clean Architecture structure
 - Set up Material Design 3 Expressive guidelines
