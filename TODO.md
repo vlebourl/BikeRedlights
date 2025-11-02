@@ -80,4 +80,4 @@ _(No deferred features)_
 
 ---
 
-**Constitution Compliance**: This file satisfies the "Project Documentation Tracking" requirement (Constitution v1.1.0, Development Workflow section).
+**Constitution Compliance**: This file satisfies the "Project Documentation Tracking" requirement (Constitution v1.3.0, Development Workflow section).

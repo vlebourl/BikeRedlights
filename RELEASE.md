@@ -51,7 +51,7 @@ _Features and changes completed but not yet released_
   - Accessibility requirements (WCAG AA)
   - Emulator testing workflow
 
-- **Constitution v1.1.0**: Project governance and core principles
+- **Constitution v1.3.0**: Project governance and core principles
   - 7 core principles (NON-NEGOTIABLE standards)
   - Android-specific coding standards
   - Development workflow requirements
@@ -121,4 +121,4 @@ _Features and changes completed but not yet released_
 
 ---
 
-**Constitution Compliance**: This file satisfies the "Project Documentation Tracking" requirement (Constitution v1.1.0, Development Workflow section).
+**Constitution Compliance**: This file satisfies the "Project Documentation Tracking" requirement (Constitution v1.3.0, Development Workflow section).
