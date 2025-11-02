@@ -164,6 +164,23 @@ Examples of foundational tasks (adjust based on your project):
 
 ---
 
+## Phase N+1: Release Preparation (REQUIRED per Constitution)
+
+**Purpose**: Prepare release for specify session completion
+
+- [ ] TXXX Move "Unreleased" items in RELEASE.md to new version section (vX.Y.Z)
+- [ ] TXXX Update app/build.gradle.kts with new versionCode and versionName
+- [ ] TXXX Commit version bump: `git commit -m "chore: bump version to vX.Y.Z"`
+- [ ] TXXX Push feature branch to GitHub: `git push origin <branch-name>`
+- [ ] TXXX Create Pull Request on GitHub with detailed description
+- [ ] TXXX After PR approval and merge, create git tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z: <summary>"`
+- [ ] TXXX Push tag to GitHub: `git push origin vX.Y.Z`
+- [ ] TXXX Build signed release APK: `./gradlew assembleRelease`
+- [ ] TXXX Create GitHub Release with APK attached (BikeRedlights-vX.Y.Z.apk)
+- [ ] TXXX Verify release notes on GitHub match RELEASE.md
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
