@@ -393,6 +393,80 @@ git commit -m "feat(domain): add SpeedDetectionUseCase with threshold checks"
 # And so on...
 ```
 
+### Release Pattern & Workflow (MANDATORY)
+
+**Each Specify Session MUST End with a Release**: Every `/speckit.specify` session concludes with a versioned release following semantic versioning.
+
+**Semantic Versioning (vMAJOR.MINOR.PATCH)**:
+- **MAJOR (vX.0.0)**: Breaking changes, incompatible API changes, major overhauls
+- **MINOR (v1.X.0)**: New features, backward-compatible additions
+- **PATCH (v1.0.X)**: Bug fixes, performance improvements, small changes
+
+**Pull Request Workflow**:
+1. Work on feature branch (e.g., `001-speed-detection`)
+2. Make small, frequent commits throughout development
+3. Push branch to GitHub: `git push origin <branch-name>`
+4. Create PR with detailed description including:
+   - Feature summary and implementation details
+   - Link to specification in `.specify/specs/`
+   - Emulator testing confirmation
+   - Breaking changes (if any)
+5. After PR approval and merge to `main`, proceed to release
+
+**Release Steps (After PR Merge)**:
+```bash
+# 1. Move "Unreleased" items in RELEASE.md to new version section
+# Edit RELEASE.md manually
+
+# 2. Update version in app/build.gradle.kts
+# Update versionCode and versionName
+
+# 3. Commit version bump
+git add RELEASE.md app/build.gradle.kts
+git commit -m "chore: bump version to v0.2.0"
+
+# 4. Create annotated tag
+git tag -a v0.2.0 -m "Release v0.2.0: Speed Detection Feature
+
+- Add GPS-based speed tracking
+- Implement configurable speed thresholds
+- Battery-efficient location updates"
+
+# 5. Push tag to GitHub
+git push origin v0.2.0
+
+# 6. Build signed release APK
+./gradlew assembleRelease
+# Output: app/build/outputs/apk/release/app-release.apk
+
+# 7. Create GitHub Release
+# - Go to GitHub → Releases → Draft new release
+# - Select tag: v0.2.0
+# - Title: "v0.2.0 - Speed Detection Feature"
+# - Body: Copy from RELEASE.md version section
+# - Attach APK: Rename to BikeRedlights-v0.2.0.apk and upload
+# - Publish release
+```
+
+**Release Checklist**:
+- ✅ All tests passing (unit, integration, UI)
+- ✅ Emulator testing completed and validated
+- ✅ RELEASE.md updated with version section
+- ✅ app/build.gradle.kts version codes updated
+- ✅ Git tag created with release notes
+- ✅ Signed release APK built successfully
+- ✅ GitHub Release created with APK attached
+- ✅ Release notes match RELEASE.md content
+
+**Version Progression Example**:
+- v0.1.0: Initial project setup
+- v0.2.0: Speed detection feature (MINOR - new feature)
+- v0.3.0: Red light warning system (MINOR - new feature)
+- v0.3.1: Fix GPS accuracy bug (PATCH - bug fix)
+- v1.0.0: First stable release (MAJOR - production ready)
+
+**Why This Matters**: Structured releases ensure traceability for a safety-critical app. Every feature is properly versioned, documented, and available as a signed APK for installation. The PR workflow enables code review before release.
+
 ## 🚀 Performance Guidelines
 
 ### General
@@ -494,6 +568,7 @@ When working on this project:
 8. **Always test on emulator** - when a feature is "working", install debug build and validate on emulator before considering it complete
 9. **Automatically update TODO.md and RELEASE.md** - user does NOT need to ask; this is mandatory for every feature workflow (start, progress, complete)
 10. **Commit small and frequently** - NEVER wait for full feature completion; commit after each logical unit (file, function, task) with conventional commit messages
+11. **Every specify session ends with a release** - prepare PR, version bump, tag, APK build, and GitHub release per constitution requirements
 
 ---
 
