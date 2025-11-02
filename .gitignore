@@ -13,3 +13,12 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Keystore files (NEVER COMMIT THESE!)
+*.jks
+*.keystore
+keystore.properties
+
+# APK/AAB files (optional - can commit for releases if desired)
+*.apk
+*.aab
