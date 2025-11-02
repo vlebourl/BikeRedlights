@@ -1,16 +1,26 @@
 <!--
 Sync Impact Report - Constitution Update
 =========================================
-Version Change: 1.0.0 → 1.0.1
+Version Change: 1.0.1 → 1.2.0
 Amended: 2025-11-02
 
 Amendment Summary:
-- PATCH update: Added emulator testing requirement to Development Workflow
-- No principle changes or additions
-- Clarifies mandatory emulator validation step for completed features
+- MINOR update: Added project documentation tracking requirements (TODO.md, RELEASE.md)
+- MINOR update: Added commit frequency and size requirements (small, regular commits)
+- New mandatory workflows: Progress tracking, release documentation, and incremental commits
+- All features must update TODO.md and RELEASE.md automatically
+- Commits must be small and frequent, not waiting for full feature completion
 
 Modified Sections:
-- Development Workflow: Added "Emulator Testing Requirement" subsection
+- Development Workflow: Added "Project Documentation Tracking (NON-NEGOTIABLE)" subsection
+- Development Workflow: Added "Commit Frequency & Size (NON-NEGOTIABLE)" subsection
+- Code Review Requirements: Added TODO.md, RELEASE.md, and commit frequency verification items
+
+Added Requirements:
+- TODO.md: Unified progress tracking for active features and pending work
+- RELEASE.md: Unified release notes and feature tracking across versions
+- Small commits: Maximum ~200 lines, single logical changes, frequent throughout development
+- Conventional commit messages: <type>(<scope>): <subject> format
 
 Principles (Unchanged):
 1. Modern Android Stack (Kotlin, Jetpack Compose, Material 3)
@@ -24,16 +34,21 @@ Principles (Unchanged):
 Templates Status:
 ✅ plan-template.md - No updates required
 ✅ spec-template.md - No updates required
-✅ tasks-template.md - Updated: Added emulator testing task to polish phase
-✅ CLAUDE.md - Updated: Added emulator testing section, updated checklist, updated Notes for Claude
+✅ tasks-template.md - Updated: Added TODO.md/RELEASE.md update tasks to setup and polish phases
+✅ CLAUDE.md - Updated: Added "Project Documentation Tracking" section with workflow and examples
+
+Documentation Created:
+✅ TODO.md - Created with initial template and structure
+✅ RELEASE.md - Created with v0.1.0 initial setup entry
 
 Follow-up TODOs:
-- None
+- None - all requirements implemented
 
 Notes:
-- Emulator testing ensures features work on actual Android runtime before merge
-- Complements existing test coverage requirements (Principle IV)
-- Rationale: Catches platform-specific issues not visible in unit tests
+- TODO.md ensures transparent progress tracking without explicit user requests
+- RELEASE.md maintains comprehensive feature and version history
+- Automatic updates prevent documentation drift
+- Rationale: Documentation tracking is essential for project visibility and release management
 -->
 
 # BikeRedlights Constitution
@@ -228,6 +243,78 @@ app/
 
 ## Development Workflow
 
+### Project Documentation Tracking (NON-NEGOTIABLE)
+
+**TODO.md - Progress Tracking:**
+- A unified TODO.md file MUST exist at repository root
+- MUST be updated automatically when starting, progressing, or completing features
+- Format: Organized by status (In Progress, Planned, Completed, Deferred)
+- Each entry MUST include: feature name, brief description, current status, start date
+- Completed items MUST be moved to "Completed" section with completion date
+- User does NOT need to explicitly request TODO.md updates; this is automatic
+
+**RELEASE.md - Version & Feature Tracking:**
+- A unified RELEASE.md file MUST exist at repository root
+- MUST be updated when features are completed and ready for release
+- Format: Organized by version (semantic versioning), with sections for each release
+- Each version entry MUST include: version number, release date, features added, bugs fixed, breaking changes
+- Unreleased features MUST be tracked in "## Unreleased" section at top
+- When a release is cut, move "Unreleased" items to new version section
+- User does NOT need to explicitly request RELEASE.md updates; this is automatic
+
+**Automatic Update Triggers:**
+- Feature start: Add to TODO.md "In Progress", add to RELEASE.md "Unreleased"
+- Feature progress: Update TODO.md status/notes as work progresses
+- Feature complete: Move TODO.md to "Completed", ensure RELEASE.md entry is detailed
+- Bug fix: Add to RELEASE.md under appropriate section
+- Breaking change: Document in RELEASE.md with clear migration guidance
+
+**Rationale:** Unified documentation prevents scattered tracking across tools, ensures
+transparency, and maintains project history. Automatic updates eliminate documentation
+drift and provide real-time visibility into project status without manual intervention.
+This is critical for solo developers and teams alike.
+
+### Commit Frequency & Size (NON-NEGOTIABLE)
+
+**Small, Regular Commits Required:**
+- Commits MUST be made regularly throughout development, NOT waiting for full feature completion
+- Each commit SHOULD represent a single logical change or task completion
+- Commit frequently: after completing a single file, function, or logical unit of work
+- Maximum recommended commit size: ~200 lines of changes (excluding auto-generated code)
+- NEVER accumulate days of work in a single commit
+
+**Acceptable Commit Granularity Examples:**
+- ✅ "Add User domain model with validation"
+- ✅ "Implement LocationRepository interface"
+- ✅ "Create SpeedDetectionUseCase with tests"
+- ✅ "Build SpeedDisplayComposable UI component"
+- ✅ "Add Hilt module for location dependencies"
+- ❌ "Complete entire speed detection feature" (too large)
+
+**Commit Message Format:**
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+**Types**: feat, fix, docs, style, refactor, test, chore
+**Example**: `feat(domain): add speed detection use case with threshold validation`
+
+**Benefits of Small Commits:**
+- Easier code review and understanding
+- Simpler rollback if issues found
+- Clear history of development progression
+- Better git bisect debugging
+- Reduced merge conflicts
+- Incremental progress visibility
+
+**Rationale:** Large, infrequent commits make code review difficult, hide bugs, complicate
+debugging, and prevent incremental testing. For safety-critical BikeRedlights features,
+small commits enable catching issues early and maintaining clear development audit trails.
+
 ### Code Review Requirements
 
 Before merge, ALL of the following MUST be verified:
@@ -244,6 +331,9 @@ Before merge, ALL of the following MUST be verified:
 - Tests are written and passing (if feature requires tests per spec)
 - All lint warnings are addressed
 - No new dependencies without justification
+- **Commits are small and frequent** (reviewed git history)
+- **TODO.md updated** with current feature status (MANDATORY)
+- **RELEASE.md updated** with feature entry in Unreleased section (MANDATORY)
 
 ### Offline-First Design
 
@@ -319,4 +409,4 @@ This constitution supersedes all other practices. When CLAUDE.md and the constit
 conflict, the constitution takes precedence. When the constitution is silent, defer to
 CLAUDE.md.
 
-**Version**: 1.0.1 | **Ratified**: 2025-11-02 | **Last Amended**: 2025-11-02
+**Version**: 1.2.0 | **Ratified**: 2025-11-02 | **Last Amended**: 2025-11-02
