@@ -254,6 +254,145 @@ adb logcat | grep BikeRedlights
 
 **Why This Matters**: Unit tests validate logic, but emulator testing catches Android framework integration issues, UI rendering problems, and runtime behavior that only appears on actual Android. For a safety-critical app like BikeRedlights, this is non-negotiable.
 
+### Project Documentation Tracking (MANDATORY)
+
+**Automatic Updates Required**: You MUST update TODO.md and RELEASE.md as features progress. The user does NOT need to explicitly ask for these updates.
+
+**TODO.md - Progress Tracking**:
+- **When starting a feature**: Add to "In Progress" section with start date, description, and task checklist
+- **During development**: Update status/notes as work progresses, check off completed tasks
+- **When complete**: Move to "Completed" section with completion date
+- **When deferred**: Move to "Deferred" section with reason
+
+**RELEASE.md - Version Tracking**:
+- **When starting a feature**: Add entry to "Unreleased" section with brief description
+- **When fixing a bug**: Add to "Bugs Fixed" under "Unreleased"
+- **When making breaking change**: Add to "Breaking Changes" with migration guidance
+- **When feature complete**: Ensure detailed entry in "Unreleased" with all changes documented
+- **When releasing a version**: Move all "Unreleased" items to new version section
+
+**Format Examples**:
+
+TODO.md entry:
+```markdown
+### Feature: Speed Detection System
+- **Started**: 2025-11-02
+- **Status**: ViewModel integration in progress
+- **Tasks Remaining**:
+  - [x] Repository setup
+  - [x] Domain layer use case
+  - [ ] ViewModel integration
+  - [ ] UI composable
+- **Blockers**: None
+```
+
+RELEASE.md entry:
+```markdown
+## Unreleased
+
+### ✨ Features Added
+- **Speed Detection System**: Real-time GPS-based speed tracking with configurable thresholds
+  - Implements Clean Architecture pattern (Repository → UseCase → ViewModel → UI)
+  - Battery-efficient location updates using balanced power mode
+  - Offline-first design with local processing
+```
+
+**Workflow Integration**:
+1. Start feature → Update TODO.md and RELEASE.md immediately
+2. Make progress → Update TODO.md task checklist
+3. Complete feature → Move TODO.md to Completed, finalize RELEASE.md entry
+4. Code review → Verify both files are updated (required on checklist)
+
+### Commit Frequency & Size (MANDATORY)
+
+**Small, Regular Commits Required**: NEVER wait for full feature completion to commit.
+
+**Commit Guidelines**:
+- ✅ Commit after completing a single file, function, or logical unit
+- ✅ Maximum ~200 lines of changes per commit (excluding auto-generated code)
+- ✅ Each commit = one logical change or task
+- ❌ NEVER accumulate days of work in a single commit
+- ❌ NEVER commit entire features at once
+
+**Good Commit Examples**:
+```bash
+git commit -m "feat(domain): add SpeedThreshold value object with validation"
+git commit -m "feat(data): implement LocationRepository with Room integration"
+git commit -m "test(domain): add unit tests for SpeedDetectionUseCase"
+git commit -m "feat(ui): create SpeedDisplayComposable with preview"
+git commit -m "refactor(di): extract location module from AppModule"
+```
+
+**Bad Commit Examples**:
+```bash
+# ❌ Too large, unclear what changed
+git commit -m "Complete speed detection feature"
+
+# ❌ Multiple unrelated changes
+git commit -m "Add repository, use case, ViewModel, and UI"
+
+# ❌ Too vague
+git commit -m "Updates"
+```
+
+**Conventional Commit Format**:
+```
+<type>(<scope>): <subject>
+
+[optional body]
+
+[optional footer]
+```
+
+**Types**:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation only
+- `style`: Formatting, missing semicolons, etc.
+- `refactor`: Code change that neither fixes a bug nor adds a feature
+- `test`: Adding missing tests
+- `chore`: Updating build tasks, package manager configs, etc.
+
+**Scopes**: `domain`, `data`, `ui`, `di`, `test`, `build`, etc.
+
+**Benefits**:
+- Easier code review (small diffs)
+- Simpler rollback if issues found
+- Clear development history
+- Better git bisect debugging
+- Reduced merge conflicts
+- Incremental testing possible
+
+**When to Commit**:
+1. After writing a new domain model/entity
+2. After implementing a repository method
+3. After creating a use case with its tests
+4. After building a composable component
+5. After adding a Hilt module or dependency
+6. After fixing a bug
+7. After refactoring a function/class
+8. At least every 1-2 hours of work, even if incomplete
+
+**Workflow**:
+```bash
+# Work on single task
+# ... implement LocationRepository ...
+
+# Commit when task is done (even if feature incomplete)
+git add app/src/main/java/com/example/bikeredlights/data/repository/LocationRepositoryImpl.kt
+git commit -m "feat(data): implement LocationRepository with FusedLocationProvider
+
+- Add battery-efficient location updates
+- Implement balanced power mode
+- Handle permission denied gracefully"
+
+# Continue with next task
+# ... implement use case ...
+git commit -m "feat(domain): add SpeedDetectionUseCase with threshold checks"
+
+# And so on...
+```
+
 ## 🚀 Performance Guidelines
 
 ### General
@@ -299,6 +438,8 @@ Before submitting code, verify:
 - ✅ No memory leaks (check with Profiler)
 - ✅ Tests are written and passing
 - ✅ **Debug build tested on emulator** (MANDATORY)
+- ✅ **TODO.md updated** with current feature status (MANDATORY)
+- ✅ **RELEASE.md updated** with feature entry in Unreleased section (MANDATORY)
 - ✅ Lint warnings are addressed
 - ✅ No new dependencies without justification
 
@@ -351,6 +492,8 @@ When working on this project:
 6. **Battery efficiency matters** - location tracking can drain battery
 7. **Test in various conditions** - different speeds, GPS accuracy levels, lighting conditions
 8. **Always test on emulator** - when a feature is "working", install debug build and validate on emulator before considering it complete
+9. **Automatically update TODO.md and RELEASE.md** - user does NOT need to ask; this is mandatory for every feature workflow (start, progress, complete)
+10. **Commit small and frequently** - NEVER wait for full feature completion; commit after each logical unit (file, function, task) with conventional commit messages
 
 ---
 
