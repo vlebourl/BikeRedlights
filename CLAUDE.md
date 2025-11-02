@@ -419,7 +419,15 @@ git commit -m "feat(domain): add SpeedDetectionUseCase with threshold checks"
 # Edit RELEASE.md manually
 
 # 2. Update version in app/build.gradle.kts
-# Update versionCode and versionName
+# Calculate versionCode using formula: MAJOR * 10000 + MINOR * 100 + PATCH
+# Examples:
+#   v0.1.0 → versionCode = 100
+#   v0.2.0 → versionCode = 200
+#   v0.2.1 → versionCode = 201
+#   v1.0.0 → versionCode = 10000
+# Edit app/build.gradle.kts:
+#   versionCode = 200  (for v0.2.0)
+#   versionName = "0.2.0"
 
 # 3. Commit version bump
 git add RELEASE.md app/build.gradle.kts
@@ -466,6 +474,52 @@ git push origin v0.2.0
 - v1.0.0: First stable release (MAJOR - production ready)
 
 **Why This Matters**: Structured releases ensure traceability for a safety-critical app. Every feature is properly versioned, documented, and available as a signed APK for installation. The PR workflow enables code review before release.
+
+### Version Code Calculation (Android-Specific)
+
+**Formula**: `versionCode = MAJOR * 10000 + MINOR * 100 + PATCH`
+
+**Why**: Android requires version codes to increase monotonically for app updates. This formula ensures:
+- Up to 99 minor versions per major version
+- Up to 99 patch versions per minor version
+- Clear numeric progression
+
+**Examples**:
+| Semantic Version | Calculation | versionCode |
+|-----------------|-------------|-------------|
+| v0.1.0 | 0 * 10000 + 1 * 100 + 0 | 100 |
+| v0.2.0 | 0 * 10000 + 2 * 100 + 0 | 200 |
+| v0.2.1 | 0 * 10000 + 2 * 100 + 1 | 201 |
+| v0.3.0 | 0 * 10000 + 3 * 100 + 0 | 300 |
+| v1.0.0 | 1 * 10000 + 0 * 100 + 0 | 10000 |
+| v1.5.3 | 1 * 10000 + 5 * 100 + 3 | 10503 |
+| v2.0.0 | 2 * 10000 + 0 * 100 + 0 | 20000 |
+
+**Implementation in `app/build.gradle.kts`**:
+```kotlin
+defaultConfig {
+    applicationId = "com.example.bikeredlights"
+    minSdk = 34
+    targetSdk = 36
+
+    // Version must increase with each release
+    versionCode = 100  // v0.1.0
+    versionName = "0.1.0"
+
+    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+}
+```
+
+**Update Process**:
+1. Determine semantic version (v0.2.0)
+2. Calculate versionCode: 0 * 10000 + 2 * 100 + 0 = 200
+3. Update both values in `app/build.gradle.kts`
+4. Commit: `git commit -m "chore: bump version to v0.2.0"`
+
+**Important**:
+- versionCode MUST always increase (never decrease or stay same)
+- If you need to hotfix an older version, use the next available code
+- Android will reject updates if versionCode doesn't increase
 
 ## 🚀 Performance Guidelines
 
