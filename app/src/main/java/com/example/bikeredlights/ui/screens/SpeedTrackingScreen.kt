@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.Lifecycle
+import com.example.bikeredlights.ui.components.GpsStatusIndicator
 import com.example.bikeredlights.ui.components.LocationDisplay
 import com.example.bikeredlights.ui.components.PermissionRequiredContent
 import com.example.bikeredlights.ui.components.SpeedDisplay
@@ -76,10 +77,11 @@ fun SpeedTrackingScreen(
                 contentAlignment = Alignment.Center
             ) {
                 if (uiState.hasLocationPermission) {
-                    // Permission granted: show speed and location display
+                    // Permission granted: show speed, location, and GPS status
                     SpeedTrackingContent(
                         speedMeasurement = uiState.speedMeasurement,
-                        locationData = uiState.locationData
+                        locationData = uiState.locationData,
+                        gpsStatus = uiState.gpsStatus
                     )
                 } else {
                     // Permission not granted: show permission required content
@@ -93,16 +95,21 @@ fun SpeedTrackingScreen(
 /**
  * Content composable for speed tracking screen when permission is granted.
  *
- * Displays the current speed and GPS position in a centered layout. This composable
- * shows both User Story 1 (speed) and User Story 2 (GPS coordinates) content.
+ * Displays the current speed, GPS position, and GPS status in a centered layout.
+ * Shows content from all three user stories:
+ * - User Story 1: Speed display
+ * - User Story 2: GPS coordinates
+ * - User Story 3: GPS status indicator
  *
  * @param speedMeasurement Current speed measurement, null before first GPS fix
  * @param locationData Current GPS location data, null before first GPS fix
+ * @param gpsStatus Current GPS signal status
  */
 @Composable
 private fun SpeedTrackingContent(
     speedMeasurement: com.example.bikeredlights.domain.model.SpeedMeasurement?,
-    locationData: com.example.bikeredlights.domain.model.LocationData?
+    locationData: com.example.bikeredlights.domain.model.LocationData?,
+    gpsStatus: com.example.bikeredlights.domain.model.GpsStatus
 ) {
     Column(
         modifier = Modifier
@@ -119,6 +126,12 @@ private fun SpeedTrackingContent(
 
         LocationDisplay(
             locationData = locationData
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        GpsStatusIndicator(
+            gpsStatus = gpsStatus
         )
     }
 }

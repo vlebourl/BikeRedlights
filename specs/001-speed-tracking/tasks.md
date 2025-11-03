@@ -298,11 +298,11 @@ adb emu geo fix -122.419416 37.774929  # San Francisco coordinates
 
 ### Tasks
 
-- [ ] T029 [P] [US3] Create GpsStatusIndicator composable in `ui/components/GpsStatusIndicator.kt`. Accept gpsStatus: GpsStatus parameter. Display text with color based on status: Unavailable (red, MaterialTheme.colorScheme.error), Acquiring (yellow/orange, MaterialTheme.colorScheme.tertiary), Active (green, MaterialTheme.colorScheme.primary). Show accuracy value for Active state. Use Material3.typography.labelLarge. Add semantics for accessibility.
+- [X] T029 [P] [US3] Create GpsStatusIndicator composable in `ui/components/GpsStatusIndicator.kt`. Accept gpsStatus: GpsStatus parameter. Display text with color based on status: Unavailable (red, MaterialTheme.colorScheme.error), Acquiring (yellow/orange, MaterialTheme.colorScheme.tertiary), Active (green, MaterialTheme.colorScheme.primary). Show accuracy value for Active state. Use Material3.typography.labelLarge. Add semantics for accessibility.
 
-- [ ] T030 [US3] Update SpeedTrackingScreen.kt to include GpsStatusIndicator component. Add below LocationDisplay with Spacer(modifier = Modifier.height(16.dp)). Pass uiState.gpsStatus to GpsStatusIndicator. Ensure vertical spacing maintains visual hierarchy (Speed → Location → GPS Status).
+- [X] T030 [US3] Update SpeedTrackingScreen.kt to include GpsStatusIndicator component. Add below LocationDisplay with Spacer(modifier = Modifier.height(16.dp)). Pass uiState.gpsStatus to GpsStatusIndicator. Ensure vertical spacing maintains visual hierarchy (Speed → Location → GPS Status).
 
-- [ ] T031 [US3] Write GpsStatusIndicatorTest in `androidTest/.../ui/components/GpsStatusIndicatorTest.kt`. Test: correct text and color for each GpsStatus state, accuracy value displayed for Active state, semantics content description correct for each state. Use Compose Test Rule with different GpsStatus values.
+- [X] T031 [US3] Write GpsStatusIndicatorTest in `androidTest/.../ui/components/GpsStatusIndicatorTest.kt`. Test: correct text and color for each GpsStatus state, accuracy value displayed for Active state, semantics content description correct for each state. Use Compose Test Rule with different GpsStatus values.
 
 **Completion Criteria (User Story 3)**:
 - [ ] "GPS Unavailable" shown when indoors or no signal (red indicator)
