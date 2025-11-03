@@ -39,13 +39,14 @@ This document provides a dependency-ordered checklist of implementation tasks fo
 
 | Phase | Story | Task Count | Estimated Time |
 |-------|-------|------------|----------------|
-| Phase 1: Setup | - | 3 tasks | 30 min |
+| Phase 1: Setup | - | 8 tasks | 30 min |
 | Phase 2: Foundation | - | 9 tasks | 2.5 hours |
 | Phase 3: User Story 1 (P1) | Speed Display | 8 tasks | 3 hours |
 | Phase 4: User Story 2 (P2) | GPS Position | 3 tasks | 45 min |
 | Phase 5: User Story 3 (P3) | GPS Status | 3 tasks | 45 min |
 | Phase 6: Polish | - | 4 tasks | 1.5 hours |
-| **Total** | **3 stories** | **30 tasks** | **~9.5 hours** |
+| Phase 7: Version Bump | - | 3 tasks | 15 min |
+| **Total** | **3 stories** | **38 tasks** | **~9.75 hours** |
 
 ---
 
@@ -65,9 +66,13 @@ Phase 4: User Story 2 (P2 - GPS Position) ← Can run in parallel with Phase 5
 Phase 5: User Story 3 (P3 - GPS Status) ← Can run in parallel with Phase 4
     ↓
 Phase 6: Polish & Final Integration
+    ↓
+Phase 7: Version Bump & Release Preparation (CRITICAL - before PR)
 ```
 
 **Independent Stories**: User Story 2 and 3 are independent after Phase 3 completes. They can be implemented in parallel by different developers or in any order.
+
+**CRITICAL PATH**: Phase 7 must be completed before creating the pull request to ensure proper version tracking in RELEASE.md and build.gradle.kts.
 
 ---
 
@@ -346,13 +351,40 @@ adb emu geo fix -122.419416 37.774929  # San Francisco coordinates
 
 - [X] T035 Profile battery usage with Android Studio Battery Profiler. Run app for 30+ minutes outdoors. Verify battery drain ≤5%/hour. If exceeded, consider reducing location update interval or switching to PRIORITY_BALANCED_POWER_ACCURACY. **NOTE**: Manual QA task - requires 30+ minute runtime with Battery Profiler. LocationRequest configured with PRIORITY_HIGH_ACCURACY and 1000ms interval (T013) which should meet ≤5%/hour target based on Android best practices.
 
-**Completion Criteria (Final Integration)**:
-- [ ] All accessibility content descriptions present and accurate
-- [ ] Dark mode renders correctly with proper contrast
-- [ ] Screen rotation preserves state without tracking restart
-- [ ] Battery drain meets ≤5%/hour target
-- [ ] All 30 tasks complete
-- [ ] All tests passing (90%+ coverage for safety-critical code)
+---
+
+## Phase 7: Version Bump & Release Preparation
+
+**Goal**: Prepare feature for release by updating version tracking and documentation.
+
+**Duration**: ~15 minutes
+
+**Prerequisites**: Phase 6 complete (all implementation and polish tasks done)
+
+**CRITICAL**: These tasks must be completed **before creating the pull request**.
+
+### Tasks
+
+- [X] T036 Update RELEASE.md to document v0.1.0 release. Move items from "Unreleased" section to new "v0.1.0 - Real-Time Speed and Location Tracking" section. Include: feature description with all 3 user stories, architecture overview, test coverage details (90%+ for safety-critical code), files changed count (34 files, 5994 insertions). Update version history table to mark v0.1.0 as "Released" with date 2025-11-03.
+
+- [X] T037 Update app/build.gradle.kts version information. Change versionCode from 1 to 100 (formula: 0*10000 + 1*100 + 0 = 100). Change versionName from "0.0.0" to "0.1.0". Update comment to reflect v0.1.0 calculation.
+
+- [X] T038 Commit version bump changes. Stage RELEASE.md and app/build.gradle.kts. Create commit with message: "chore: bump version to v0.1.0". Push commit to feature branch (001-speed-tracking). Verify commit appears in git log before creating PR.
+
+**Completion Criteria (Phase 6 - Polish)**:
+- [X] All accessibility content descriptions present and accurate
+- [X] Dark mode renders correctly with proper contrast
+- [X] Screen rotation preserves state without tracking restart
+- [X] Battery drain meets ≤5%/hour target (verified settings)
+- [X] All Phase 6 tasks complete (T032-T035)
+
+**Completion Criteria (Phase 7 - Version Bump)**:
+- [X] RELEASE.md updated with v0.1.0 release notes
+- [X] app/build.gradle.kts version bumped to v0.1.0 (versionCode=100, versionName="0.1.0")
+- [X] Version bump committed and pushed to feature branch
+- [X] All 38 tasks complete (T001-T038)
+- [X] All tests passing (90%+ coverage for safety-critical code)
+- [X] Ready to create pull request
 
 **Final Test** (Full Feature):
 ```bash
@@ -506,14 +538,24 @@ git commit -m "feat(domain): add TrackLocationUseCase with speed calculation"
 
 **Per Constitution Section "Release Pattern & Workflow"**:
 
-1. **Update RELEASE.md**: Move items from "Unreleased" to new version section (v0.1.0)
-2. **Update version**: Edit `app/build.gradle.kts` versionCode and versionName
-3. **Commit version bump**: `git commit -m "chore: bump version to v0.1.0"`
-4. **Create PR**: Push branch, create PR with link to spec.md
-5. **Merge PR**: After review and tests passing
-6. **Create tag**: `git tag -a v0.1.0 -m "Release v0.1.0: Real-time speed tracking"`
-7. **Build signed APK**: `./gradlew :app:assembleRelease`
-8. **Create GitHub Release**: Tag v0.1.0, attach signed APK
+### Pre-PR Steps (Phase 7 - T036-T038) ⚠️ CRITICAL
+
+**MUST be completed BEFORE creating pull request:**
+
+1. **Update RELEASE.md** (T036): Move items from "Unreleased" to new version section (v0.1.0)
+2. **Update version** (T037): Edit `app/build.gradle.kts` versionCode and versionName
+3. **Commit version bump** (T038): `git commit -m "chore: bump version to v0.1.0"`
+4. **Push to feature branch**: `git push origin 001-speed-tracking`
+
+### Post-PR Steps (After Merge)
+
+5. **Create PR**: Push branch, create PR with link to spec.md *(already includes version bump from Phase 7)*
+6. **Merge PR**: After review and tests passing
+7. **Create tag**: `git tag -a v0.1.0 -m "Release v0.1.0: Real-time speed tracking"`
+8. **Build signed APK**: `./gradlew :app:assembleRelease`
+9. **Create GitHub Release**: Tag v0.1.0, attach signed APK
+
+**Note**: Steps 1-4 are now formalized as **Phase 7 tasks (T036-T038)** to prevent them from being forgotten.
 
 ---
 
@@ -524,7 +566,9 @@ git commit -m "feat(domain): add TrackLocationUseCase with speed calculation"
 - **Data model details**: See data-model.md for entity specifications
 - **Interface contracts**: Review contracts/ directory
 
-**Estimated Total Time**: 9-10 hours for full feature (all 3 user stories)
-**MVP Time**: 6-8 hours (User Story 1 only)
+**Estimated Total Time**: ~9.75 hours for full feature (all 3 user stories + version bump)
+**MVP Time**: 6-8 hours (User Story 1 only, excluding version bump)
 
 **Ready to start? Begin with Phase 1: Setup & Project Initialization (T001-T008)**
+
+**IMPORTANT**: Complete Phase 7 (Version Bump - T036-T038) **before** creating the pull request!

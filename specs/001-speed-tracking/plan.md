@@ -285,6 +285,60 @@ After completing Phase 1 (research, data modeling, and contract design), the imp
 | Performance & Battery | ✅ PASS | ✅ PASS | No change |
 | Accessibility | ✅ PASS | ✅ PASS | No change |
 
+### Release Preparation Workflow
+
+**CRITICAL**: These steps must be completed **before creating the pull request** to ensure proper version tracking.
+
+#### Pre-PR Checklist (Version Bump)
+
+**Step 1: Update RELEASE.md**
+- Move items from "Unreleased" section to new version section (e.g., v0.1.0)
+- Include complete feature description with all user stories
+- Document architecture overview and test coverage
+- Update version history table
+
+**Step 2: Update app/build.gradle.kts**
+- Bump `versionCode` using formula: `MAJOR*10000 + MINOR*100 + PATCH`
+  - Example: v0.1.0 = 0*10000 + 1*100 + 0 = 100
+- Update `versionName` string (e.g., "0.0.0" → "0.1.0")
+
+**Step 3: Commit Version Bump**
+```bash
+git add RELEASE.md app/build.gradle.kts
+git commit -m "chore: bump version to vX.Y.Z"
+git push origin <feature-branch>
+```
+
+**Step 4: Create Pull Request**
+- Create PR with updated version included
+- Link to spec.md in PR description
+- Wait for review and CI checks
+
+#### Post-Merge Workflow (After PR Merged)
+
+**Step 5: Create Release Tag**
+```bash
+git checkout main
+git pull origin main
+git tag -a vX.Y.Z -m "Release vX.Y.Z: <feature summary>"
+git push origin vX.Y.Z
+```
+
+**Step 6: Build Signed Release APK**
+```bash
+./gradlew :app:assembleRelease
+```
+
+**Step 7: Create GitHub Release**
+- Navigate to: https://github.com/<org>/<repo>/releases/new
+- Select tag: vX.Y.Z
+- Title: "vX.Y.Z - <Feature Name>"
+- Copy release notes from RELEASE.md
+- Attach: `app/build/outputs/apk/release/app-release.apk`
+- Publish release
+
+**Note**: Steps 1-4 are **blocking** for PR creation. Steps 5-7 occur after merge.
+
 ### Approval
 
 **Implementation Plan Approved**: ✅ YES
@@ -292,3 +346,5 @@ After completing Phase 1 (research, data modeling, and contract design), the imp
 **Justification**: All design artifacts (research.md, data-model.md, contracts/, quickstart.md) demonstrate strict adherence to constitutional principles. No violations, no complexity tracking needed, no deviations from Android best practices (2024-2025).
 
 **Ready for Next Phase**: `/speckit.tasks` (task generation from implementation plan)
+
+**REMINDER**: Complete Release Preparation Workflow steps 1-3 before creating PR!
