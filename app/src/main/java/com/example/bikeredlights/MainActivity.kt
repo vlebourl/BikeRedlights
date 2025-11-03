@@ -4,101 +4,55 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
+import com.example.bikeredlights.data.repository.LocationRepositoryImpl
+import com.example.bikeredlights.domain.usecase.TrackLocationUseCase
+import com.example.bikeredlights.ui.screens.SpeedTrackingScreen
 import com.example.bikeredlights.ui.theme.BikeRedlightsTheme
+import com.example.bikeredlights.ui.viewmodel.SpeedTrackingViewModel
+import com.example.bikeredlights.ui.viewmodel.SpeedTrackingViewModelFactory
 
 /**
  * MainActivity
  *
  * Main entry point for the BikeRedlights app.
- * Uses Jetpack Compose for UI.
+ * Implements User Story 1: View Current Speed While Riding
+ *
+ * Uses manual dependency injection (v0.1.0 will migrate to Hilt):
+ * 1. Create LocationRepositoryImpl with FusedLocationProviderClient
+ * 2. Create TrackLocationUseCase with repository
+ * 3. Create SpeedTrackingViewModel with use case via factory
+ * 4. Render SpeedTrackingScreen with ViewModel
  *
  * TODO v0.1.0: Add Hilt dependency injection (@AndroidEntryPoint)
  */
 class MainActivity : ComponentActivity() {
 
+    private lateinit var viewModel: SpeedTrackingViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // Manual dependency injection (until Hilt is re-enabled)
+        val locationRepository = LocationRepositoryImpl(
+            context = applicationContext
+        )
+        val trackLocationUseCase = TrackLocationUseCase(
+            locationRepository = locationRepository
+        )
+        val factory = SpeedTrackingViewModelFactory(locationRepository, trackLocationUseCase)
+        viewModel = ViewModelProvider(this, factory)[SpeedTrackingViewModel::class.java]
+
         setContent {
             BikeRedlightsTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    WelcomeScreen(
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                SpeedTrackingScreen(
+                    viewModel = viewModel,
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
-    }
-}
-
-/**
- * Welcome Screen
- *
- * Placeholder screen for v0.0.0 - demonstrates that the app builds,
- * installs, and launches successfully with Compose + Material 3 theme.
- */
-@Composable
-fun WelcomeScreen(modifier: Modifier = Modifier) {
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "BikeRedlights",
-                style = MaterialTheme.typography.displayLarge,
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = "v0.0.0",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-            Text(
-                text = "Project skeleton ready for development",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 24.dp)
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun WelcomeScreenPreview() {
-    BikeRedlightsTheme {
-        WelcomeScreen()
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun WelcomeScreenDarkPreview() {
-    BikeRedlightsTheme {
-        WelcomeScreen()
     }
 }

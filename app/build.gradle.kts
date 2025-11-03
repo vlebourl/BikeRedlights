@@ -26,9 +26,9 @@ android {
         applicationId = "com.example.bikeredlights"
         minSdk = 34
         targetSdk = 35
-        // v0.0.0 = 0*10000 + 0*100 + 0 = 0 (but must be >= 1)
-        versionCode = 1
-        versionName = "0.0.0"
+        // v0.1.0 = 0*10000 + 1*100 + 0 = 100
+        versionCode = 100
+        versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -118,6 +118,7 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)
