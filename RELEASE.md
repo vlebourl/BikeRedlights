@@ -18,7 +18,7 @@ _Features and changes completed but not yet released_
 
 **Status**: ✅ COMPLETE - Real-time GPS-based speed tracking
 **Focus**: Cycling speedometer with location display and GPS status feedback
-**APK Size**: TBD (release build)
+**APK Size**: 22MB (release build)
 **Tested On**: Pixel 9 Pro Emulator (Android 15 / API 35)
 
 ### ✨ Features Added
