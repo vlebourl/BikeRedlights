@@ -316,26 +316,255 @@ git push origin <feature-branch>
 
 #### Post-Merge Workflow (After PR Merged)
 
-**Step 5: Create Release Tag**
+**Step 5: Create Release Tag with Comprehensive Annotation**
+
+**CRITICAL**: Git tags must include comprehensive multi-line annotations, not just single-line summaries.
+
 ```bash
 git checkout main
 git pull origin main
-git tag -a vX.Y.Z -m "Release vX.Y.Z: <feature summary>"
+
+# Create annotated tag with comprehensive description
+git tag -a vX.Y.Z -m "$(cat <<'EOF'
+Release vX.Y.Z: <Feature Name> (<Release Type>)
+
+<Project Name> vX.Y.Z - <One-line summary of release>
+
+FEATURES (<Number> User Stories Delivered):
+
+User Story 1 (<Priority>): <Story Title>
+- <Feature bullet 1>
+- <Feature bullet 2>
+- <Feature bullet 3>
+
+User Story 2 (<Priority>): <Story Title>
+- <Feature bullet 1>
+- <Feature bullet 2>
+
+ARCHITECTURE:
+
+<Architecture pattern description>:
+- <Layer 1>: <Components>
+- <Layer 2>: <Components>
+- <Layer 3>: <Components>
+
+Key Features:
+- <Key feature 1>
+- <Key feature 2>
+- <Key feature 3>
+
+TEST COVERAGE:
+
+<Coverage percentage>+ coverage for safety-critical code:
+- Unit Tests: <count> tests (<test suites>)
+- UI Tests: <count> tests (<test suites>)
+- Total: <total> tests, all passing
+
+TECHNICAL DETAILS:
+
+- APK Size: <size>MB (release build, minified with R8)
+- Min SDK: API <version> (Android <name>)
+- Target SDK: API <version> (Android <name>)
+- <Key dependency 1>
+- <Key dependency 2>
+- <Key setting 1>
+
+CHANGES:
+
+- <count> files changed, <count> insertions
+- Production code: <count> files (<areas>)
+- Test code: <count> test files (<types>)
+- Spec files: <count> documentation files
+
+LINKS:
+
+- Pull Request: <PR URL>
+- Feature Spec: <spec file path>
+- Implementation Plan: <plan file path>
+- Tasks Breakdown: <tasks file path> (<task count> tasks completed)
+
+Tested On: <Device/Emulator> (<Android Version>)
+
+<Additional context or notes about this release>
+EOF
+)"
+
 git push origin vX.Y.Z
 ```
+
+**Template Variables to Replace**:
+- `vX.Y.Z`: Version number (e.g., v0.1.0)
+- `<Feature Name>`: Main feature name
+- `<Release Type>`: e.g., "First MVP", "Minor Update", "Major Release"
+- `<Project Name>`: BikeRedlights
+- All `<placeholders>`: Replace with actual values from RELEASE.md
+
+**Tag Annotation Requirements**:
+- Minimum 50 lines of content
+- Include all user stories delivered
+- Include architecture overview
+- Include test coverage statistics
+- Include technical details (APK size, SDK versions)
+- Include links to PR and spec files
+- Must be viewable with `git show <tag>` or `git tag -l -n100 <tag>`
 
 **Step 6: Build Signed Release APK**
 ```bash
 ./gradlew :app:assembleRelease
 ```
 
-**Step 7: Create GitHub Release**
-- Navigate to: https://github.com/<org>/<repo>/releases/new
-- Select tag: vX.Y.Z
-- Title: "vX.Y.Z - <Feature Name>"
-- Copy release notes from RELEASE.md
-- Attach: `app/build/outputs/apk/release/app-release.apk`
-- Publish release
+**Step 7: Create GitHub Release with Comprehensive Description**
+
+**CRITICAL**: GitHub releases must include comprehensive markdown-formatted descriptions with:
+- Feature descriptions for all user stories
+- Architecture overview
+- Test coverage details
+- Installation instructions
+- Documentation links
+- Technical specifications
+
+```bash
+gh release create vX.Y.Z \
+  --title "vX.Y.Z - <Feature Name> (<Release Type>)" \
+  --notes "$(cat <<'EOF'
+## 🚴 <Release Type>
+
+**<Project Name> vX.Y.Z** - <One-line summary>
+
+**APK Size**: <size>MB (release build, minified with R8)
+**Tested On**: <Device/Emulator> (<Android Version>)
+**Pull Request**: [#<number>](<PR URL>)
+
+---
+
+### ✨ Features (<Number> User Stories Delivered)
+
+**[Feature <number>: <Feature Name>](<spec URL>)**
+
+#### User Story 1 (<Priority>): <Story Title> ✅
+
+- <Feature bullet 1>
+- <Feature bullet 2>
+- <Feature bullet 3>
+
+#### User Story 2 (<Priority>): <Story Title> ✅
+
+- <Feature bullet 1>
+- <Feature bullet 2>
+
+---
+
+### 🏗️ Architecture
+
+**<Architecture Pattern>:**
+
+- **<Layer 1>**: <Components>
+- **<Layer 2>**: <Components>
+- **<Layer 3>**: <Components>
+
+**Key Features:**
+
+- 🔐 <Security feature>
+- ♿ <Accessibility feature>
+- 🌙 <Theme feature>
+- 🔄 <Lifecycle feature>
+- 🔋 <Performance feature>
+
+---
+
+### ✅ Test Coverage
+
+**<Percentage>+ coverage** for safety-critical code (per [Constitution](<constitution URL>) requirement):
+
+- **Unit Tests**: <count> tests
+  - <Test suite 1>: <What it tests>
+  - <Test suite 2>: <What it tests>
+- **UI Tests**: <count> tests
+  - <Test suite 1> (<count> tests)
+  - <Test suite 2> (<count> tests)
+- **Total**: <total> tests, all passing ✅
+
+---
+
+### 📦 Changes
+
+- **<count> files changed**, <count> insertions
+- **Production code**: <count> files (<areas>)
+- **Test code**: <count> test files (<types>)
+- **Spec files**: <count> documentation files
+
+---
+
+### 🔧 Technical Details
+
+- **Minimum SDK**: API <version> (Android <name>)
+- **Target SDK**: API <version> (Android <name>)
+- **<Key dependency 1>**: <details>
+- **<Key dependency 2>**: <details>
+- **<Key setting 1>**: <details>
+
+---
+
+### 📥 Installation
+
+1. **Download** `app-release.apk` from assets below
+2. **Enable** "Install from unknown sources" in Android settings
+3. **Install** the APK
+4. **Grant** <required permissions> when prompted
+5. **Start using** the app! 🚴
+
+---
+
+### 📚 Documentation
+
+- **[Feature Specification](<spec URL>)** - Requirements and user stories
+- **[Implementation Plan](<plan URL>)** - Architecture and design decisions
+- **[Tasks Breakdown](<tasks URL>)** - <count> tasks completed across <count> phases
+- **[Quick Start Guide](<quickstart URL>)** - Development setup and implementation guide
+
+---
+
+### 🚀 What's Next
+
+This is the **<release type>** establishing the foundation for future features including:
+
+- <Future feature 1>
+- <Future feature 2>
+- <Future feature 3>
+
+---
+
+### 🐛 Known Issues
+
+- **<Issue 1>** - <Description and workaround>
+
+---
+
+**Note**: <Release-specific notes>
+
+🤖 **Generated with [Claude Code](https://claude.com/claude-code)**
+EOF
+)" \
+  app/build/outputs/apk/release/app-release.apk
+```
+
+**GitHub Release Requirements**:
+- Must use markdown formatting with emoji headers (🚴, ✨, 🏗️, ✅, etc.)
+- Include horizontal rules (---) between major sections
+- All user stories must be documented with checkmarks (✅)
+- Architecture must be in bold with structured breakdown
+- Test coverage must include breakdown by test suite
+- Installation instructions must be numbered 5-step list
+- Documentation links must be formatted as markdown links
+- "What's Next" section must outline future roadmap
+- Must include "Known Issues" section (even if empty)
+- APK must be attached as asset
+
+**Verification**:
+- Release URL: `https://github.com/<org>/<repo>/releases/tag/vX.Y.Z`
+- Verify APK is downloadable from release assets
+- Verify all markdown formatting renders correctly
+- Verify all links are functional
 
 **Note**: Steps 1-4 are **blocking** for PR creation. Steps 5-7 occur after merge.
 

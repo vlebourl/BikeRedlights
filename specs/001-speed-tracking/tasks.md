@@ -551,11 +551,68 @@ git commit -m "feat(domain): add TrackLocationUseCase with speed calculation"
 
 5. **Create PR**: Push branch, create PR with link to spec.md *(already includes version bump from Phase 7)*
 6. **Merge PR**: After review and tests passing
-7. **Create tag**: `git tag -a v0.1.0 -m "Release v0.1.0: Real-time speed tracking"`
-8. **Build signed APK**: `./gradlew :app:assembleRelease`
-9. **Create GitHub Release**: Tag v0.1.0, attach signed APK
 
-**Note**: Steps 1-4 are now formalized as **Phase 7 tasks (T036-T038)** to prevent them from being forgotten.
+7. **Create comprehensive annotated tag**:
+   ```bash
+   git tag -a v0.1.0 -m "$(cat <<'EOF'
+   Release v0.1.0: <Feature Name> (<Release Type>)
+
+   <Project> v0.1.0 - <One-line summary>
+
+   FEATURES (<Count> User Stories Delivered):
+   [Full feature descriptions - see plan.md Step 5 template]
+
+   ARCHITECTURE:
+   [Architecture breakdown - see plan.md Step 5 template]
+
+   TEST COVERAGE:
+   [90%+ coverage details - see plan.md Step 5 template]
+
+   TECHNICAL DETAILS:
+   [APK size, SDK versions, dependencies - see plan.md Step 5 template]
+
+   CHANGES:
+   [Files changed, insertions - see plan.md Step 5 template]
+
+   LINKS:
+   [PR, spec, plan, tasks - see plan.md Step 5 template]
+   EOF
+   )"
+   ```
+   **CRITICAL**: Tag annotation must be 50+ lines with comprehensive details. See `plan.md` Step 5 for full template.
+
+8. **Build signed APK**: `./gradlew :app:assembleRelease`
+
+9. **Create comprehensive GitHub Release**:
+   ```bash
+   gh release create v0.1.0 \
+     --title "v0.1.0 - <Feature Name> (<Release Type>)" \
+     --notes "$(cat <<'EOF'
+     ## 🚴 <Release Type>
+
+     [Comprehensive markdown description with:
+     - ✨ Features section with all user stories
+     - 🏗️ Architecture overview
+     - ✅ Test coverage breakdown
+     - 📦 Changes summary
+     - 🔧 Technical details
+     - 📥 Installation instructions
+     - 📚 Documentation links
+     - 🚀 What's Next (roadmap)
+     - 🐛 Known Issues
+
+     See plan.md Step 7 for full template]
+     EOF
+     )" \
+     app/build/outputs/apk/release/app-release.apk
+   ```
+   **CRITICAL**: Release description must use emoji headers, horizontal rules, and structured markdown. See `plan.md` Step 7 for full template.
+
+**Requirements**:
+- Steps 1-4 are formalized as **Phase 7 tasks (T036-T038)** - must complete before PR
+- Steps 7 & 9 must use **comprehensive templates** from `plan.md` - not single-line messages
+- Tag annotation minimum: 50 lines
+- GitHub release minimum: 10 sections with emoji headers
 
 ---
 
