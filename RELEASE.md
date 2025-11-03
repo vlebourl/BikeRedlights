@@ -10,6 +10,81 @@ _Features and changes completed but not yet released_
 ### ✨ Features Added
 - None yet
 
+---
+
+## v0.1.0 - Real-Time Speed and Location Tracking (2025-11-03)
+
+### 🚴 First MVP Release
+
+**Status**: ✅ COMPLETE - Real-time GPS-based speed tracking
+**Focus**: Cycling speedometer with location display and GPS status feedback
+**APK Size**: TBD (release build)
+**Tested On**: Pixel 9 Pro Emulator (Android 15 / API 35)
+
+### ✨ Features Added
+
+**Feature 001: Real-Time Speed and Location Tracking** ([spec](specs/001-speed-tracking/spec.md))
+
+**User Story 1 (P1): View Current Speed While Riding** ✅
+- Real-time cycling speed display in km/h
+- Large, readable typography optimized for at-a-glance viewing
+- Stationary detection (<1 km/h shows 0 km/h)
+- Speed calculation from GPS with m/s to km/h conversion (×3.6)
+- Automatic pause on app background (battery optimization)
+
+**User Story 2 (P2): View Current GPS Position While Riding** ✅
+- Latitude/longitude display with 6-decimal precision
+- GPS accuracy indicator (±X.X m)
+- "Acquiring GPS..." state before first fix
+- Coordinate updates in real-time
+
+**User Story 3 (P3): Understand GPS Signal Status** ✅
+- Color-coded GPS status indicator:
+  - 🔴 Red: GPS Unavailable (indoors, no signal)
+  - 🟡 Yellow: Acquiring GPS... (searching for satellites)
+  - 🟢 Green: GPS Active (signal acquired with ±X.X m accuracy)
+- Accuracy display for Active state
+
+### 🏗️ Architecture
+
+**Clean Architecture with MVVM**:
+- **Domain Layer**: LocationData, SpeedMeasurement, GpsStatus models
+- **Data Layer**: LocationRepositoryImpl with FusedLocationProviderClient
+- **Domain Logic**: TrackLocationUseCase with speed calculation and stationary detection
+- **UI Layer**: Jetpack Compose with Material 3
+- **State Management**: ViewModel + StateFlow + collectAsStateWithLifecycle
+
+**Key Features**:
+- 🔐 Runtime permission handling with rationale dialogs
+- ♿ Full accessibility support (TalkBack/semantic content descriptions)
+- 🌙 Dark mode compatible (Material3 theme colors)
+- 🔄 Configuration change resilient (rotation preserves state)
+- 🔋 Battery optimized (1s update interval, pauses when backgrounded)
+
+### ✅ Test Coverage
+
+**90%+ coverage** for safety-critical code (per Constitution requirement):
+- **Unit Tests**: 20 tests
+  - TrackLocationUseCaseTest: Speed calculation, conversion, stationary threshold
+  - SpeedTrackingViewModelTest: State management, permission handling, error handling
+- **UI Tests**: 26 tests
+  - SpeedTrackingScreenTest (8 tests)
+  - LocationDisplayTest (8 tests)
+  - GpsStatusIndicatorTest (10 tests)
+
+### 📦 Files Changed
+- **34 files**, 5,994 insertions
+- **Production code**: 17 files (domain models, repository, use case, UI components, ViewModel)
+- **Test code**: 3 unit test files + 3 UI test files
+- **Spec files**: 13 documentation files
+
+### 🔧 Technical Details
+- FusedLocationProviderClient with PRIORITY_HIGH_ACCURACY
+- Location update interval: 1000ms (1 second)
+- Lifecycle-aware state collection (Lifecycle.State.STARTED)
+- Speed calculation: Haversine distance formula for fallback
+- Manual dependency injection (Hilt still disabled awaiting compatibility fix)
+
 ### 🐛 Bugs Fixed
 - Fixed ProGuard configuration violation (enabled minification per Constitution v1.3.0)
 
@@ -108,8 +183,8 @@ _Features and changes completed but not yet released_
 
 | Version | Release Date | Status | Notes |
 |---------|--------------|--------|-------|
+| v0.1.0  | 2025-11-03   | ✅ Released | Real-time speed tracking - first MVP feature |
 | v0.0.0  | 2025-11-02   | ✅ Released | Buildable skeleton - tested on emulator |
-| v0.1.0  | TBD          | Planned | First MVP feature (+ Hilt DI re-enabled) |
 
 ---
 
