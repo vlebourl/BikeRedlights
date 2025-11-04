@@ -104,32 +104,32 @@ This document provides an actionable task breakdown for implementing GPS-based r
 
 ### Service Implementation
 
-- [ ] T024 [US1] Create RideRecordingService in app/src/main/java/com/example/bikeredlights/service/RideRecordingService.kt
-- [ ] T024a [US1] Implement POST_NOTIFICATIONS permission request for Android 13+ in RideRecordingService.onCreate()
-- [ ] T025 [US1] Implement notification builder with Pause/Stop actions in RideRecordingService
-- [ ] T026 [US1] Implement LocationCallback for GPS updates in RideRecordingService
-- [ ] T027 [US1] Add START_STICKY logic and process death recovery in RideRecordingService
+- [X] T024 [US1] Create RideRecordingService in app/src/main/java/com/example/bikeredlights/service/RideRecordingService.kt
+- [X] T024a [US1] Implement POST_NOTIFICATIONS permission request for Android 13+ in RideRecordingService.onCreate()
+- [X] T025 [US1] Implement notification builder with Pause/Stop actions in RideRecordingService
+- [X] T026 [US1] Implement LocationCallback for GPS updates in RideRecordingService
+- [X] T027 [US1] Add START_STICKY logic and process death recovery in RideRecordingService
 
 ### Use Case Implementation
 
-- [ ] T028 [P] [US1] Create StartRideUseCase in app/src/main/java/com/example/bikeredlights/domain/usecase/StartRideUseCase.kt
-- [ ] T029 [P] [US1] Create FinishRideUseCase in app/src/main/java/com/example/bikeredlights/domain/usecase/FinishRideUseCase.kt
-- [ ] T029a [P] [US1] Add minimum 5-second duration validation in FinishRideUseCase with auto-discard logic
-- [ ] T030 [P] [US1] Create RecordTrackPointUseCase in app/src/main/java/com/example/bikeredlights/domain/usecase/RecordTrackPointUseCase.kt
-- [ ] T031 [P] [US1] Create CalculateDistanceUseCase in app/src/main/java/com/example/bikeredlights/domain/usecase/CalculateDistanceUseCase.kt
+- [X] T028 [P] [US1] Create StartRideUseCase in app/src/main/java/com/example/bikeredlights/domain/usecase/StartRideUseCase.kt
+- [X] T029 [P] [US1] Create FinishRideUseCase in app/src/main/java/com/example/bikeredlights/domain/usecase/FinishRideUseCase.kt
+- [X] T029a [P] [US1] Add minimum 5-second duration validation in FinishRideUseCase with auto-discard logic
+- [X] T030 [P] [US1] Create RecordTrackPointUseCase in app/src/main/java/com/example/bikeredlights/domain/usecase/RecordTrackPointUseCase.kt
+- [X] T031 [P] [US1] Create CalculateDistanceUseCase in app/src/main/java/com/example/bikeredlights/domain/usecase/CalculateDistanceUseCase.kt
 
 ### ViewModel Implementation
 
-- [ ] T032 [US1] Create RideRecordingViewModel in app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt
-- [ ] T033 [US1] Implement startRide() action in RideRecordingViewModel
-- [ ] T034 [US1] Implement stopRide() action with save/discard dialog in RideRecordingViewModel
-- [ ] T035 [US1] Add StateFlow-based UI state management in RideRecordingViewModel
+- [X] T032 [US1] Create RideRecordingViewModel in app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt
+- [X] T033 [US1] Implement startRide() action in RideRecordingViewModel
+- [X] T034 [US1] Implement stopRide() action with save/discard dialog in RideRecordingViewModel
+- [X] T035 [US1] Add StateFlow-based UI state management in RideRecordingViewModel
 
 ### UI Implementation
 
-- [ ] T036 [US1] Update LiveRideScreen with Start/Stop buttons in app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt
-- [ ] T037 [P] [US1] Create SaveRideDialog composable in app/src/main/java/com/example/bikeredlights/ui/components/ride/SaveRideDialog.kt
-- [ ] T038 [US1] Wire ViewModel to LiveRideScreen UI in app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt
+- [X] T036 [US1] Update LiveRideScreen with Start/Stop buttons in app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt
+- [X] T037 [P] [US1] Create SaveRideDialog composable in app/src/main/java/com/example/bikeredlights/ui/components/ride/SaveRideDialog.kt
+- [X] T038 [US1] Wire ViewModel to LiveRideScreen UI in app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt
 
 ### Test Tasks (Required per spec SC-007)
 
