@@ -6,14 +6,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.bikeredlights.ui.screens.SpeedTrackingScreen
+import com.example.bikeredlights.ui.screens.settings.RideTrackingSettingsScreen
 import com.example.bikeredlights.ui.screens.settings.SettingsHomeScreen
+import com.example.bikeredlights.ui.screens.settings.SettingsViewModel
 import com.example.bikeredlights.ui.viewmodel.SpeedTrackingViewModel
 
 /**
@@ -23,15 +27,18 @@ import com.example.bikeredlights.ui.viewmodel.SpeedTrackingViewModel
  * - Live tab (speed tracking)
  * - Rides tab (placeholder for Feature 3)
  * - Settings tab (Feature 2A)
+ * - Settings detail screens (Ride & Tracking)
  *
  * @param navController Navigation controller for managing navigation state
  * @param speedTrackingViewModel ViewModel for speed tracking (existing v0.1.0)
+ * @param settingsViewModel ViewModel for settings (Feature 2A)
  * @param modifier Modifier for NavHost
  */
 @Composable
 fun AppNavigation(
     navController: NavHostController,
     speedTrackingViewModel: SpeedTrackingViewModel,
+    settingsViewModel: SettingsViewModel,
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -52,9 +59,37 @@ fun AppNavigation(
             RidesPlaceholderScreen()
         }
 
-        // Settings tab - Feature 2A
+        // Settings tab - Feature 2A home screen
         composable(BottomNavDestination.SETTINGS.route) {
-            SettingsHomeScreen()
+            SettingsHomeScreen(
+                onRideTrackingClick = {
+                    navController.navigate(SettingsDestination.RIDE_TRACKING.route)
+                }
+            )
+        }
+
+        // Settings detail screen - Ride & Tracking
+        composable(SettingsDestination.RIDE_TRACKING.route) {
+            val uiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
+
+            RideTrackingSettingsScreen(
+                unitsSystem = uiState.unitsSystem,
+                gpsAccuracy = uiState.gpsAccuracy,
+                autoPauseConfig = uiState.autoPauseConfig,
+                onUnitsChange = { units ->
+                    settingsViewModel.setUnitsSystem(units)
+                },
+                onGpsAccuracyChange = { accuracy ->
+                    settingsViewModel.setGpsAccuracy(accuracy)
+                },
+                onAutoPauseChange = { config ->
+                    settingsViewModel.setAutoPauseEnabled(config.enabled)
+                    settingsViewModel.setAutoPauseThreshold(config.thresholdMinutes)
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

@@ -63,3 +63,28 @@ enum class BottomNavDestination(
         }
     }
 }
+
+/**
+ * Settings detail destinations (nested under Settings tab).
+ *
+ * These are the detail screens accessible from the Settings home screen.
+ */
+enum class SettingsDestination(
+    val route: String
+) {
+    /**
+     * Ride & Tracking settings detail screen.
+     * Contains: Units, GPS Accuracy, Auto-Pause settings.
+     */
+    RIDE_TRACKING(route = "settings/ride_tracking");
+
+    companion object {
+        /**
+         * Get destination from route string.
+         * Returns null if route doesn't match any destination.
+         */
+        fun fromRoute(route: String?): SettingsDestination? {
+            return entries.find { it.route == route }
+        }
+    }
+}

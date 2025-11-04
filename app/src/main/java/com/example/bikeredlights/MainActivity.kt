@@ -20,9 +20,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.bikeredlights.data.repository.LocationRepositoryImpl
+import com.example.bikeredlights.data.repository.SettingsRepositoryImpl
 import com.example.bikeredlights.domain.usecase.TrackLocationUseCase
 import com.example.bikeredlights.ui.navigation.AppNavigation
 import com.example.bikeredlights.ui.navigation.BottomNavDestination
+import com.example.bikeredlights.ui.screens.settings.SettingsViewModel
 import com.example.bikeredlights.ui.theme.BikeRedlightsTheme
 import com.example.bikeredlights.ui.viewmodel.SpeedTrackingViewModel
 import com.example.bikeredlights.ui.viewmodel.SpeedTrackingViewModelFactory
@@ -36,29 +38,41 @@ import com.example.bikeredlights.ui.viewmodel.SpeedTrackingViewModelFactory
  *
  * Uses manual dependency injection (Hilt deferred per constitution exception):
  * 1. Create LocationRepositoryImpl with FusedLocationProviderClient
- * 2. Create TrackLocationUseCase with repository
- * 3. Create SpeedTrackingViewModel with use case via factory
- * 4. Render Scaffold with NavigationBar and AppNavigation
+ * 2. Create SettingsRepositoryImpl with DataStore
+ * 3. Create TrackLocationUseCase with location repository
+ * 4. Create SpeedTrackingViewModel with use case via factory
+ * 5. Create SettingsViewModel with settings repository
+ * 6. Render Scaffold with NavigationBar and AppNavigation
  *
  * TODO v0.3.0: Migrate to Hilt dependency injection (@AndroidEntryPoint)
  */
 class MainActivity : ComponentActivity() {
 
     private lateinit var speedTrackingViewModel: SpeedTrackingViewModel
+    private lateinit var settingsViewModel: SettingsViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         // Manual dependency injection (until Hilt is re-enabled in v0.3.0)
+
+        // Location tracking dependencies (v0.1.0)
         val locationRepository = LocationRepositoryImpl(
             context = applicationContext
         )
         val trackLocationUseCase = TrackLocationUseCase(
             locationRepository = locationRepository
         )
-        val factory = SpeedTrackingViewModelFactory(locationRepository, trackLocationUseCase)
-        speedTrackingViewModel = ViewModelProvider(this, factory)[SpeedTrackingViewModel::class.java]
+        val speedTrackingFactory = SpeedTrackingViewModelFactory(locationRepository, trackLocationUseCase)
+        speedTrackingViewModel = ViewModelProvider(this, speedTrackingFactory)[SpeedTrackingViewModel::class.java]
+
+        // Settings dependencies (v0.2.0)
+        val settingsRepository = SettingsRepositoryImpl(
+            context = applicationContext
+        )
+        // No factory needed for SettingsViewModel since ViewModelProvider can instantiate directly
+        settingsViewModel = SettingsViewModel(settingsRepository)
 
         setContent {
             BikeRedlightsTheme {
@@ -107,6 +121,7 @@ class MainActivity : ComponentActivity() {
                     AppNavigation(
                         navController = navController,
                         speedTrackingViewModel = speedTrackingViewModel,
+                        settingsViewModel = settingsViewModel,
                         modifier = Modifier.padding(paddingValues)
                     )
                 }
