@@ -137,9 +137,9 @@ A commuter cycling through urban areas with frequent stops at red lights and tra
 - **SC-001**: Users can navigate from any screen to Settings tab and back within 2 taps
 - **SC-002**: Users can change Units setting and see speed display update within 1 second
 - **SC-003**: Settings changes persist across app restarts 100% of the time (tested with 20 restart cycles)
-- **SC-004**: Users with Battery Saver enabled observe 30-50% reduction in GPS-related battery consumption during 1-hour ride compared to High Accuracy
+- **SC-004**: Users with Battery Saver enabled observe 30-50% reduction in GPS-related battery consumption during 1-hour ride compared to High Accuracy (measured via Android Battery Historian comparing identical route playback with GPS speed 25 km/h constant)
 - **SC-005**: Users with Auto-Pause enabled at 5-minute threshold automatically pause after remaining stationary for 5 minutes (+/- 10 seconds)
-- **SC-006**: Settings UI renders and responds to user input within 100ms on mid-range Android devices (API 26+)
+- **SC-006**: Settings UI renders and responds to user input within 100ms on Pixel 4a (API 33) or equivalent (4GB RAM, Snapdragon 730G or better, API 26+)
 - **SC-007**: 100% of settings changes save successfully to DataStore under normal conditions (tested with 100 consecutive saves)
 - **SC-008**: App launches successfully and displays default settings within 2 seconds even when DataStore fails to load (fallback defaults applied)
 - **SC-009**: Settings screens maintain readability at 200% system font scaling (accessibility requirement)

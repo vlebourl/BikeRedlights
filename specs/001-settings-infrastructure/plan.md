@@ -238,9 +238,23 @@ app/src/androidTest/java/com/example/bikeredlights/
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-**No violations detected. This section is not applicable.**
+### Constitutional Exception: Manual DI Instead of Dagger Hilt
 
-Feature 2A fully complies with CLAUDE.md Android Development Standards. No complexity justifications needed.
+**Constitution Requirement**: CLAUDE.md:94 mandates "**DI**: Dagger Hilt"
+
+**Exception Requested**: Feature 2A uses manual dependency injection instead of Dagger Hilt
+
+**Justification**:
+- **Scope**: Only 3 settings requiring 1 ViewModel + 1 Repository = minimal DI needs
+- **Complexity Cost**: Hilt adds 1000+ LOC (modules, annotations, generated code) for 2 injections
+- **Simplicity Benefit**: Manual DI (constructor injection) more readable for small feature
+- **Migration Path**: Hilt will be enabled in v0.3.0 when feature count justifies overhead (5+ ViewModels)
+- **Precedent**: v0.1.0 established manual DI pattern; Feature 2A maintains consistency
+- **Risk**: Low - manual DI testable via constructor injection, no lifecycle issues
+
+**Impact**: Temporary technical debt, resolved in v0.3.0 per roadmap
+
+**Approval**: Required before Phase 2 implementation begins
 
 ---
 

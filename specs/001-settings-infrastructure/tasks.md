@@ -37,7 +37,7 @@ BikeRedlights uses Android Clean Architecture:
 
 **Tests for Setup Phase**:
 - [ ] T008 [P] Unit tests for AutoPauseConfig validation (valid/invalid thresholds) in `app/src/test/java/com/example/bikeredlights/domain/model/settings/AutoPauseConfigTest.kt`
-- [ ] T009 [P] Unit tests for UnitConversions (kmh→mph, km→miles accuracy) in `app/src/test/java/com/example/bikeredlights/domain/util/UnitConversionsTest.kt`
+- [ ] T009 [P] Unit tests for UnitConversions (kmh→mph precision to 2 decimals, km→miles accuracy, edge cases: 0.0, 0.1, 100.0, 999.9 values, verify conversion factor 0.621371) in `app/src/test/java/com/example/bikeredlights/domain/util/UnitConversionsTest.kt`
 - [ ] T010 [P] Unit tests for SettingsRepository (read defaults, write/read persistence, error handling) in `app/src/test/java/com/example/bikeredlights/data/repository/SettingsRepositoryTest.kt`
 
 **Checkpoint**: Domain models, repository, and utilities are fully implemented and tested
@@ -82,9 +82,10 @@ BikeRedlights uses Android Clean Architecture:
 
 ### Integration & Testing for US1
 
-- [ ] T022 [US1] Update SpeedTrackingViewModel (from v0.1.0) to read unitsSystem from SettingsRepository and convert speed display
+- [ ] T022 [US1] Update SpeedTrackingViewModel (UI layer, from v0.1.0) to inject SettingsRepository, collect unitsSystem Flow, and apply UnitConversions.toMph() when Imperial selected (affects live speed display only)
 - [ ] T023 [US1] UI test: Change units to Imperial → Verify SegmentedButton selection changes in `app/src/androidTest/java/com/example/bikeredlights/ui/screens/settings/SettingsNavigationTest.kt`
 - [ ] T024 [US1] Instrumented test: Change units to Imperial → Restart app → Verify Imperial persists in `app/src/androidTest/java/com/example/bikeredlights/ui/screens/settings/SettingsPersistenceTest.kt`
+- [ ] T024b [US1] Integration test: Change units to Imperial during simulated location updates → Verify speed display updates within 1 second with correct mph value in `app/src/androidTest/java/com/example/bikeredlights/ui/screens/settings/SettingsPersistenceTest.kt`
 
 **Checkpoint**: User Story 1 COMPLETE - Units setting fully functional, persists, and affects speed display
 
@@ -100,7 +101,7 @@ BikeRedlights uses Android Clean Architecture:
 
 - [ ] T025 [US2] Add GPS Accuracy SegmentedButtonSetting to RideTrackingSettingsScreen (High Accuracy/Battery Saver) in `app/src/main/java/com/example/bikeredlights/ui/screens/settings/RideTrackingSettingsScreen.kt`
 - [ ] T026 [US2] Wire GPS Accuracy setting to SettingsViewModel (add setGpsAccuracy method)
-- [ ] T027 [US2] Update LocationRepository (from v0.1.0) to read gpsAccuracy from SettingsRepository and configure update interval (1s vs 3-5s)
+- [ ] T027 [US2] Update LocationRepository (data layer, from v0.1.0) to inject SettingsRepository, collect gpsAccuracy Flow, and configure FusedLocationProviderClient interval: 1000ms (HIGH_ACCURACY) or 4000ms (BATTERY_SAVER)
 
 ### Testing for US2
 
@@ -124,7 +125,7 @@ BikeRedlights uses Android Clean Architecture:
 ### Implementation for US3
 
 - [ ] T031 [US3] Add Auto-Pause ToggleWithPickerSetting to RideTrackingSettingsScreen (toggle, picker with 1,2,3,5,10,15 options) in `app/src/main/java/com/example/bikeredlights/ui/screens/settings/RideTrackingSettingsScreen.kt`
-- [ ] T032 [US3] Wire Auto-Pause setting to SettingsViewModel (add setAutoPauseEnabled and setAutoPauseThreshold methods)
+- [ ] T032 [US3] Wire Auto-Pause setting to SettingsViewModel (add setAutoPauseEnabled and setAutoPauseThreshold methods for persistence only; actual ride pause/resume logic deferred to Feature 1A TrackLocationUseCase)
 
 ### Testing for US3
 
