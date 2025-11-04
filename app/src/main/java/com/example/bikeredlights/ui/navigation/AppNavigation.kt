@@ -83,8 +83,8 @@ fun AppNavigation(
                     settingsViewModel.setGpsAccuracy(accuracy)
                 },
                 onAutoPauseChange = { config ->
-                    settingsViewModel.setAutoPauseEnabled(config.enabled)
-                    settingsViewModel.setAutoPauseThreshold(config.thresholdMinutes)
+                    // Use atomic update to avoid race condition
+                    settingsViewModel.setAutoPauseConfig(config)
                 },
                 onNavigateBack = {
                     navController.popBackStack()

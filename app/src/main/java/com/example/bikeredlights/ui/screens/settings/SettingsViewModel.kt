@@ -94,6 +94,20 @@ class SettingsViewModel(
             settingsRepository.setAutoPauseConfig(newConfig)
         }
     }
+
+    /**
+     * Update user's auto-pause configuration atomically.
+     *
+     * Use this method when updating both enabled state and threshold simultaneously
+     * to avoid race conditions.
+     *
+     * @param config New auto-pause configuration
+     */
+    fun setAutoPauseConfig(config: AutoPauseConfig) {
+        viewModelScope.launch {
+            settingsRepository.setAutoPauseConfig(config)
+        }
+    }
 }
 
 /**
