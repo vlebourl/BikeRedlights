@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
 
         // Manual dependency injection (until Hilt is re-enabled in v0.3.0)
 
-        // Settings dependencies (v0.2.0) - created first since used by SpeedTrackingViewModel
+        // Settings dependencies (v0.2.0) - created first since used by multiple components
         val settingsRepository = SettingsRepositoryImpl(
             context = applicationContext
         )
@@ -65,7 +65,8 @@ class MainActivity : ComponentActivity() {
 
         // Location tracking dependencies (v0.1.0, v0.2.0 update with SettingsRepository)
         val locationRepository = LocationRepositoryImpl(
-            context = applicationContext
+            context = applicationContext,
+            settingsRepository = settingsRepository  // v0.2.0: For GPS accuracy configuration
         )
         val trackLocationUseCase = TrackLocationUseCase(
             locationRepository = locationRepository
