@@ -323,7 +323,7 @@ class RideRecordingService : Service() {
     }
 
     /**
-     * Update ride distance by calculating from last two track points.
+     * Update ride statistics (distance, speeds) from latest track points.
      */
     private suspend fun updateRideDistance(rideId: Long) {
         // Get last two track points
@@ -336,12 +336,37 @@ class RideRecordingService : Service() {
         // Calculate distance
         val distance = calculateDistanceUseCase(previousPoint, lastPoint)
 
+        // Calculate current speed from GPS data
+        // Speed is in meters per second; stationary detection: < 1 km/h (0.278 m/s) = 0.0
+        val currentSpeed = if (lastPoint.speedMetersPerSec < 0.278) {
+            0.0  // Stationary
+        } else {
+            lastPoint.speedMetersPerSec
+        }
+
         // Get current ride
         val ride = rideRepository.getRideById(rideId) ?: return
 
-        // Update ride distance
+        // Update max speed
+        val newMaxSpeed = maxOf(ride.maxSpeedMetersPerSec, currentSpeed)
+
+        // Calculate moving duration (exclude paused time)
+        val elapsedDuration = System.currentTimeMillis() - ride.startTime
+        val movingDuration = elapsedDuration - ride.manualPausedDurationMillis - ride.autoPausedDurationMillis
+
+        // Calculate average speed (distance / moving time)
+        val newDistance = ride.distanceMeters + distance
+        val avgSpeed = if (movingDuration > 0) {
+            newDistance / (movingDuration / 1000.0)  // Convert ms to seconds
+        } else {
+            0.0
+        }
+
+        // Update ride statistics
         val updatedRide = ride.copy(
-            distanceMeters = ride.distanceMeters + distance
+            distanceMeters = newDistance,
+            maxSpeedMetersPerSec = newMaxSpeed,
+            avgSpeedMetersPerSec = avgSpeed
         )
 
         rideRepository.updateRide(updatedRide)
