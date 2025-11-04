@@ -536,6 +536,17 @@ After comprehensive analysis, two features were split for more atomic developmen
 
 ## ✅ Foundation (Released)
 
+### v0.2.0 - Basic Settings Infrastructure
+**Status**: ✅ Released (2025-11-04)
+- Settings tab with card-based layout
+- Ride & Tracking settings: Units (Metric/Imperial), GPS Accuracy (High/Battery Saver), Auto-Pause
+- DataStore persistence across app restarts
+- Bottom navigation bar with 3 tabs (Live, Rides, Settings)
+- Reusable Material 3 UI components (SegmentedButtonSetting, ToggleWithPickerSetting)
+- 57 unit tests + 12+ instrumented tests passing
+- Full accessibility support (48dp touch targets, TalkBack)
+- Bug fix: Auto-pause toggle race condition resolved
+
 ### v0.1.0 - Real-Time Speed Tracking
 **Status**: ✅ Released (2025-11-03)
 - Real-time speedometer (km/h)
@@ -549,7 +560,7 @@ After comprehensive analysis, two features were split for more atomic developmen
 ## 📋 Features in Brainstorming Queue
 
 ### Feature 1: Ride Tracking & Review ⭐
-**Status**: Fully scoped, ready for prioritization (UPDATED after Settings discussion)
+**Status**: Fully scoped, ready for implementation (next in sequence)
 **Complexity**: High (7-10 days)
 **Target Users**: Commuters + delivery riders
 **Core Value**: Personal/professional ride logging with detailed analytics
@@ -1323,7 +1334,7 @@ After atomicity review and dependency analysis, this is the optimal sequence:
 
 | # | Feature | Release | Days | Cumulative | Dependencies | Deliverable |
 |---|---------|---------|------|------------|--------------|-------------|
-| 1 | F2A: Basic Settings | v0.2.0 | 2-3 | 2-3 | DataStore | Settings foundation |
+| 1 | F2A: Basic Settings | v0.2.0 ✅ | 2-3 | 2-3 | DataStore | Settings foundation |
 | 2 | F1A: Core Recording | v0.3.0 | 4-5 | 6-8 | F2A | Ride tracking (no maps) |
 | 3 | F3: Ride History | v0.4.0 | 3-5 | 9-13 | F1A | **MVP COMPLETE** ✅ |
 | 4 | F1B: Maps Integration | v0.5.0 | 3-4 | 12-17 | F1A, Google Maps | Enhanced MVP with maps |
@@ -1340,10 +1351,13 @@ After atomicity review and dependency analysis, this is the optimal sequence:
 
 **Goal:** Deliver usable ride tracking product ASAP
 
-**v0.2.0 - Basic Settings** (2-3 days)
+**v0.2.0 - Basic Settings** (2-3 days) ✅ **COMPLETE - Released 2025-11-04**
 - First feature after v0.1.0
 - Settings tab with Ride & Tracking card
 - Units, GPS accuracy, auto-pause settings
+- Bottom navigation bar with 3 tabs
+- Reusable Material 3 UI components
+- 57 unit tests + 12+ instrumented tests
 - ✅ **Milestone:** Settings infrastructure complete
 
 **v0.3.0 - Core Ride Recording** (4-5 days, 6-8 cumulative)
@@ -1417,9 +1431,9 @@ After atomicity review and dependency analysis, this is the optimal sequence:
 ### **📈 Milestone Timeline**
 
 ```
-Day 0:    v0.1.0 (Current - Speed tracking)
-Day 2-3:  v0.2.0 (Settings)
-Day 6-8:  v0.3.0 (Core recording)
+Day 0:    v0.1.0 (Speed tracking) ✅
+Day 2-3:  v0.2.0 (Settings) ✅ COMPLETE
+Day 6-8:  v0.3.0 (Core recording) ← NEXT
 Day 9-13: v0.4.0 (MVP COMPLETE) ✅✅✅
 Day 12-17: v0.5.0 (Maps enhancement)
 Day 13-19: v0.6.0 (Stop settings)
