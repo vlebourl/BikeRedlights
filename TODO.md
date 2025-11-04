@@ -1,6 +1,6 @@
 # BikeRedlights - Project TODO
 
-> **Last Updated**: 2025-11-02
+> **Last Updated**: 2025-11-04
 > **Purpose**: Unified progress tracking for all features, tasks, and pending work
 
 ## 📋 In Progress
@@ -44,6 +44,39 @@ _(No features currently planned)_
 ## ✅ Completed
 
 _Features completed and merged_
+
+### Feature 2A: Basic Settings Infrastructure
+- **Completed**: 2025-11-04
+- **Description**: Implemented comprehensive settings system with DataStore persistence, Material 3 UI, and bottom navigation
+- **Status**: ✅ All 3 user stories complete, 57 unit tests passing, 12+ instrumented tests, accessibility validated
+- **Details**:
+  - **User Story 1: Select Preferred Units (Metric/Imperial)**
+    - Domain: UnitsSystem enum, conversion utilities
+    - Data: SettingsRepository with DataStore Preferences
+    - UI: SegmentedButtonSetting composable, RideTrackingSettingsScreen
+    - Persistence: Units selection persists across app restarts
+  - **User Story 2: Adjust GPS Accuracy for Battery Life**
+    - Domain: GpsAccuracy enum (HIGH_ACCURACY: 1s, BATTERY_SAVER: 4s)
+    - Integration: LocationRepository reads GPS accuracy from settings, configures update intervals dynamically
+    - UI: GPS Accuracy toggle in Ride & Tracking screen
+    - Persistence: GPS accuracy persists and affects location tracking
+  - **User Story 3: Enable Auto-Pause for Commutes**
+    - Domain: AutoPauseConfig model (enabled: Boolean, thresholdMinutes: Int)
+    - UI: ToggleWithPickerSetting composable with threshold picker (1-15 minutes)
+    - Persistence: Auto-pause config (toggle + threshold) persists across app restarts
+    - Note: Actual pause/resume logic deferred to Feature 1A (Core Ride Recording)
+  - **Navigation Infrastructure**:
+    - Bottom navigation bar with 3 tabs: Live, Rides, Settings
+    - SettingsScreen with navigation to Ride & Tracking detail screen
+    - SettingsViewModel with StateFlow for reactive UI updates
+  - **Quality Assurance**:
+    - 48dp minimum touch targets (WCAG compliant)
+    - Comprehensive accessibility (contentDescription, TalkBack support)
+    - Material 3 theming with dark mode support
+    - Preview compositions for all components
+- **Test Coverage**: 57 unit tests, 12+ instrumented tests
+- **Architecture**: Clean Architecture (UI → ViewModel → Domain → Data), MVVM pattern
+- **Git Commits**: 20+ commits across 6 phases
 
 ### v0.0.0 - Buildable Project Skeleton
 - **Completed**: 2025-11-02
