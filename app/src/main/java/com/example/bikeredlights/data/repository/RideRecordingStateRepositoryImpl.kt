@@ -1,0 +1,177 @@
+package com.example.bikeredlights.data.repository
+
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import com.example.bikeredlights.domain.model.RideRecordingState
+import com.example.bikeredlights.domain.repository.RideRecordingStateRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * DataStore extension for recording state preferences.
+ */
+private val Context.recordingStateDataStore: DataStore<Preferences> by preferencesDataStore(
+    name = "recording_state"
+)
+
+/**
+ * Implementation of RideRecordingStateRepository using DataStore Preferences.
+ *
+ * **Design Principles**:
+ * - In-memory StateFlow for immediate UI updates
+ * - DataStore persistence for process death recovery
+ * - Thread-safe operations (StateFlow + DataStore)
+ * - Singleton to ensure single source of truth
+ *
+ * **State Persistence**:
+ * - Stores current state type (Idle, Recording, Paused, Stopped)
+ * - Stores current ride ID
+ * - Restores state on app restart
+ *
+ * **Flow Behavior**:
+ * - Hot StateFlow (always has value)
+ * - Emits immediately on collect
+ * - Updates all collectors on state change
+ *
+ * @property context Application context for DataStore
+ */
+@Singleton
+class RideRecordingStateRepositoryImpl @Inject constructor(
+    @ApplicationContext private val context: Context
+) : RideRecordingStateRepository {
+
+    /**
+     * In-memory state for immediate access.
+     */
+    private val _recordingState = MutableStateFlow<RideRecordingState>(RideRecordingState.Idle)
+
+    /**
+     * DataStore preference keys.
+     */
+    private companion object {
+        val STATE_TYPE_KEY = stringPreferencesKey("state_type")
+        val RIDE_ID_KEY = longPreferencesKey("ride_id")
+
+        // State type constants
+        const val STATE_IDLE = "idle"
+        const val STATE_RECORDING = "recording"
+        const val STATE_MANUALLY_PAUSED = "manually_paused"
+        const val STATE_AUTO_PAUSED = "auto_paused"
+        const val STATE_STOPPED = "stopped"
+    }
+
+    init {
+        // Restore state from DataStore on initialization
+        // This will be called when repository is first injected
+        CoroutineScope(Dispatchers.IO).launch {
+            restoreStateFromDataStore()
+        }
+    }
+
+    override fun getRecordingState(): Flow<RideRecordingState> {
+        return _recordingState.asStateFlow()
+    }
+
+    override suspend fun updateRecordingState(state: RideRecordingState) {
+        // Update in-memory state
+        _recordingState.value = state
+
+        // Persist to DataStore
+        context.recordingStateDataStore.edit { preferences ->
+            when (state) {
+                is RideRecordingState.Idle -> {
+                    preferences[STATE_TYPE_KEY] = STATE_IDLE
+                    preferences.remove(RIDE_ID_KEY)
+                }
+                is RideRecordingState.Recording -> {
+                    preferences[STATE_TYPE_KEY] = STATE_RECORDING
+                    preferences[RIDE_ID_KEY] = state.rideId
+                }
+                is RideRecordingState.ManuallyPaused -> {
+                    preferences[STATE_TYPE_KEY] = STATE_MANUALLY_PAUSED
+                    preferences[RIDE_ID_KEY] = state.rideId
+                }
+                is RideRecordingState.AutoPaused -> {
+                    preferences[STATE_TYPE_KEY] = STATE_AUTO_PAUSED
+                    preferences[RIDE_ID_KEY] = state.rideId
+                }
+                is RideRecordingState.Stopped -> {
+                    preferences[STATE_TYPE_KEY] = STATE_STOPPED
+                    preferences[RIDE_ID_KEY] = state.rideId
+                }
+            }
+        }
+    }
+
+    override suspend fun clearRecordingState() {
+        // Update in-memory state
+        _recordingState.value = RideRecordingState.Idle
+
+        // Clear DataStore
+        context.recordingStateDataStore.edit { preferences ->
+            preferences.clear()
+        }
+    }
+
+    override suspend fun getCurrentState(): RideRecordingState {
+        return _recordingState.value
+    }
+
+    /**
+     * Restore state from DataStore on initialization.
+     */
+    private suspend fun restoreStateFromDataStore() {
+        val preferences = context.recordingStateDataStore.data.first()
+        val stateType = preferences[STATE_TYPE_KEY] ?: STATE_IDLE
+        val rideId = preferences[RIDE_ID_KEY]
+
+        val restoredState = when (stateType) {
+            STATE_IDLE -> RideRecordingState.Idle
+            STATE_RECORDING -> {
+                if (rideId != null) {
+                    RideRecordingState.Recording(rideId)
+                } else {
+                    RideRecordingState.Idle  // Fallback if data corrupted
+                }
+            }
+            STATE_MANUALLY_PAUSED -> {
+                if (rideId != null) {
+                    RideRecordingState.ManuallyPaused(rideId)
+                } else {
+                    RideRecordingState.Idle
+                }
+            }
+            STATE_AUTO_PAUSED -> {
+                if (rideId != null) {
+                    RideRecordingState.AutoPaused(rideId)
+                } else {
+                    RideRecordingState.Idle
+                }
+            }
+            STATE_STOPPED -> {
+                if (rideId != null) {
+                    RideRecordingState.Stopped(rideId)
+                } else {
+                    RideRecordingState.Idle
+                }
+            }
+            else -> RideRecordingState.Idle  // Unknown state
+        }
+
+        _recordingState.value = restoredState
+    }
+}

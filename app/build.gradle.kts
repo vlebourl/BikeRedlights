@@ -5,8 +5,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    // TODO v0.1.0: Re-enable Hilt after resolving Gradle plugin compatibility
-    // alias(libs.plugins.hilt)
+    alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
 }
@@ -104,11 +103,10 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
-    // Dependency Injection - Hilt (temporarily disabled for v0.0.0)
-    // TODO v0.1.0: Re-enable Hilt after resolving Gradle plugin compatibility
-    // implementation(libs.hilt.android)
-    // ksp(libs.hilt.compiler)
-    // implementation(libs.hilt.navigation.compose)
+    // Dependency Injection - Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
 
     // Database - Room
     implementation(libs.androidx.room.runtime)
