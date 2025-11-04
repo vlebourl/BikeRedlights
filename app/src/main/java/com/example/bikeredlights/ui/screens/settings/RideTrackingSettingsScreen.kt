@@ -23,6 +23,7 @@ import com.example.bikeredlights.domain.model.settings.GpsAccuracy
 import com.example.bikeredlights.domain.model.settings.AutoPauseConfig
 import com.example.bikeredlights.domain.model.settings.UnitsSystem
 import com.example.bikeredlights.ui.components.settings.SegmentedButtonSetting
+import com.example.bikeredlights.ui.components.settings.ToggleWithPickerSetting
 import com.example.bikeredlights.ui.theme.BikeRedlightsTheme
 
 /**
@@ -113,13 +114,14 @@ fun RideTrackingSettingsScreen(
                 )
 
                 // User Story 3: Auto-Pause Rides (toggle + duration picker)
-                // TODO: Uncomment in Phase 5 when implementing User Story 3
-                /*
                 ToggleWithPickerSetting(
                     label = "Auto-Pause Rides",
                     enabled = autoPauseConfig.enabled,
                     selectedValue = autoPauseConfig.thresholdMinutes,
                     options = AutoPauseConfig.VALID_THRESHOLDS,
+                    valueFormatter = { minutes ->
+                        if (minutes == 1) "1 minute" else "$minutes minutes"
+                    },
                     onEnabledChange = { enabled ->
                         onAutoPauseChange(autoPauseConfig.copy(enabled = enabled))
                     },
@@ -127,7 +129,6 @@ fun RideTrackingSettingsScreen(
                         onAutoPauseChange(autoPauseConfig.copy(thresholdMinutes = minutes))
                     }
                 )
-                */
             }
         }
     }
