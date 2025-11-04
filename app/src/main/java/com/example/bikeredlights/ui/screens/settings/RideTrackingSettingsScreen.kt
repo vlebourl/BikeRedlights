@@ -100,8 +100,6 @@ fun RideTrackingSettingsScreen(
                 )
 
                 // User Story 2: GPS Accuracy (High Accuracy/Battery Saver)
-                // TODO: Uncomment in Phase 4 when implementing User Story 2
-                /*
                 SegmentedButtonSetting(
                     label = "GPS Accuracy",
                     option1Label = "High Accuracy",
@@ -113,7 +111,6 @@ fun RideTrackingSettingsScreen(
                         )
                     }
                 )
-                */
 
                 // User Story 3: Auto-Pause Rides (toggle + duration picker)
                 // TODO: Uncomment in Phase 5 when implementing User Story 3
