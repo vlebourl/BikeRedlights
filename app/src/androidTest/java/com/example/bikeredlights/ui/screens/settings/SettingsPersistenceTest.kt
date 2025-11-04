@@ -199,4 +199,88 @@ class SettingsPersistenceTest {
         val persistedUnits = settingsRepository.unitsSystem.first()
         assertEquals(UnitsSystem.IMPERIAL, persistedUnits)
     }
+
+    @Test
+    fun autoPauseConfig_defaultsToDisabled() = runTest {
+        // When: Reading auto-pause config without setting it
+        val autoPauseConfig = settingsRepository.autoPauseConfig.first()
+
+        // Then: Default is disabled with 5 minute threshold
+        assertEquals(false, autoPauseConfig.enabled)
+        assertEquals(5, autoPauseConfig.thresholdMinutes)
+    }
+
+    @Test
+    fun autoPauseConfig_persistsEnabledAcrossReads() = runTest {
+        // Given: Enable Auto-Pause with 10 minute threshold
+        val config = AutoPauseConfig(enabled = true, thresholdMinutes = 10)
+        settingsRepository.setAutoPauseConfig(config)
+
+        // When: Creating new repository instance (simulates app restart)
+        val newRepository = SettingsRepositoryImpl(context)
+        val persistedConfig = newRepository.autoPauseConfig.first()
+
+        // Then: Auto-Pause enabled with 10 minutes persists
+        assertEquals(true, persistedConfig.enabled)
+        assertEquals(10, persistedConfig.thresholdMinutes)
+    }
+
+    @Test
+    fun autoPauseConfig_persistsDisabledWithCustomThreshold() = runTest {
+        // Given: Disable Auto-Pause but set custom threshold
+        val config = AutoPauseConfig(enabled = false, thresholdMinutes = 3)
+        settingsRepository.setAutoPauseConfig(config)
+
+        // When: Creating new repository instance
+        val newRepository = SettingsRepositoryImpl(context)
+        val persistedConfig = newRepository.autoPauseConfig.first()
+
+        // Then: Both enabled state and threshold persist
+        assertEquals(false, persistedConfig.enabled)
+        assertEquals(3, persistedConfig.thresholdMinutes)
+    }
+
+    @Test
+    fun autoPauseConfig_uiChangePersistsInDataStore() = runTest {
+        // Given: Initial Auto-Pause disabled
+        var currentAutoPauseConfig = AutoPauseConfig.default()
+
+        // When: Rendering UI and enabling Auto-Pause with 10 minutes
+        composeTestRule.setContent {
+            BikeRedlightsTheme {
+                RideTrackingSettingsScreen(
+                    unitsSystem = UnitsSystem.METRIC,
+                    gpsAccuracy = GpsAccuracy.HIGH_ACCURACY,
+                    autoPauseConfig = currentAutoPauseConfig,
+                    onUnitsChange = {},
+                    onGpsAccuracyChange = {},
+                    onAutoPauseChange = { newConfig ->
+                        currentAutoPauseConfig = newConfig
+                        runBlocking {
+                            settingsRepository.setAutoPauseConfig(newConfig)
+                        }
+                    },
+                    onNavigateBack = {}
+                )
+            }
+        }
+
+        // Enable Auto-Pause by clicking the toggle
+        composeTestRule
+            .onNodeWithText("Auto-Pause Rides")
+            .performClick()
+
+        // Change threshold to 10 minutes
+        composeTestRule
+            .onNodeWithText("5 minutes")
+            .performClick()
+        composeTestRule
+            .onNodeWithText("10 minutes")
+            .performClick()
+
+        // Then: Setting persists in DataStore
+        val persistedConfig = settingsRepository.autoPauseConfig.first()
+        assertEquals(true, persistedConfig.enabled)
+        assertEquals(10, persistedConfig.thresholdMinutes)
+    }
 }

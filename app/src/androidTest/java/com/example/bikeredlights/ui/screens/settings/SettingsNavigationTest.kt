@@ -196,4 +196,76 @@ class SettingsNavigationTest {
             .onNodeWithText("Battery Saver")
             .assertIsDisplayed()
     }
+
+    @Test
+    fun rideTrackingSettingsScreen_enableAutoPause_showsPickerAndUpdatesToggle() {
+        // Given: Track Auto-Pause config
+        var currentAutoPauseConfig = AutoPauseConfig.default()
+
+        // When: Rendering with Auto-Pause disabled, then enabling it
+        composeTestRule.setContent {
+            BikeRedlightsTheme {
+                RideTrackingSettingsScreen(
+                    unitsSystem = UnitsSystem.METRIC,
+                    gpsAccuracy = GpsAccuracy.HIGH_ACCURACY,
+                    autoPauseConfig = currentAutoPauseConfig,
+                    onUnitsChange = {},
+                    onGpsAccuracyChange = {},
+                    onAutoPauseChange = { config ->
+                        currentAutoPauseConfig = config
+                    },
+                    onNavigateBack = {}
+                )
+            }
+        }
+
+        // Initially, Auto-Pause label is displayed but picker is not
+        composeTestRule
+            .onNodeWithText("Auto-Pause Rides")
+            .assertIsDisplayed()
+
+        // Click the toggle to enable Auto-Pause
+        composeTestRule
+            .onNodeWithText("Auto-Pause Rides")
+            .performClick()
+
+        // Then: Auto-Pause is enabled
+        assertEquals(true, currentAutoPauseConfig.enabled)
+    }
+
+    @Test
+    fun rideTrackingSettingsScreen_changeAutoPauseThreshold_updatesValue() {
+        // Given: Track Auto-Pause threshold
+        var currentAutoPauseConfig = AutoPauseConfig(enabled = true, thresholdMinutes = 5)
+
+        // When: Rendering with Auto-Pause enabled
+        composeTestRule.setContent {
+            BikeRedlightsTheme {
+                RideTrackingSettingsScreen(
+                    unitsSystem = UnitsSystem.METRIC,
+                    gpsAccuracy = GpsAccuracy.HIGH_ACCURACY,
+                    autoPauseConfig = currentAutoPauseConfig,
+                    onUnitsChange = {},
+                    onGpsAccuracyChange = {},
+                    onAutoPauseChange = { config ->
+                        currentAutoPauseConfig = config
+                    },
+                    onNavigateBack = {}
+                )
+            }
+        }
+
+        // Click on the threshold picker to expand it
+        composeTestRule
+            .onNodeWithText("5 minutes")
+            .performClick()
+
+        // Select 3 minutes from the dropdown
+        composeTestRule
+            .onNodeWithText("3 minutes")
+            .performClick()
+
+        // Then: Threshold is updated to 3 minutes
+        assertEquals(3, currentAutoPauseConfig.thresholdMinutes)
+    }
 }
