@@ -36,7 +36,7 @@ object UnitConversions {
      * - 25.5 km/h → 15.84 mph
      */
     fun toMph(kmh: Float): Float {
-        return round(kmh * KMH_TO_MPH * 100) / 100
+        return (round(kmh * KMH_TO_MPH * 100) / 100).toFloat()
     }
 
     /**
@@ -46,7 +46,7 @@ object UnitConversions {
      * @return Speed in kilometers per hour, rounded to 2 decimal places
      */
     fun toKmh(mph: Float): Float {
-        return round(mph / KMH_TO_MPH * 100) / 100
+        return (round(mph / KMH_TO_MPH * 100) / 100).toFloat()
     }
 
     /**
@@ -61,7 +61,7 @@ object UnitConversions {
      * - 42.195 km → 26.22 mi (marathon distance)
      */
     fun toMiles(km: Float): Float {
-        return round(km * KM_TO_MILES * 100) / 100
+        return (round(km * KM_TO_MILES * 100) / 100).toFloat()
     }
 
     /**
@@ -71,7 +71,7 @@ object UnitConversions {
      * @return Distance in kilometers, rounded to 2 decimal places
      */
     fun toKm(miles: Float): Float {
-        return round(miles / KM_TO_MILES * 100) / 100
+        return (round(miles / KM_TO_MILES * 100) / 100).toFloat()
     }
 
     /**
