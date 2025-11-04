@@ -1,5 +1,6 @@
 package com.example.bikeredlights.domain.util
 
+import java.util.Locale
 import kotlin.math.round
 
 /**
@@ -83,7 +84,7 @@ object UnitConversions {
      */
     fun formatSpeed(speed: Float, isMetric: Boolean): String {
         val unit = if (isMetric) "km/h" else "mph"
-        return "%.1f %s".format(speed, unit)
+        return "%.1f %s".format(Locale.US, speed, unit)
     }
 
     /**
@@ -95,6 +96,6 @@ object UnitConversions {
      */
     fun formatDistance(distance: Float, isMetric: Boolean): String {
         val unit = if (isMetric) "km" else "mi"
-        return "%.2f %s".format(distance, unit)
+        return "%.2f %s".format(Locale.US, distance, unit)
     }
 }
