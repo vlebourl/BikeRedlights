@@ -18,7 +18,7 @@ _Features and changes completed but not yet released_
 
 **Status**: ✅ COMPLETE - Comprehensive settings system with DataStore persistence
 **Focus**: User-configurable ride tracking preferences (units, GPS accuracy, auto-pause)
-**APK Size**: TBD (release build)
+**APK Size**: 22MB (release build)
 **Tested On**: Pixel 9 Pro Emulator (Android 15 / API 35)
 
 ### ✨ Features Added
