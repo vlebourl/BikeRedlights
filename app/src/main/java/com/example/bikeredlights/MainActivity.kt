@@ -57,22 +57,25 @@ class MainActivity : ComponentActivity() {
 
         // Manual dependency injection (until Hilt is re-enabled in v0.3.0)
 
-        // Location tracking dependencies (v0.1.0)
+        // Settings dependencies (v0.2.0) - created first since used by SpeedTrackingViewModel
+        val settingsRepository = SettingsRepositoryImpl(
+            context = applicationContext
+        )
+        settingsViewModel = SettingsViewModel(settingsRepository)
+
+        // Location tracking dependencies (v0.1.0, v0.2.0 update with SettingsRepository)
         val locationRepository = LocationRepositoryImpl(
             context = applicationContext
         )
         val trackLocationUseCase = TrackLocationUseCase(
             locationRepository = locationRepository
         )
-        val speedTrackingFactory = SpeedTrackingViewModelFactory(locationRepository, trackLocationUseCase)
-        speedTrackingViewModel = ViewModelProvider(this, speedTrackingFactory)[SpeedTrackingViewModel::class.java]
-
-        // Settings dependencies (v0.2.0)
-        val settingsRepository = SettingsRepositoryImpl(
-            context = applicationContext
+        val speedTrackingFactory = SpeedTrackingViewModelFactory(
+            locationRepository,
+            trackLocationUseCase,
+            settingsRepository  // v0.2.0: Pass settings repository for units conversion
         )
-        // No factory needed for SettingsViewModel since ViewModelProvider can instantiate directly
-        settingsViewModel = SettingsViewModel(settingsRepository)
+        speedTrackingViewModel = ViewModelProvider(this, speedTrackingFactory)[SpeedTrackingViewModel::class.java]
 
         setContent {
             BikeRedlightsTheme {

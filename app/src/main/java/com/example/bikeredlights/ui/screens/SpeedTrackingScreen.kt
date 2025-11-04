@@ -81,7 +81,8 @@ fun SpeedTrackingScreen(
                     SpeedTrackingContent(
                         speedMeasurement = uiState.speedMeasurement,
                         locationData = uiState.locationData,
-                        gpsStatus = uiState.gpsStatus
+                        gpsStatus = uiState.gpsStatus,
+                        unitsSystem = uiState.unitsSystem
                     )
                 } else {
                     // Permission not granted: show permission required content
@@ -101,15 +102,19 @@ fun SpeedTrackingScreen(
  * - User Story 2: GPS coordinates
  * - User Story 3: GPS status indicator
  *
+ * v0.2.0 Update: Added units system parameter for speed display conversion.
+ *
  * @param speedMeasurement Current speed measurement, null before first GPS fix
  * @param locationData Current GPS location data, null before first GPS fix
  * @param gpsStatus Current GPS signal status
+ * @param unitsSystem User's preferred measurement system (Metric/Imperial)
  */
 @Composable
 private fun SpeedTrackingContent(
     speedMeasurement: com.example.bikeredlights.domain.model.SpeedMeasurement?,
     locationData: com.example.bikeredlights.domain.model.LocationData?,
-    gpsStatus: com.example.bikeredlights.domain.model.GpsStatus
+    gpsStatus: com.example.bikeredlights.domain.model.GpsStatus,
+    unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem
 ) {
     Column(
         modifier = Modifier
@@ -119,7 +124,8 @@ private fun SpeedTrackingContent(
         verticalArrangement = Arrangement.Center
     ) {
         SpeedDisplay(
-            speedMeasurement = speedMeasurement
+            speedMeasurement = speedMeasurement,
+            unitsSystem = unitsSystem
         )
 
         Spacer(modifier = Modifier.height(32.dp))
