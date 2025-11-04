@@ -27,18 +27,18 @@ BikeRedlights uses Android Clean Architecture:
 
 **Purpose**: Create foundational infrastructure shared across all settings
 
-- [ ] T001 [P] Create PreferencesKeys object with 4 DataStore key definitions in `app/src/main/java/com/example/bikeredlights/data/preferences/PreferencesKeys.kt`
-- [ ] T002 [P] Create UnitsSystem enum in `app/src/main/java/com/example/bikeredlights/domain/model/settings/UnitsSystem.kt`
-- [ ] T003 [P] Create GpsAccuracy enum in `app/src/main/java/com/example/bikeredlights/domain/model/settings/GpsAccuracy.kt`
-- [ ] T004 [P] Create AutoPauseConfig data class with validation in `app/src/main/java/com/example/bikeredlights/domain/model/settings/AutoPauseConfig.kt`
-- [ ] T005 [P] Create UnitConversions utility object with km/h↔mph and km↔miles functions in `app/src/main/java/com/example/bikeredlights/domain/util/UnitConversions.kt`
-- [ ] T006 Create SettingsRepository interface (4 Flow reads, 3 suspend writes) in `app/src/main/java/com/example/bikeredlights/data/repository/SettingsRepository.kt`
-- [ ] T007 Implement SettingsRepositoryImpl with DataStore and error handling in `app/src/main/java/com/example/bikeredlights/data/repository/SettingsRepositoryImpl.kt`
+- [X] T001 [P] Create PreferencesKeys object with 4 DataStore key definitions in `app/src/main/java/com/example/bikeredlights/data/preferences/PreferencesKeys.kt`
+- [X] T002 [P] Create UnitsSystem enum in `app/src/main/java/com/example/bikeredlights/domain/model/settings/UnitsSystem.kt`
+- [X] T003 [P] Create GpsAccuracy enum in `app/src/main/java/com/example/bikeredlights/domain/model/settings/GpsAccuracy.kt`
+- [X] T004 [P] Create AutoPauseConfig data class with validation in `app/src/main/java/com/example/bikeredlights/domain/model/settings/AutoPauseConfig.kt`
+- [X] T005 [P] Create UnitConversions utility object with km/h↔mph and km↔miles functions in `app/src/main/java/com/example/bikeredlights/domain/util/UnitConversions.kt`
+- [X] T006 Create SettingsRepository interface (4 Flow reads, 3 suspend writes) in `app/src/main/java/com/example/bikeredlights/data/repository/SettingsRepository.kt`
+- [X] T007 Implement SettingsRepositoryImpl with DataStore and error handling in `app/src/main/java/com/example/bikeredlights/data/repository/SettingsRepositoryImpl.kt`
 
 **Tests for Setup Phase**:
-- [ ] T008 [P] Unit tests for AutoPauseConfig validation (valid/invalid thresholds) in `app/src/test/java/com/example/bikeredlights/domain/model/settings/AutoPauseConfigTest.kt`
-- [ ] T009 [P] Unit tests for UnitConversions (kmh→mph precision to 2 decimals, km→miles accuracy, edge cases: 0.0, 0.1, 100.0, 999.9 values, verify conversion factor 0.621371) in `app/src/test/java/com/example/bikeredlights/domain/util/UnitConversionsTest.kt`
-- [ ] T010 [P] Unit tests for SettingsRepository (read defaults, write/read persistence, error handling) in `app/src/test/java/com/example/bikeredlights/data/repository/SettingsRepositoryTest.kt`
+- [X] T008 [P] Unit tests for AutoPauseConfig validation (valid/invalid thresholds) in `app/src/test/java/com/example/bikeredlights/domain/model/settings/AutoPauseConfigTest.kt`
+- [X] T009 [P] Unit tests for UnitConversions (kmh→mph precision to 2 decimals, km→miles accuracy, edge cases: 0.0, 0.1, 100.0, 999.9 values, verify conversion factor 0.621371) in `app/src/test/java/com/example/bikeredlights/domain/util/UnitConversionsTest.kt`
+- [X] T010 [P] Unit tests for SettingsRepository (read defaults, write/read persistence, error handling) in `app/src/test/java/com/example/bikeredlights/data/repository/SettingsRepositoryTest.kt`
 
 **Checkpoint**: Domain models, repository, and utilities are fully implemented and tested
 
