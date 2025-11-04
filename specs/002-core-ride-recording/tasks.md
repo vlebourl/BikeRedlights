@@ -73,6 +73,7 @@ This document provides an actionable task breakdown for implementing GPS-based r
 - [ ] T014 [P] Create Ride domain model in app/src/main/java/com/example/bikeredlights/domain/model/Ride.kt
 - [ ] T015 [P] Create TrackPoint domain model in app/src/main/java/com/example/bikeredlights/domain/model/TrackPoint.kt
 - [ ] T016 [P] Create RideRecordingState domain model in app/src/main/java/com/example/bikeredlights/domain/model/RideRecordingState.kt
+- [ ] T017a [P] Implement ride name generator utility in app/src/main/java/com/example/bikeredlights/domain/util/RideNameGenerator.kt (format: "Ride on MMM d, yyyy")
 
 ### Repository Implementation Tasks
 
@@ -104,6 +105,7 @@ This document provides an actionable task breakdown for implementing GPS-based r
 ### Service Implementation
 
 - [ ] T024 [US1] Create RideRecordingService in app/src/main/java/com/example/bikeredlights/service/RideRecordingService.kt
+- [ ] T024a [US1] Implement POST_NOTIFICATIONS permission request for Android 13+ in RideRecordingService.onCreate()
 - [ ] T025 [US1] Implement notification builder with Pause/Stop actions in RideRecordingService
 - [ ] T026 [US1] Implement LocationCallback for GPS updates in RideRecordingService
 - [ ] T027 [US1] Add START_STICKY logic and process death recovery in RideRecordingService
@@ -112,6 +114,7 @@ This document provides an actionable task breakdown for implementing GPS-based r
 
 - [ ] T028 [P] [US1] Create StartRideUseCase in app/src/main/java/com/example/bikeredlights/domain/usecase/StartRideUseCase.kt
 - [ ] T029 [P] [US1] Create FinishRideUseCase in app/src/main/java/com/example/bikeredlights/domain/usecase/FinishRideUseCase.kt
+- [ ] T029a [P] [US1] Add minimum 5-second duration validation in FinishRideUseCase with auto-discard logic
 - [ ] T030 [P] [US1] Create RecordTrackPointUseCase in app/src/main/java/com/example/bikeredlights/domain/usecase/RecordTrackPointUseCase.kt
 - [ ] T031 [P] [US1] Create CalculateDistanceUseCase in app/src/main/java/com/example/bikeredlights/domain/usecase/CalculateDistanceUseCase.kt
 
@@ -124,9 +127,9 @@ This document provides an actionable task breakdown for implementing GPS-based r
 
 ### UI Implementation
 
-- [ ] T036 [US1] Update LiveRideScreen with Start/Stop buttons in app/src/main/java/com/example/bikeredlights/ui/screens/SpeedTrackingScreen.kt
+- [ ] T036 [US1] Update LiveRideScreen with Start/Stop buttons in app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt
 - [ ] T037 [P] [US1] Create SaveRideDialog composable in app/src/main/java/com/example/bikeredlights/ui/components/ride/SaveRideDialog.kt
-- [ ] T038 [US1] Wire ViewModel to LiveRideScreen UI in app/src/main/java/com/example/bikeredlights/ui/screens/SpeedTrackingScreen.kt
+- [ ] T038 [US1] Wire ViewModel to LiveRideScreen UI in app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt
 
 ### Test Tasks (Required per spec SC-007)
 
@@ -480,6 +483,7 @@ This document provides an actionable task breakdown for implementing GPS-based r
 - [ ] T169 Run all unit tests and verify 90%+ coverage (spec SC-007)
 - [ ] T170 Run all instrumented tests and verify pass rate
 - [ ] T171 Comprehensive emulator testing with GPX route simulation
+- [ ] T171a [US4] Run 1-hour battery drain test with High Accuracy GPS on Pixel emulator, measure and verify <10%/hour drain
 - [ ] T172 Verify battery drain < 10%/hour with High Accuracy (spec SC-008)
 - [ ] T173 Verify database writes < 100ms (spec SC-009)
 - [ ] T174 Verify Stop button responds < 1 second (spec SC-010)

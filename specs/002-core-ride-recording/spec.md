@@ -174,7 +174,7 @@ As a cyclist, I want my phone screen to stay on while the app is in foreground d
 - **FR-005**: System MUST run foreground service during recording that survives screen-off and app backgrounding
 - **FR-006**: System MUST display persistent notification during recording with real-time duration and distance
 - **FR-007**: System MUST calculate and display duration in HH:MM:SS format with 1-second updates
-- **FR-008**: System MUST calculate distance from GPS coordinates using Haversine formula or distance from Location API
+- **FR-008**: System MUST calculate distance from GPS coordinates using Haversine formula (manual calculation between consecutive TrackPoints for accuracy and testability)
 - **FR-009**: System MUST calculate average speed as total distance / total duration (excluding paused time)
 - **FR-010**: System MUST track maximum speed achieved during ride
 - **FR-011**: System MUST display current speed with stationary detection (< 1 km/h shows as 0)
@@ -223,3 +223,12 @@ As a cyclist, I want my phone screen to stay on while the app is in foreground d
 - **SC-010**: User can stop recording and see Review screen within 1 second of tapping Stop button
 - **SC-011**: App handles GPS signal loss gracefully without crashing or corrupting ride data
 - **SC-012**: Incomplete ride recovery on app launch correctly restores or discards ride data
+
+## Component Mapping *(clarification)*
+
+**Terminology Alignment**:
+- **"Live tab"** (spec terminology) = `LiveRideScreen.kt` composable (codebase)
+- **"Review screen"** (spec terminology) = `RideReviewScreen.kt` composable (codebase)
+- **"Settings"** (spec terminology) = `SettingsScreen.kt` composable (existing F2A)
+
+The app uses bottom navigation with three tabs. "Live tab" refers to the first tab which contains the LiveRideScreen composable where ride recording takes place. This screen exists at `app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt` and will be updated from its current speed tracking display to include ride recording controls.
