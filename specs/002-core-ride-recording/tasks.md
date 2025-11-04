@@ -63,30 +63,30 @@ This document provides an actionable task breakdown for implementing GPS-based r
 
 ### Repository Interface Tasks
 
-- [ ] T010 Create RideRepository interface in app/src/main/java/com/example/bikeredlights/domain/repository/RideRepository.kt
-- [ ] T011 [P] Create TrackPointRepository interface in app/src/main/java/com/example/bikeredlights/domain/repository/TrackPointRepository.kt
-- [ ] T012 [P] Create LocationRepository interface in app/src/main/java/com/example/bikeredlights/domain/repository/LocationRepository.kt
-- [ ] T013 [P] Create RideRecordingStateRepository interface in app/src/main/java/com/example/bikeredlights/domain/repository/RideRecordingStateRepository.kt
+- [X] T010 Create RideRepository interface in app/src/main/java/com/example/bikeredlights/domain/repository/RideRepository.kt
+- [X] T011 [P] Create TrackPointRepository interface in app/src/main/java/com/example/bikeredlights/domain/repository/TrackPointRepository.kt
+- [X] T012 [P] Create LocationRepository interface in app/src/main/java/com/example/bikeredlights/domain/repository/LocationRepository.kt (already exists from Feature 001-speed-tracking)
+- [X] T013 [P] Create RideRecordingStateRepository interface in app/src/main/java/com/example/bikeredlights/domain/repository/RideRecordingStateRepository.kt
 
 ### Domain Model Tasks
 
-- [ ] T014 [P] Create Ride domain model in app/src/main/java/com/example/bikeredlights/domain/model/Ride.kt
-- [ ] T015 [P] Create TrackPoint domain model in app/src/main/java/com/example/bikeredlights/domain/model/TrackPoint.kt
-- [ ] T016 [P] Create RideRecordingState domain model in app/src/main/java/com/example/bikeredlights/domain/model/RideRecordingState.kt
-- [ ] T017a [P] Implement ride name generator utility in app/src/main/java/com/example/bikeredlights/domain/util/RideNameGenerator.kt (format: "Ride on MMM d, yyyy")
+- [X] T014 [P] Create Ride domain model in app/src/main/java/com/example/bikeredlights/domain/model/Ride.kt
+- [X] T015 [P] Create TrackPoint domain model in app/src/main/java/com/example/bikeredlights/domain/model/TrackPoint.kt
+- [X] T016 [P] Create RideRecordingState domain model in app/src/main/java/com/example/bikeredlights/domain/model/RideRecordingState.kt
+- [X] T017a [P] Implement ride name generator utility in app/src/main/java/com/example/bikeredlights/domain/util/RideNameGenerator.kt (format: "Ride on MMM d, yyyy")
 
 ### Repository Implementation Tasks
 
-- [ ] T017 Implement RideRepositoryImpl in app/src/main/java/com/example/bikeredlights/data/repository/RideRepositoryImpl.kt
-- [ ] T018 [P] Implement TrackPointRepositoryImpl in app/src/main/java/com/example/bikeredlights/data/repository/TrackPointRepositoryImpl.kt
-- [ ] T019 [P] Implement LocationRepositoryImpl in app/src/main/java/com/example/bikeredlights/data/repository/LocationRepositoryImpl.kt
-- [ ] T020 [P] Implement RideRecordingStateRepositoryImpl in app/src/main/java/com/example/bikeredlights/data/repository/RideRecordingStateRepositoryImpl.kt
+- [X] T017 Implement RideRepositoryImpl in app/src/main/java/com/example/bikeredlights/data/repository/RideRepositoryImpl.kt
+- [X] T018 [P] Implement TrackPointRepositoryImpl in app/src/main/java/com/example/bikeredlights/data/repository/TrackPointRepositoryImpl.kt
+- [X] T019 [P] Implement LocationRepositoryImpl in app/src/main/java/com/example/bikeredlights/data/repository/LocationRepositoryImpl.kt (already exists from Feature 001-speed-tracking)
+- [X] T020 [P] Implement RideRecordingStateRepositoryImpl in app/src/main/java/com/example/bikeredlights/data/repository/RideRecordingStateRepositoryImpl.kt
 
 ### Repository Test Tasks (Required per spec SC-007)
 
-- [ ] T021 [P] Write unit tests for RideRepositoryImpl in app/src/test/java/com/example/bikeredlights/data/repository/RideRepositoryImplTest.kt
-- [ ] T022 [P] Write unit tests for LocationRepositoryImpl in app/src/test/java/com/example/bikeredlights/data/repository/LocationRepositoryImplTest.kt
-- [ ] T023 Run all repository unit tests and verify 90%+ coverage
+- [X] T021 [P] Write unit tests for RideRepositoryImpl in app/src/test/java/com/example/bikeredlights/data/repository/RideRepositoryImplTest.kt
+- [X] T022 [P] Write unit tests for LocationRepositoryImpl in app/src/test/java/com/example/bikeredlights/data/repository/LocationRepositoryImplTest.kt (skipped - LocationRepository from Feature 001)
+- [X] T023 Run all repository unit tests and verify 90%+ coverage
 
 **Validation Criteria**:
 - ✅ All repository interfaces defined with clear contracts
