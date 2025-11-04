@@ -59,6 +59,7 @@ _Features and changes completed but not yet released_
 - **Instrumented Tests**: 12+ tests
   - SettingsNavigationTest: UI interactions for all 3 settings
   - SettingsPersistenceTest: DataStore persistence validation across app restarts
+- **Emulator Validation**: ✅ Persistence validated for all 3 settings across app restarts
 
 ### 🏗️ Architecture
 - Clean Architecture: UI → ViewModel → Domain → Data
@@ -66,8 +67,14 @@ _Features and changes completed but not yet released_
 - Manual dependency injection (Hilt deferred to v0.3.0 per Constitution exception)
 - DataStore Preferences for local persistence (no network, no database)
 
+### 🐛 Bugs Fixed
+- **Auto-Pause Toggle Race Condition**: Fixed toggle not staying enabled when clicked
+  - Root cause: Two sequential ViewModel calls reading stale state
+  - Solution: Added atomic `setAutoPauseConfig()` method for single-transaction updates
+  - Validated on emulator: Toggle now enables correctly and persists across app restarts
+
 ### 📦 Files Changed
-- **20+ commits** across 6 phases (Setup, Foundation, 3 User Stories, Polish)
+- **21+ commits** across 6 phases (Setup, Foundation, 3 User Stories, Polish, Bug Fix)
 - **Domain layer**: 3 models, 1 utility class
 - **Data layer**: SettingsRepository interface + implementation
 - **UI layer**: 2 screens, 2 reusable components, ViewModel, navigation integration
