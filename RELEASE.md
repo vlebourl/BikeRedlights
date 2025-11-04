@@ -8,6 +8,20 @@
 _Features and changes completed but not yet released_
 
 ### ✨ Features Added
+- None yet
+
+---
+
+## v0.2.0 - Basic Settings Infrastructure (2025-11-04)
+
+### ⚙️ Settings & Configuration
+
+**Status**: ✅ COMPLETE - Comprehensive settings system with DataStore persistence
+**Focus**: User-configurable ride tracking preferences (units, GPS accuracy, auto-pause)
+**APK Size**: TBD (release build)
+**Tested On**: Pixel 9 Pro Emulator (Android 15 / API 35)
+
+### ✨ Features Added
 
 **Feature 2A: Basic Settings Infrastructure** ([spec](specs/001-settings-infrastructure/spec.md))
 
@@ -253,6 +267,7 @@ _Features and changes completed but not yet released_
 
 | Version | Release Date | Status | Notes |
 |---------|--------------|--------|-------|
+| v0.2.0  | 2025-11-04   | ✅ Released | Basic settings infrastructure with DataStore persistence |
 | v0.1.0  | 2025-11-03   | ✅ Released | Real-time speed tracking - first MVP feature |
 | v0.0.0  | 2025-11-02   | ✅ Released | Buildable skeleton - tested on emulator |
 
