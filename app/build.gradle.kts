@@ -146,5 +146,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(composeBom)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.mockk)  // For mocking in instrumented tests
+    androidTestImplementation(libs.kotlinx.coroutines.test)  // For runTest in instrumented tests
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
