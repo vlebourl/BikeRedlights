@@ -2,6 +2,7 @@ package com.example.bikeredlights.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.bikeredlights.data.repository.SettingsRepository
 import com.example.bikeredlights.domain.model.GpsStatus
 import com.example.bikeredlights.domain.repository.LocationRepository
 import com.example.bikeredlights.domain.usecase.TrackLocationUseCase
@@ -25,12 +26,17 @@ import kotlinx.coroutines.launch
  * - Location tracking continues during rotation without restart
  * - Flow collection automatically cancels when ViewModel is cleared
  *
+ * v0.2.0 Update: Integrated with SettingsRepository to support units conversion
+ * (Metric/Imperial) for speed display.
+ *
  * @param locationRepository Repository providing location updates
  * @param trackLocationUseCase Use case providing speed measurements
+ * @param settingsRepository Repository providing user preferences (v0.2.0)
  */
 class SpeedTrackingViewModel(
     private val locationRepository: LocationRepository,
-    private val trackLocationUseCase: TrackLocationUseCase
+    private val trackLocationUseCase: TrackLocationUseCase,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SpeedTrackingUiState())
@@ -42,6 +48,21 @@ class SpeedTrackingViewModel(
      * to automatically stop location tracking when app backgrounds.
      */
     val uiState: StateFlow<SpeedTrackingUiState> = _uiState.asStateFlow()
+
+    init {
+        // Collect units system changes (v0.2.0)
+        viewModelScope.launch {
+            settingsRepository.unitsSystem
+                .catch { exception ->
+                    // Handle settings read failure silently, use default (Metric)
+                }
+                .collect { unitsSystem ->
+                    _uiState.update { currentState ->
+                        currentState.copy(unitsSystem = unitsSystem)
+                    }
+                }
+        }
+    }
 
     /**
      * Starts location tracking and speed calculation.

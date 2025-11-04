@@ -8,7 +8,77 @@
 _Features and changes completed but not yet released_
 
 ### ✨ Features Added
-- None yet
+
+**Feature 2A: Basic Settings Infrastructure** ([spec](specs/001-settings-infrastructure/spec.md))
+
+- **User Story 1 (P1): Select Preferred Units (Metric/Imperial)** ✅
+  - Settings → Ride & Tracking → Units segmented button (Metric/Imperial)
+  - Default: Metric (km/h, meters)
+  - DataStore persistence: Units selection persists across app restarts
+  - Domain: UnitsSystem enum with conversion utilities
+
+- **User Story 2 (P2): Adjust GPS Accuracy for Battery Life** ✅
+  - Settings → Ride & Tracking → GPS Accuracy toggle (High Accuracy/Battery Saver)
+  - High Accuracy: 1-second GPS updates for real-time tracking
+  - Battery Saver: 4-second GPS updates for battery optimization
+  - Default: High Accuracy
+  - Integration: LocationRepository dynamically configures GPS intervals based on setting
+  - DataStore persistence: GPS accuracy selection persists across app restarts
+
+- **User Story 3 (P3): Enable Auto-Pause for Commutes** ✅
+  - Settings → Ride & Tracking → Auto-Pause Rides toggle with threshold picker
+  - Threshold options: 1, 2, 3, 5, 10, 15 minutes
+  - Default: Disabled (5 minutes when enabled)
+  - DataStore persistence: Auto-pause config (enabled + threshold) persists across app restarts
+  - Note: Actual pause/resume logic deferred to Feature 1A (Core Ride Recording)
+
+**Bottom Navigation Bar** ✅
+- Material 3 NavigationBar with 3 tabs: Live, Rides, Settings
+- Tab selection preserved across screen changes
+- Icons: Compass (Live), List (Rides), Settings
+
+**Settings Architecture** ✅
+- SettingsScreen: Main settings menu with navigation cards
+- RideTrackingSettingsScreen: Detail screen for Ride & Tracking settings
+- SettingsViewModel: StateFlow-based reactive UI state management
+- SettingsRepository: DataStore Preferences for key-value persistence
+- Domain models: UnitsSystem, GpsAccuracy, AutoPauseConfig with validation
+
+**Reusable Settings UI Components** ✅
+- SegmentedButtonSetting: Material 3 segmented button for 2-option choices
+- ToggleWithPickerSetting: Toggle switch with conditional dropdown picker
+- Accessibility: 48dp minimum touch targets, TalkBack contentDescriptions
+- Dark mode support with Material 3 theming
+
+### ✅ Test Coverage
+- **Unit Tests**: 57 tests passing
+  - Settings domain models and utilities
+  - SettingsRepository persistence
+  - SettingsViewModel state management
+  - All existing tests remain passing
+- **Instrumented Tests**: 12+ tests
+  - SettingsNavigationTest: UI interactions for all 3 settings
+  - SettingsPersistenceTest: DataStore persistence validation across app restarts
+- **Emulator Validation**: ✅ Persistence validated for all 3 settings across app restarts
+
+### 🏗️ Architecture
+- Clean Architecture: UI → ViewModel → Domain → Data
+- MVVM pattern with StateFlow for reactive state
+- Manual dependency injection (Hilt deferred to v0.3.0 per Constitution exception)
+- DataStore Preferences for local persistence (no network, no database)
+
+### 🐛 Bugs Fixed
+- **Auto-Pause Toggle Race Condition**: Fixed toggle not staying enabled when clicked
+  - Root cause: Two sequential ViewModel calls reading stale state
+  - Solution: Added atomic `setAutoPauseConfig()` method for single-transaction updates
+  - Validated on emulator: Toggle now enables correctly and persists across app restarts
+
+### 📦 Files Changed
+- **21+ commits** across 6 phases (Setup, Foundation, 3 User Stories, Polish, Bug Fix)
+- **Domain layer**: 3 models, 1 utility class
+- **Data layer**: SettingsRepository interface + implementation
+- **UI layer**: 2 screens, 2 reusable components, ViewModel, navigation integration
+- **Test layer**: Unit tests + instrumented tests
 
 ---
 

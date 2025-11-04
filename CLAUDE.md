@@ -895,6 +895,7 @@ When working on this project:
 ## Active Technologies
 - Kotlin 2.0.21 with Jetpack Compose + Play Services Location 21.3.0, Jetpack Compose (BOM 2024.11.00), Material 3 (001-speed-tracking)
 - None for MVP (no persistence of location data) (001-speed-tracking)
+- DataStore Preferences (key-value pairs, local device only) (001-settings-infrastructure)
 
 ## Recent Changes
 - 001-speed-tracking: Added Kotlin 2.0.21 with Jetpack Compose + Play Services Location 21.3.0, Jetpack Compose (BOM 2024.11.00), Material 3

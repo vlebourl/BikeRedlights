@@ -6,7 +6,10 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import com.example.bikeredlights.domain.model.GpsStatus
 import com.example.bikeredlights.domain.model.SpeedMeasurement
+import com.example.bikeredlights.data.repository.SettingsRepository
 import com.example.bikeredlights.domain.model.SpeedSource
+import com.example.bikeredlights.domain.model.settings.UnitsSystem
+import com.example.bikeredlights.domain.repository.LocationRepository
 import com.example.bikeredlights.domain.usecase.TrackLocationUseCase
 import com.example.bikeredlights.ui.screens.SpeedTrackingScreen
 import com.example.bikeredlights.ui.theme.BikeRedlightsTheme
@@ -34,19 +37,25 @@ class SpeedTrackingScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    private lateinit var locationRepository: LocationRepository
     private lateinit var trackLocationUseCase: TrackLocationUseCase
+    private lateinit var settingsRepository: SettingsRepository
     private lateinit var viewModel: SpeedTrackingViewModel
 
     @Before
     fun setup() {
+        locationRepository = mockk()
         trackLocationUseCase = mockk()
+        settingsRepository = mockk()
+        // Default: settings repository returns default units system
+        every { settingsRepository.unitsSystem } returns flowOf(UnitsSystem.DEFAULT)
     }
 
     @Test
     fun speedTrackingScreen_displaysPlaceholderWhenSpeedIsNull() {
         // Given: ViewModel with null speed measurement
         every { trackLocationUseCase() } returns flowOf()
-        viewModel = SpeedTrackingViewModel(trackLocationUseCase)
+        viewModel = SpeedTrackingViewModel(locationRepository, trackLocationUseCase, settingsRepository)
 
         // Manually set permission granted (bypasses permission dialog in test)
         viewModel.onPermissionGranted()
@@ -75,7 +84,7 @@ class SpeedTrackingScreenTest {
             source = SpeedSource.GPS
         )
         every { trackLocationUseCase() } returns flowOf(speedMeasurement)
-        viewModel = SpeedTrackingViewModel(trackLocationUseCase)
+        viewModel = SpeedTrackingViewModel(locationRepository, trackLocationUseCase, settingsRepository)
         viewModel.onPermissionGranted()
 
         // When: Setting screen content
@@ -102,7 +111,7 @@ class SpeedTrackingScreenTest {
             source = SpeedSource.GPS
         )
         every { trackLocationUseCase() } returns flowOf(speedMeasurement)
-        viewModel = SpeedTrackingViewModel(trackLocationUseCase)
+        viewModel = SpeedTrackingViewModel(locationRepository, trackLocationUseCase, settingsRepository)
         viewModel.onPermissionGranted()
 
         // When: Setting screen content
@@ -122,7 +131,7 @@ class SpeedTrackingScreenTest {
     fun speedTrackingScreen_displaysPermissionRequiredWhenNoPermission() {
         // Given: ViewModel with no permission
         every { trackLocationUseCase() } returns flowOf()
-        viewModel = SpeedTrackingViewModel(trackLocationUseCase)
+        viewModel = SpeedTrackingViewModel(locationRepository, trackLocationUseCase, settingsRepository)
 
         // Permission explicitly denied (default state is also no permission)
         viewModel.onPermissionDenied()
@@ -165,7 +174,7 @@ class SpeedTrackingScreenTest {
                 source = SpeedSource.GPS
             )
             every { trackLocationUseCase() } returns flowOf(speedMeasurement)
-            viewModel = SpeedTrackingViewModel(trackLocationUseCase)
+            viewModel = SpeedTrackingViewModel(locationRepository, trackLocationUseCase, settingsRepository)
             viewModel.onPermissionGranted()
 
             // When: Setting screen content
@@ -193,7 +202,7 @@ class SpeedTrackingScreenTest {
             source = SpeedSource.GPS
         )
         every { trackLocationUseCase() } returns flowOf(speedMeasurement)
-        viewModel = SpeedTrackingViewModel(trackLocationUseCase)
+        viewModel = SpeedTrackingViewModel(locationRepository, trackLocationUseCase, settingsRepository)
         viewModel.onPermissionGranted()
 
         // When: Setting screen content
@@ -213,7 +222,7 @@ class SpeedTrackingScreenTest {
     fun speedTrackingScreen_hasAccessibilityContentDescriptionForNoSpeed() {
         // Given: ViewModel with null speed
         every { trackLocationUseCase() } returns flowOf()
-        viewModel = SpeedTrackingViewModel(trackLocationUseCase)
+        viewModel = SpeedTrackingViewModel(locationRepository, trackLocationUseCase, settingsRepository)
         viewModel.onPermissionGranted()
 
         // When: Setting screen content
@@ -249,7 +258,7 @@ class SpeedTrackingScreenTest {
 
         // First show 10 km/h
         every { trackLocationUseCase() } returns flowOf(measurement1)
-        viewModel = SpeedTrackingViewModel(trackLocationUseCase)
+        viewModel = SpeedTrackingViewModel(locationRepository, trackLocationUseCase, settingsRepository)
         viewModel.onPermissionGranted()
 
         composeTestRule.setContent {
@@ -266,7 +275,7 @@ class SpeedTrackingScreenTest {
         // When: Speed changes to 25 km/h
         every { trackLocationUseCase() } returns flowOf(measurement2)
         // Create new ViewModel instance to simulate state update
-        viewModel = SpeedTrackingViewModel(trackLocationUseCase)
+        viewModel = SpeedTrackingViewModel(locationRepository, trackLocationUseCase, settingsRepository)
         viewModel.onPermissionGranted()
 
         composeTestRule.setContent {
