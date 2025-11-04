@@ -36,18 +36,18 @@ This document provides an actionable task breakdown for implementing GPS-based r
 
 ### Setup Tasks
 
-- [ ] T001 Create Ride entity in app/src/main/java/com/example/bikeredlights/data/local/entity/Ride.kt
-- [ ] T002 [P] Create TrackPoint entity in app/src/main/java/com/example/bikeredlights/data/local/entity/TrackPoint.kt
-- [ ] T003 Create RideDao interface in app/src/main/java/com/example/bikeredlights/data/local/dao/RideDao.kt
-- [ ] T004 [P] Create TrackPointDao interface in app/src/main/java/com/example/bikeredlights/data/local/dao/TrackPointDao.kt
-- [ ] T005 Create BikeRedlightsDatabase class in app/src/main/java/com/example/bikeredlights/data/local/BikeRedlightsDatabase.kt
-- [ ] T006 Add service declaration and permissions to app/src/main/AndroidManifest.xml
+- [X] T001 Create Ride entity in app/src/main/java/com/example/bikeredlights/data/local/entity/Ride.kt
+- [X] T002 [P] Create TrackPoint entity in app/src/main/java/com/example/bikeredlights/data/local/entity/TrackPoint.kt
+- [X] T003 Create RideDao interface in app/src/main/java/com/example/bikeredlights/data/local/dao/RideDao.kt
+- [X] T004 [P] Create TrackPointDao interface in app/src/main/java/com/example/bikeredlights/data/local/dao/TrackPointDao.kt
+- [X] T005 Create BikeRedlightsDatabase class in app/src/main/java/com/example/bikeredlights/data/local/BikeRedlightsDatabase.kt
+- [X] T006 Add service declaration and permissions to app/src/main/AndroidManifest.xml
 
 ### Database Test Tasks (Required per spec SC-007)
 
-- [ ] T007 [P] Write unit tests for RideDao in app/src/androidTest/java/com/example/bikeredlights/data/local/RideDaoTest.kt
-- [ ] T008 [P] Write unit tests for TrackPointDao in app/src/androidTest/java/com/example/bikeredlights/data/local/TrackPointDaoTest.kt
-- [ ] T009 Run instrumented tests and verify cascade delete behavior
+- [X] T007 [P] Write unit tests for RideDao in app/src/androidTest/java/com/example/bikeredlights/data/local/RideDaoTest.kt
+- [X] T008 [P] Write unit tests for TrackPointDao in app/src/androidTest/java/com/example/bikeredlights/data/local/TrackPointDaoTest.kt
+- [X] T009 Run instrumented tests and verify cascade delete behavior
 
 **Validation Criteria**:
 - ✅ Room database builds successfully
