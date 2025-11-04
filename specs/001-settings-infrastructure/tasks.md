@@ -50,10 +50,10 @@ BikeRedlights uses Android Clean Architecture:
 
 **⚠️ CRITICAL**: No user story UI work can begin until bottom navigation is functional
 
-- [ ] T011 Create BottomNavDestination enum (LIVE, RIDES, SETTINGS) in `app/src/main/java/com/example/bikeredlights/ui/navigation/BottomNavDestination.kt`
-- [ ] T012 Create SettingsViewModel with SettingsUiState and StateFlow in `app/src/main/java/com/example/bikeredlights/ui/screens/settings/SettingsViewModel.kt`
-- [ ] T013 Modify MainActivity to add Scaffold with NavigationBar (bottom nav) in `app/src/main/java/com/example/bikeredlights/ui/MainActivity.kt`
-- [ ] T014 Create AppNavigation with NavHost and settings route in `app/src/main/java/com/example/bikeredlights/ui/navigation/AppNavigation.kt`
+- [X] T011 Create BottomNavDestination enum (LIVE, RIDES, SETTINGS) in `app/src/main/java/com/example/bikeredlights/ui/navigation/BottomNavDestination.kt`
+- [X] T012 Create SettingsViewModel with SettingsUiState and StateFlow in `app/src/main/java/com/example/bikeredlights/ui/screens/settings/SettingsViewModel.kt`
+- [X] T013 Modify MainActivity to add Scaffold with NavigationBar (bottom nav) in `app/src/main/java/com/example/bikeredlights/ui/MainActivity.kt`
+- [X] T014 Create AppNavigation with NavHost and settings route in `app/src/main/java/com/example/bikeredlights/ui/navigation/AppNavigation.kt`
 
 **Tests for Foundational Phase**:
 - [ ] T015 [P] Unit tests for SettingsViewModel (StateFlow emissions, settings changes) in `app/src/test/java/com/example/bikeredlights/ui/screens/settings/SettingsViewModelTest.kt`
