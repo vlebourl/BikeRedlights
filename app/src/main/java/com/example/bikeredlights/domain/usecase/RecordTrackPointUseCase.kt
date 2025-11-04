@@ -57,8 +57,8 @@ class RecordTrackPointUseCase @Inject constructor(
             timestamp = locationData.timestamp,
             latitude = locationData.latitude,
             longitude = locationData.longitude,
-            speedMetersPerSec = locationData.speedMetersPerSec,
-            accuracy = locationData.accuracyMeters,
+            speedMetersPerSec = locationData.speedMps?.toDouble() ?: 0.0,
+            accuracy = locationData.accuracy,
             isManuallyPaused = isManuallyPaused,
             isAutoPaused = isAutoPaused
         )
