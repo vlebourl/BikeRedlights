@@ -11,6 +11,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.bikeredlights.ui.components.ride.KeepScreenOn
 import com.example.bikeredlights.ui.components.ride.RideControls
 import com.example.bikeredlights.ui.components.ride.RideStatistics
 import com.example.bikeredlights.ui.components.ride.SaveRideDialog
@@ -55,6 +56,15 @@ fun LiveRideScreen(
                 }
             }
         }
+    }
+
+    // Keep screen on during recording (US6)
+    // Only applies when recording is active (not idle, not showing save dialog)
+    val isRecording = uiState is RideRecordingUiState.Recording ||
+                      uiState is RideRecordingUiState.Paused ||
+                      uiState is RideRecordingUiState.AutoPaused
+    if (isRecording) {
+        KeepScreenOn()
     }
 
     // Show save dialog if needed
