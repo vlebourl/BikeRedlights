@@ -12,9 +12,13 @@ import com.example.bikeredlights.domain.usecase.FinishRideUseCase
 import com.example.bikeredlights.service.RideRecordingService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -42,11 +46,20 @@ class RideRecordingViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val rideRecordingStateRepository: RideRecordingStateRepository,
     private val rideRepository: RideRepository,
-    private val finishRideUseCase: FinishRideUseCase
+    private val finishRideUseCase: FinishRideUseCase,
+    private val settingsRepository: com.example.bikeredlights.domain.repository.SettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<RideRecordingUiState>(RideRecordingUiState.Idle)
     val uiState: StateFlow<RideRecordingUiState> = _uiState.asStateFlow()
+
+    private val _navigationEvents = Channel<NavigationEvent>(Channel.BUFFERED)
+    val navigationEvents = _navigationEvents.receiveAsFlow()
+
+    // Expose settings for UI (T076)
+    val unitsSystem: StateFlow<com.example.bikeredlights.domain.model.settings.UnitsSystem> =
+        settingsRepository.getUnitsSystem()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), com.example.bikeredlights.domain.model.settings.UnitsSystem.METRIC)
 
     init {
         // Observe recording state from repository
@@ -137,18 +150,23 @@ class RideRecordingViewModel @Inject constructor(
      * - Keeps ride in database
      * - Clears recording state
      * - Returns to Idle state
-     * - TODO: Navigate to Review screen to show ride details
+     * - Emits navigation event to Review screen
      */
     fun saveRide() {
-        viewModelScope.launch {
-            // Clear recording state
-            rideRecordingStateRepository.clearRecordingState()
+        val state = _uiState.value
+        if (state is RideRecordingUiState.ShowingSaveDialog) {
+            viewModelScope.launch {
+                val rideId = state.ride.id
 
-            // Return to Idle state
-            _uiState.value = RideRecordingUiState.Idle
+                // Clear recording state
+                rideRecordingStateRepository.clearRecordingState()
 
-            // TODO: Navigate to Review screen (placeholder for now)
-            // navigationController.navigate("review/${ride.id}")
+                // Return to Idle state
+                _uiState.value = RideRecordingUiState.Idle
+
+                // Emit navigation event to Review screen
+                _navigationEvents.send(NavigationEvent.NavigateToReview(rideId))
+            }
         }
     }
 
@@ -223,6 +241,62 @@ class RideRecordingViewModel @Inject constructor(
             }
         }
     }
+
+    companion object {
+        /**
+         * Convert distance from meters to kilometers or miles.
+         *
+         * @param meters Distance in meters
+         * @param unitsSystem Units system (Metric or Imperial)
+         * @return Distance in km (Metric) or miles (Imperial)
+         */
+        fun convertDistance(meters: Double, unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem): Double {
+            return when (unitsSystem) {
+                com.example.bikeredlights.domain.model.settings.UnitsSystem.METRIC -> meters / 1000.0  // km
+                com.example.bikeredlights.domain.model.settings.UnitsSystem.IMPERIAL -> meters / 1609.34  // miles
+            }
+        }
+
+        /**
+         * Convert speed from meters/second to km/h or mph.
+         *
+         * @param metersPerSec Speed in meters per second
+         * @param unitsSystem Units system (Metric or Imperial)
+         * @return Speed in km/h (Metric) or mph (Imperial)
+         */
+        fun convertSpeed(metersPerSec: Double, unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem): Double {
+            return when (unitsSystem) {
+                com.example.bikeredlights.domain.model.settings.UnitsSystem.METRIC -> metersPerSec * 3.6  // km/h
+                com.example.bikeredlights.domain.model.settings.UnitsSystem.IMPERIAL -> metersPerSec * 2.23694  // mph
+            }
+        }
+
+        /**
+         * Get distance unit label.
+         *
+         * @param unitsSystem Units system (Metric or Imperial)
+         * @return Unit label ("km" or "mi")
+         */
+        fun getDistanceUnit(unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem): String {
+            return when (unitsSystem) {
+                com.example.bikeredlights.domain.model.settings.UnitsSystem.METRIC -> "km"
+                com.example.bikeredlights.domain.model.settings.UnitsSystem.IMPERIAL -> "mi"
+            }
+        }
+
+        /**
+         * Get speed unit label.
+         *
+         * @param unitsSystem Units system (Metric or Imperial)
+         * @return Unit label ("km/h" or "mph")
+         */
+        fun getSpeedUnit(unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem): String {
+            return when (unitsSystem) {
+                com.example.bikeredlights.domain.model.settings.UnitsSystem.METRIC -> "km/h"
+                com.example.bikeredlights.domain.model.settings.UnitsSystem.IMPERIAL -> "mph"
+            }
+        }
+    }
 }
 
 /**
@@ -261,4 +335,19 @@ sealed class RideRecordingUiState {
      * @property ride Finished ride (endTime set)
      */
     data class ShowingSaveDialog(val ride: Ride) : RideRecordingUiState()
+}
+
+/**
+ * Navigation events emitted by ViewModel.
+ *
+ * Used to trigger one-time navigation actions from the screen.
+ * Consumed via Channel to prevent duplicate navigation on recomposition.
+ */
+sealed class NavigationEvent {
+    /**
+     * Navigate to Ride Review screen.
+     *
+     * @property rideId ID of the ride to review
+     */
+    data class NavigateToReview(val rideId: Long) : NavigationEvent()
 }

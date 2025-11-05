@@ -46,6 +46,7 @@ fun LiveRideScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val unitsSystem by viewModel.unitsSystem.collectAsStateWithLifecycle()
 
     // Handle navigation events (one-time events via Channel)
     LaunchedEffect(Unit) {
@@ -92,6 +93,7 @@ fun LiveRideScreen(
                 val ride = (uiState as RideRecordingUiState.Recording).ride
                 RecordingContent(
                     ride = ride,
+                    unitsSystem = unitsSystem,
                     onPauseRide = { viewModel.pauseRide() },
                     onStopRide = { viewModel.stopRide() }
                 )
@@ -100,6 +102,7 @@ fun LiveRideScreen(
                 val ride = (uiState as RideRecordingUiState.Paused).ride
                 PausedContent(
                     ride = ride,
+                    unitsSystem = unitsSystem,
                     onResumeRide = { viewModel.resumeRide() },
                     onStopRide = { viewModel.stopRide() }
                 )
@@ -108,6 +111,7 @@ fun LiveRideScreen(
                 val ride = (uiState as RideRecordingUiState.AutoPaused).ride
                 AutoPausedContent(
                     ride = ride,
+                    unitsSystem = unitsSystem,
                     onResumeRide = { viewModel.resumeRide() },
                     onStopRide = { viewModel.stopRide() }
                 )
@@ -117,6 +121,7 @@ fun LiveRideScreen(
                 val ride = (uiState as RideRecordingUiState.ShowingSaveDialog).ride
                 RecordingContent(
                     ride = ride,
+                    unitsSystem = unitsSystem,
                     onPauseRide = { }, // No action while dialog is shown
                     onStopRide = { } // No action while dialog is shown
                 )
@@ -158,6 +163,7 @@ private fun IdleContent(
 @Composable
 private fun RecordingContent(
     ride: com.example.bikeredlights.domain.model.Ride,
+    unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     onPauseRide: () -> Unit,
     onStopRide: () -> Unit,
     modifier: Modifier = Modifier
@@ -183,6 +189,7 @@ private fun RecordingContent(
         RideStatistics(
             ride = ride,
             currentSpeed = 0.0, // TODO: Expose current speed from service
+            unitsSystem = unitsSystem,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -205,6 +212,7 @@ private fun RecordingContent(
 @Composable
 private fun PausedContent(
     ride: com.example.bikeredlights.domain.model.Ride,
+    unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     onResumeRide: () -> Unit,
     onStopRide: () -> Unit,
     modifier: Modifier = Modifier
@@ -230,6 +238,7 @@ private fun PausedContent(
         RideStatistics(
             ride = ride,
             currentSpeed = 0.0, // Zero when paused
+            unitsSystem = unitsSystem,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -252,6 +261,7 @@ private fun PausedContent(
 @Composable
 private fun AutoPausedContent(
     ride: com.example.bikeredlights.domain.model.Ride,
+    unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     onResumeRide: () -> Unit,
     onStopRide: () -> Unit,
     modifier: Modifier = Modifier
@@ -278,6 +288,7 @@ private fun AutoPausedContent(
         RideStatistics(
             ride = ride,
             currentSpeed = 0.0, // Zero when auto-paused
+            unitsSystem = unitsSystem,
             modifier = Modifier.fillMaxWidth()
         )
 

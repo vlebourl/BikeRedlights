@@ -4,10 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bikeredlights.domain.model.Ride
 import com.example.bikeredlights.domain.repository.RideRepository
+import com.example.bikeredlights.domain.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,6 +21,7 @@ import javax.inject.Inject
  * - Load ride from database by ID
  * - Expose ride as UI state
  * - Handle loading and error states
+ * - Expose settings (units system) for UI
  *
  * **State Management**:
  * - Emits RideReviewUiState (Loading, Success, Error)
@@ -31,11 +35,17 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class RideReviewViewModel @Inject constructor(
-    private val rideRepository: RideRepository
+    private val rideRepository: RideRepository,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<RideReviewUiState>(RideReviewUiState.Loading)
     val uiState: StateFlow<RideReviewUiState> = _uiState.asStateFlow()
+
+    // Expose settings for UI (units conversion)
+    val unitsSystem: StateFlow<com.example.bikeredlights.domain.model.settings.UnitsSystem> =
+        settingsRepository.getUnitsSystem()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), com.example.bikeredlights.domain.model.settings.UnitsSystem.METRIC)
 
     /**
      * Load ride from database by ID.

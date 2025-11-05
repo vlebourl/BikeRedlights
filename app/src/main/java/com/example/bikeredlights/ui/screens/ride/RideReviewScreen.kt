@@ -59,6 +59,7 @@ fun RideReviewScreen(
     }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val unitsSystem by viewModel.unitsSystem.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -95,6 +96,7 @@ fun RideReviewScreen(
                 is RideReviewUiState.Success -> {
                     RideReviewContent(
                         ride = state.ride,
+                        unitsSystem = unitsSystem,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -164,6 +166,7 @@ private fun ErrorContent(
 @Composable
 private fun RideReviewContent(
     ride: Ride,
+    unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -192,11 +195,12 @@ private fun RideReviewContent(
         RideStatistics(
             ride = ride,
             currentSpeed = 0.0,  // Not applicable for completed ride
+            unitsSystem = unitsSystem,
             modifier = Modifier.fillMaxWidth()
         )
 
         // Summary section
-        SummarySection(ride)
+        SummarySection(ride, unitsSystem)
     }
 }
 
@@ -234,6 +238,7 @@ private fun MapPlaceholder(
 @Composable
 private fun SummarySection(
     ride: Ride,
+    unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -266,25 +271,27 @@ private fun SummarySection(
                 value = formatDuration(ride.movingDurationMillis)
             )
 
-            // Distance
-            val distanceKm = ride.distanceMeters / 1000.0
+            // Distance (converted based on units system)
+            val distance = com.example.bikeredlights.ui.viewmodel.RideRecordingViewModel.convertDistance(ride.distanceMeters, unitsSystem)
+            val distanceUnit = com.example.bikeredlights.ui.viewmodel.RideRecordingViewModel.getDistanceUnit(unitsSystem)
             SummaryRow(
                 label = "Distance",
-                value = String.format("%.2f km", distanceKm)
+                value = String.format("%.2f %s", distance, distanceUnit)
             )
 
-            // Average speed
-            val avgSpeedKmh = ride.avgSpeedMetersPerSec * 3.6
+            // Average speed (converted based on units system)
+            val avgSpeed = com.example.bikeredlights.ui.viewmodel.RideRecordingViewModel.convertSpeed(ride.avgSpeedMetersPerSec, unitsSystem)
+            val speedUnit = com.example.bikeredlights.ui.viewmodel.RideRecordingViewModel.getSpeedUnit(unitsSystem)
             SummaryRow(
                 label = "Average Speed",
-                value = String.format("%.1f km/h", avgSpeedKmh)
+                value = String.format("%.1f %s", avgSpeed, speedUnit)
             )
 
-            // Max speed
-            val maxSpeedKmh = ride.maxSpeedMetersPerSec * 3.6
+            // Max speed (converted based on units system)
+            val maxSpeed = com.example.bikeredlights.ui.viewmodel.RideRecordingViewModel.convertSpeed(ride.maxSpeedMetersPerSec, unitsSystem)
             SummaryRow(
                 label = "Max Speed",
-                value = String.format("%.1f km/h", maxSpeedKmh)
+                value = String.format("%.1f %s", maxSpeed, speedUnit)
             )
         }
     }

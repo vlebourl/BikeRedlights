@@ -12,13 +12,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.bikeredlights.domain.model.Ride
+import com.example.bikeredlights.domain.model.settings.UnitsSystem
+import com.example.bikeredlights.ui.viewmodel.RideRecordingViewModel
 
 /**
  * Display ride statistics during active recording.
  *
  * **Features**:
  * - Duration in HH:MM:SS format
- * - Distance with one decimal place
+ * - Distance with one decimal place (km or miles based on settings)
  * - Current speed (from latest GPS reading)
  * - Average speed (distance / moving time)
  * - Max speed (peak value)
@@ -29,14 +31,20 @@ import com.example.bikeredlights.domain.model.Ride
  * - Large primary metric (duration)
  * - Secondary metrics in grid
  *
+ * **Units Support**:
+ * - Metric: km, km/h
+ * - Imperial: miles, mph
+ *
  * @param ride Current ride with statistics
  * @param currentSpeed Current speed in m/s from latest GPS update
+ * @param unitsSystem Units system for display (Metric or Imperial)
  * @param modifier Modifier for this composable
  */
 @Composable
 fun RideStatistics(
     ride: Ride,
     currentSpeed: Double = 0.0,
+    unitsSystem: UnitsSystem = UnitsSystem.METRIC,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -60,10 +68,11 @@ fun RideStatistics(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Distance
-            val distanceKm = ride.distanceMeters / 1000.0
+            // Distance (converted based on units system)
+            val distance = RideRecordingViewModel.convertDistance(ride.distanceMeters, unitsSystem)
+            val distanceUnit = RideRecordingViewModel.getDistanceUnit(unitsSystem)
             Text(
-                text = String.format("%.1f km", distanceKm),
+                text = String.format("%.1f %s", distance, distanceUnit),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Medium
             )
@@ -79,6 +88,7 @@ fun RideStatistics(
                 SpeedMetric(
                     label = "Current",
                     speed = currentSpeed,
+                    unitsSystem = unitsSystem,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -86,6 +96,7 @@ fun RideStatistics(
                 SpeedMetric(
                     label = "Average",
                     speed = ride.avgSpeedMetersPerSec,
+                    unitsSystem = unitsSystem,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -100,6 +111,7 @@ fun RideStatistics(
                 SpeedMetric(
                     label = "Max",
                     speed = ride.maxSpeedMetersPerSec,
+                    unitsSystem = unitsSystem,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -129,11 +141,17 @@ fun RideStatistics(
 
 /**
  * Display a single speed metric.
+ *
+ * @param label Label for the metric (e.g., "Current", "Average", "Max")
+ * @param speed Speed in meters per second
+ * @param unitsSystem Units system for conversion (Metric or Imperial)
+ * @param modifier Modifier for this composable
  */
 @Composable
 private fun SpeedMetric(
     label: String,
     speed: Double,
+    unitsSystem: UnitsSystem,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -147,16 +165,18 @@ private fun SpeedMetric(
         )
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Convert m/s to km/h (multiply by 3.6)
-        val speedKmh = speed * 3.6
+        // Convert m/s to km/h or mph based on units system
+        val convertedSpeed = RideRecordingViewModel.convertSpeed(speed, unitsSystem)
+        val speedUnit = RideRecordingViewModel.getSpeedUnit(unitsSystem)
+
         Text(
-            text = String.format("%.1f", speedKmh),
+            text = String.format("%.1f", convertedSpeed),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center
         )
         Text(
-            text = "km/h",
+            text = speedUnit,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
