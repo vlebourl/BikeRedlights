@@ -6,11 +6,13 @@ import com.example.bikeredlights.data.repository.SettingsRepository
 import com.example.bikeredlights.domain.model.settings.AutoPauseConfig
 import com.example.bikeredlights.domain.model.settings.GpsAccuracy
 import com.example.bikeredlights.domain.model.settings.UnitsSystem
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * ViewModel for Settings screens.
@@ -20,7 +22,8 @@ import kotlinx.coroutines.launch
  *
  * @param settingsRepository Repository for settings persistence
  */
-class SettingsViewModel(
+@HiltViewModel
+class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
