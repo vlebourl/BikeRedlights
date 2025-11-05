@@ -355,11 +355,11 @@ This document provides an actionable task breakdown for implementing GPS-based r
 
 ### Wake Lock Implementation
 
-- [ ] T113 [US6] Create KeepScreenOn composable in app/src/main/java/com/example/bikeredlights/ui/components/ride/KeepScreenOn.kt
-- [ ] T114 [US6] Implement DisposableEffect with FLAG_KEEP_SCREEN_ON in KeepScreenOn
-- [ ] T115 [US6] Apply KeepScreenOn to LiveRideScreen when isRecording = true
-- [ ] T116 [US6] Verify wake lock releases when recording stops
-- [ ] T117 [US6] Verify wake lock releases when app backgrounds
+- [X] T113 [US6] Create KeepScreenOn composable in app/src/main/java/com/example/bikeredlights/ui/components/ride/KeepScreenOn.kt
+- [X] T114 [US6] Implement DisposableEffect with FLAG_KEEP_SCREEN_ON in KeepScreenOn
+- [X] T115 [US6] Apply KeepScreenOn to LiveRideScreen when isRecording = true
+- [X] T116 [US6] Verify wake lock releases when recording stops
+- [X] T117 [US6] Verify wake lock releases when app backgrounds
 
 ### Test Tasks
 
