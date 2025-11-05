@@ -9,13 +9,15 @@ import javax.inject.Inject
  *
  * **Business Logic**:
  * - Sets endTime to current timestamp
- * - Calculates final elapsedDuration
- * - Validates minimum 5-second duration
+ * - Calculates final elapsedDuration (total time including pauses)
+ * - Calculates final movingDuration (active recording time, excludes pauses) - T087
+ * - Validates minimum 5-second moving duration - T087
  * - Updates ride in database
  * - Returns FinishRideResult (Success or TooShort)
  *
  * **Minimum Duration Validation**:
- * - Rides < 5 seconds are considered invalid
+ * - Rides < 5 seconds of moving time are considered invalid - T087
+ * - Uses movingDuration (excludes pauses) for validation - T087
  * - Returns TooShort result (caller should auto-discard)
  * - Prevents accidental "tap Start, immediately tap Stop" scenarios
  *
@@ -53,18 +55,23 @@ class FinishRideUseCase @Inject constructor(
         // Set end time
         val endTime = System.currentTimeMillis()
 
-        // Calculate elapsed duration
+        // Calculate elapsed duration (total time including pauses)
         val elapsedDuration = endTime - ride.startTime
 
-        // Validate minimum duration (5 seconds = 5000ms)
-        if (elapsedDuration < MIN_RIDE_DURATION_MILLIS) {
-            return FinishRideResult.TooShort(elapsedDuration)
+        // Calculate moving duration (active recording time, excludes pauses) - T087
+        val movingDuration = elapsedDuration - ride.manualPausedDurationMillis - ride.autoPausedDurationMillis
+
+        // Validate minimum duration using moving time (5 seconds = 5000ms) - T087
+        // Use movingDuration instead of elapsedDuration to exclude paused time from validation
+        if (movingDuration < MIN_RIDE_DURATION_MILLIS) {
+            return FinishRideResult.TooShort(movingDuration)
         }
 
-        // Update ride with end time and elapsed duration
+        // Update ride with end time and final duration calculations - T087
         val finishedRide = ride.copy(
             endTime = endTime,
-            elapsedDurationMillis = elapsedDuration
+            elapsedDurationMillis = elapsedDuration,
+            movingDurationMillis = movingDuration  // Final moving duration calculation
         )
 
         rideRepository.updateRide(finishedRide)
