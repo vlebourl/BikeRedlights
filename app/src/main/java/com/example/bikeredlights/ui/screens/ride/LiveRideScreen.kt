@@ -1,14 +1,24 @@
 package com.example.bikeredlights.ui.screens.ride
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.bikeredlights.ui.components.ride.KeepScreenOn
@@ -86,7 +96,8 @@ fun LiveRideScreen(
         when (uiState) {
             is RideRecordingUiState.Idle -> {
                 IdleContent(
-                    onStartRide = { viewModel.startRide() }
+                    onStartRide = { viewModel.startRide() },
+                    modifier = Modifier.fillMaxSize()
                 )
             }
             is RideRecordingUiState.Recording -> {
@@ -132,12 +143,63 @@ fun LiveRideScreen(
 
 /**
  * Content shown when idle (no active ride).
+ *
+ * **Permission Handling**:
+ * - Checks for location permissions before starting ride
+ * - Requests permissions if not granted
+ * - Shows rationale dialog if permissions are denied
+ * - Handles "Don't ask again" scenario with settings prompt
  */
 @Composable
 private fun IdleContent(
     onStartRide: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
+    // Permission state
+    var showPermissionDeniedDialog by remember { mutableStateOf(false) }
+    var permissionsGranted by remember {
+        mutableStateOf(hasLocationPermissions(context))
+    }
+
+    // Permission launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+
+        if (fineLocationGranted || coarseLocationGranted) {
+            // At least one location permission granted, start ride
+            permissionsGranted = true
+            onStartRide()
+        } else {
+            // Permissions denied, show dialog
+            showPermissionDeniedDialog = true
+        }
+    }
+
+    // Permission denied dialog
+    if (showPermissionDeniedDialog) {
+        AlertDialog(
+            onDismissRequest = { showPermissionDeniedDialog = false },
+            title = { Text("Location Permission Required") },
+            text = {
+                Text(
+                    "BikeRedlights needs location permission to track your ride. " +
+                    "Please grant location permission in Settings to use ride recording."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showPermissionDeniedDialog = false }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
+    // Main idle UI
     Column(
         modifier = modifier.padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -149,12 +211,45 @@ private fun IdleContent(
             modifier = Modifier.padding(bottom = 24.dp)
         )
         Button(
-            onClick = onStartRide,
+            onClick = {
+                if (hasLocationPermissions(context)) {
+                    // Permissions already granted, start ride immediately
+                    onStartRide()
+                } else {
+                    // Request permissions
+                    permissionLauncher.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                        )
+                    )
+                }
+            },
             modifier = Modifier.fillMaxWidth(0.6f)
         ) {
             Text("Start Ride")
         }
     }
+}
+
+/**
+ * Check if location permissions are granted.
+ *
+ * @param context Android context
+ * @return true if at least one location permission is granted
+ */
+private fun hasLocationPermissions(context: Context): Boolean {
+    val fineLocationGranted = ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.ACCESS_FINE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
+
+    val coarseLocationGranted = ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.ACCESS_COARSE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
+
+    return fineLocationGranted || coarseLocationGranted
 }
 
 /**
