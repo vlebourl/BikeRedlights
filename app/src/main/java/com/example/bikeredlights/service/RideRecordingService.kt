@@ -32,6 +32,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -100,6 +101,7 @@ class RideRecordingService : Service() {
     private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
     private var locationJob: Job? = null
     private var durationUpdateJob: Job? = null
+    private var gpsAccuracyObserverJob: Job? = null  // T082: Observe GPS accuracy changes
     private var currentRideId: Long? = null
     private var currentState: RideRecordingState = RideRecordingState.Idle
     private var pauseStartTime: Long = 0  // Timestamp when pause started (Bug #2 fix)
@@ -163,6 +165,7 @@ class RideRecordingService : Service() {
         serviceScope.cancel()
         locationJob?.cancel()
         durationUpdateJob?.cancel()
+        gpsAccuracyObserverJob?.cancel()
     }
 
     /**
@@ -192,6 +195,9 @@ class RideRecordingService : Service() {
 
             // Start duration updates (Bug #1 fix)
             startDurationUpdates(rideId)
+
+            // Start GPS accuracy observer (T082)
+            startGpsAccuracyObserver(rideId)
         }
     }
 
@@ -204,6 +210,9 @@ class RideRecordingService : Service() {
         serviceScope.launch {
             // Stop duration updates while paused
             durationUpdateJob?.cancel()
+
+            // Stop GPS accuracy observer while paused (T082)
+            gpsAccuracyObserverJob?.cancel()
 
             // Record pause start time (Bug #2 fix)
             pauseStartTime = System.currentTimeMillis()
@@ -243,6 +252,9 @@ class RideRecordingService : Service() {
             // Resume duration updates (Bug #1 fix)
             startDurationUpdates(rideId)
 
+            // Resume GPS accuracy observer (T082)
+            startGpsAccuracyObserver(rideId)
+
             // Update notification
             val notification = buildNotification("Recording...")
             notificationManager.notify(NOTIFICATION_ID, notification)
@@ -266,6 +278,9 @@ class RideRecordingService : Service() {
 
             // Stop duration updates
             durationUpdateJob?.cancel()
+
+            // Stop GPS accuracy observer (T082)
+            gpsAccuracyObserverJob?.cancel()
 
             // Update state to Stopped
             currentState = RideRecordingState.Stopped(rideId)
@@ -297,6 +312,7 @@ class RideRecordingService : Service() {
                     startForegroundService(notification)
                     startLocationTracking(state.rideId)
                     startDurationUpdates(state.rideId)
+                    startGpsAccuracyObserver(state.rideId)  // T082
                 }
                 is RideRecordingState.ManuallyPaused -> {
                     // Resume in paused state
@@ -312,6 +328,7 @@ class RideRecordingService : Service() {
                     val notification = buildNotification("Auto-paused (Recovered)")
                     startForegroundService(notification)
                     startLocationTracking(state.rideId)
+                    startGpsAccuracyObserver(state.rideId)  // T082
                 }
                 else -> {
                     // No active ride, stop service
@@ -499,6 +516,39 @@ class RideRecordingService : Service() {
         )
 
         rideRepository.updateRide(updatedRide)
+    }
+
+    /**
+     * Start GPS accuracy observer (T082).
+     *
+     * Observes changes to GPS accuracy setting and restarts location tracking
+     * when the setting changes mid-ride. This ensures the new update interval
+     * takes effect immediately without needing to stop and restart the ride.
+     *
+     * @param rideId ID of the active ride
+     */
+    private fun startGpsAccuracyObserver(rideId: Long) {
+        gpsAccuracyObserverJob?.cancel()
+
+        gpsAccuracyObserverJob = serviceScope.launch {
+            settingsRepository.gpsAccuracy
+                .distinctUntilChanged()  // Only react to actual changes
+                .collect { newAccuracy ->
+                    // Restart location tracking with new GPS accuracy setting
+                    // Only restart if we're currently recording (not paused)
+                    val state = rideRecordingStateRepository.getCurrentState()
+                    if (state is RideRecordingState.Recording || state is RideRecordingState.AutoPaused) {
+                        // Cancel current location job
+                        locationJob?.cancel()
+
+                        // Restart with new setting (LocationRepository will read latest setting)
+                        startLocationTracking(rideId)
+
+                        android.util.Log.d("RideRecordingService",
+                            "GPS accuracy changed to ${newAccuracy.name}, restarted location tracking")
+                    }
+                }
+        }
     }
 
     /**
