@@ -12,32 +12,36 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.bikeredlights.ui.screens.SpeedTrackingScreen
+import androidx.navigation.navArgument
+import com.example.bikeredlights.ui.screens.ride.LiveRideScreen
+import com.example.bikeredlights.ui.screens.ride.RideReviewScreen
 import com.example.bikeredlights.ui.screens.settings.RideTrackingSettingsScreen
 import com.example.bikeredlights.ui.screens.settings.SettingsHomeScreen
 import com.example.bikeredlights.ui.screens.settings.SettingsViewModel
-import com.example.bikeredlights.ui.viewmodel.SpeedTrackingViewModel
+import com.example.bikeredlights.ui.viewmodel.RideRecordingViewModel
 
 /**
  * Main navigation graph for the BikeRedlights app.
  *
  * Handles routing between:
- * - Live tab (speed tracking)
+ * - Live tab (ride recording)
  * - Rides tab (placeholder for Feature 3)
  * - Settings tab (Feature 2A)
  * - Settings detail screens (Ride & Tracking)
+ * - Ride review screen (after saving ride)
  *
  * @param navController Navigation controller for managing navigation state
- * @param speedTrackingViewModel ViewModel for speed tracking (existing v0.1.0)
+ * @param rideRecordingViewModel ViewModel for ride recording (Feature 002)
  * @param settingsViewModel ViewModel for settings (Feature 2A)
  * @param modifier Modifier for NavHost
  */
 @Composable
 fun AppNavigation(
     navController: NavHostController,
-    speedTrackingViewModel: SpeedTrackingViewModel,
+    rideRecordingViewModel: RideRecordingViewModel,
     settingsViewModel: SettingsViewModel,
     modifier: Modifier = Modifier
 ) {
@@ -46,11 +50,32 @@ fun AppNavigation(
         startDestination = BottomNavDestination.DEFAULT.route,
         modifier = modifier
     ) {
-        // Live tab - Speed tracking (v0.1.0)
+        // Live tab - Ride recording (Feature 002)
         composable(BottomNavDestination.LIVE.route) {
-            SpeedTrackingScreen(
-                viewModel = speedTrackingViewModel,
-                modifier = Modifier
+            LiveRideScreen(
+                viewModel = rideRecordingViewModel,
+                onNavigateToReview = { rideId ->
+                    navController.navigate("ride_review/$rideId")
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        // Ride review screen (Feature 002) - shows completed ride statistics
+        composable(
+            route = "ride_review/{rideId}",
+            arguments = listOf(
+                navArgument("rideId") {
+                    type = NavType.LongType
+                }
+            )
+        ) { backStackEntry ->
+            val rideId = backStackEntry.arguments?.getLong("rideId") ?: 0L
+            RideReviewScreen(
+                rideId = rideId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
             )
         }
 

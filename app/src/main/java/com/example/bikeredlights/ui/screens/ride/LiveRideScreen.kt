@@ -3,6 +3,7 @@ package com.example.bikeredlights.ui.screens.ride
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -13,8 +14,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.bikeredlights.ui.components.ride.RideControls
 import com.example.bikeredlights.ui.components.ride.RideStatistics
 import com.example.bikeredlights.ui.components.ride.SaveRideDialog
+import com.example.bikeredlights.ui.viewmodel.NavigationEvent
 import com.example.bikeredlights.ui.viewmodel.RideRecordingUiState
 import com.example.bikeredlights.ui.viewmodel.RideRecordingViewModel
+import kotlinx.coroutines.flow.collectLatest
 
 /**
  * Live Ride Screen for starting and stopping ride recording.
@@ -38,9 +41,21 @@ import com.example.bikeredlights.ui.viewmodel.RideRecordingViewModel
 @Composable
 fun LiveRideScreen(
     viewModel: RideRecordingViewModel = hiltViewModel(),
+    onNavigateToReview: (Long) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // Handle navigation events (one-time events via Channel)
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvents.collectLatest { event ->
+            when (event) {
+                is NavigationEvent.NavigateToReview -> {
+                    onNavigateToReview(event.rideId)
+                }
+            }
+        }
+    }
 
     // Show save dialog if needed
     if (uiState is RideRecordingUiState.ShowingSaveDialog) {
