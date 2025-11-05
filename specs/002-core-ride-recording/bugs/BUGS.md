@@ -2,17 +2,25 @@
 
 **Feature**: F1A - Core Ride Recording (v0.3.0)
 **Phase**: Phase 6 - User Story 5 (P2) - Settings Integration
-**Status**: Partially Complete - Known Bugs
+**Status**: ✅ **ALL BUGS FIXED** (as of 2025-11-05)
 **Date Reported**: 2025-11-05
+**Date Resolved**: 2025-11-05
 **Reporter**: Emulator Testing Session
 
 ---
 
 ## Summary
 
-Phase 6 testing revealed **4 critical bugs** related to real-time UI updates during ride recording. While the Flow-based observation infrastructure was successfully implemented (tasks T076-T079 partially complete), the underlying Service update logic has fundamental issues that prevent proper real-time display of ride statistics.
+Phase 6 testing revealed **4 bugs** related to real-time UI updates, pause behavior, permissions, and UX enhancements. All bugs have been successfully resolved:
 
-**Impact**: Users cannot see live duration/distance/speed updates during ride recording. The UI only updates when user interacts (pause/resume) or navigates away and back.
+- ✅ **Bug #1** (CRITICAL): Duration not updating in real-time - **FIXED** (commit e420703)
+- ✅ **Bug #2** (CRITICAL): Duration continues when paused - **FIXED** (commit e420703)
+- ✅ **Bug #3** (HIGH): Missing permission request UI - **FIXED** (commit b534d23)
+- ✅ **Bug #4** (LOW): Missing current time display - **FIXED** (commit e420703)
+
+**Previous Impact**: Users could not see live duration/distance/speed updates during ride recording. The UI only updated when user interacted (pause/resume) or navigated away and back.
+
+**Current Status**: All critical bugs resolved. Real-time updates work correctly, pause behavior is accurate, permissions are requested properly, and current time is displayed.
 
 ---
 
@@ -245,11 +253,14 @@ private suspend fun handleResume() {
 
 ## Bug #3: Missing Permission Request UI
 
+### Status
+✅ **FIXED** (commit b534d23, 2025-11-05)
+
 ### Severity
-**HIGH** - App crashes on first launch; blocks all functionality
+**HIGH** - App crashed on first launch; blocked all functionality
 
 ### Description
-The app does not request location permissions on first launch. When user taps "Start Ride", the app crashes with SecurityException because FOREGROUND_SERVICE_LOCATION permission is not granted.
+The app did not request location permissions on first launch. When user tapped "Start Ride", the app crashed with SecurityException because FOREGROUND_SERVICE_LOCATION permission was not granted.
 
 ### Steps to Reproduce
 1. Fresh install app on emulator
@@ -288,76 +299,105 @@ Permissions ARE declared in manifest:
 
 **Problem**: No runtime permission request flow implemented. App assumes permissions are already granted.
 
-### Proposed Fix
+### Resolution
 
-**Strategy**: Add permission request screen/dialog before allowing "Start Ride"
+**Strategy Implemented**: Permission check in IdleContent composable (lightweight, UI-only approach)
 
-**Implementation Options**:
+**Approach**: Instead of adding ViewModel state or new screens, implemented permission handling directly in the IdleContent composable using Compose permission APIs. This keeps the logic localized and follows Android best practices.
 
-**Option A: Permission Request on First Launch**
-1. Check permissions in MainActivity.onCreate()
-2. If not granted, show full-screen permission rationale
-3. Request permissions using ActivityResultContracts.RequestMultiplePermissions
-4. Only navigate to main app after permissions granted
+**Implementation Details** (commit b534d23):
 
-**Option B: Permission Request on "Start Ride" Tap**
-1. Check permissions in RideRecordingViewModel.startRide()
-2. If not granted, emit UI state: RideRecordingUiState.PermissionsRequired
-3. Show dialog explaining why location is needed
-4. Request permissions when user taps "Grant Permissions"
-5. Start ride recording after permissions granted
-
-**Recommended**: Option B (cleaner UX, user knows why permissions are needed)
-
-**Code changes needed**:
+1. **Added permission check helper function**:
 ```kotlin
-// In RideRecordingViewModel.kt
-sealed class RideRecordingUiState {
-    data object Idle : RideRecordingUiState()
-    data object PermissionsRequired : RideRecordingUiState()  // ← ADD THIS
-    // ... existing states
+private fun hasLocationPermissions(context: Context): Boolean {
+    val fineLocationGranted = ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.ACCESS_FINE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
+
+    val coarseLocationGranted = ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.ACCESS_COARSE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
+
+    return fineLocationGranted || coarseLocationGranted
 }
+```
 
-fun startRide() {
-    if (!hasLocationPermissions()) {
-        _uiState.value = RideRecordingUiState.PermissionsRequired
-        return
-    }
-    RideRecordingService.startRecording(context)
-}
+2. **Implemented permission launcher in IdleContent**:
+```kotlin
+val permissionLauncher = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.RequestMultiplePermissions()
+) { permissions ->
+    val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+    val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
 
-private fun hasLocationPermissions(): Boolean {
-    return context.checkSelfPermission(ACCESS_FINE_LOCATION) == PERMISSION_GRANTED
-}
-
-// In LiveRideScreen.kt
-@Composable
-fun LiveRideScreen(...) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    when (uiState) {
-        is PermissionsRequired -> {
-            LocationPermissionDialog(
-                onGranted = { viewModel.startRide() },
-                onDenied = { /* return to idle */ }
-            )
-        }
-        // ... existing states
+    if (fineLocationGranted || coarseLocationGranted) {
+        onStartRide()  // Start ride immediately
+    } else {
+        showPermissionDeniedDialog = true  // Show rationale
     }
 }
 ```
 
-**Files to create**:
-- `app/src/main/java/com/example/bikeredlights/ui/components/permissions/LocationPermissionDialog.kt`
+3. **Modified "Start Ride" button onClick**:
+```kotlin
+Button(
+    onClick = {
+        if (hasLocationPermissions(context)) {
+            onStartRide()  // Permissions already granted
+        } else {
+            permissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+)
+```
 
-**Files to modify**:
-- `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt`
+4. **Added permission denied dialog**:
+```kotlin
+if (showPermissionDeniedDialog) {
+    AlertDialog(
+        onDismissRequest = { showPermissionDeniedDialog = false },
+        title = { Text("Location Permission Required") },
+        text = {
+            Text(
+                "BikeRedlights needs location permission to track your ride. " +
+                "Please grant location permission in Settings to use ride recording."
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { showPermissionDeniedDialog = false }) {
+                Text("OK")
+            }
+        }
+    )
+}
+```
+
+**Files Modified**:
 - `app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt`
+  - Lines 1-32: Added permission handling imports
+  - Lines 144-253: Rewrote IdleContent with permission flow
 
-**Tests to add**:
-- Unit test: ViewModel checks permissions before starting service
-- UI test: Permission dialog shows when permissions not granted
-- UI test: "Start Ride" works after permissions granted
+**Why This Approach**:
+- ✅ No new ViewModel state needed (simpler)
+- ✅ No new screens/dialogs needed (uses Android's native permission UI)
+- ✅ Follows Compose best practices (rememberLauncherForActivityResult)
+- ✅ Minimal code changes (localized to one composable)
+- ✅ User understands context when permission is requested (at "Start Ride" tap)
+
+**Testing**:
+- Revoked permissions via adb
+- Installed fresh APK
+- App no longer crashes on "Start Ride"
+- Android's native permission dialog appears
+- Ride starts immediately after granting permissions
+- Rationale dialog shows if permissions denied
 
 ---
 
