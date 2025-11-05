@@ -33,6 +33,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -105,6 +106,7 @@ class RideRecordingService : Service() {
     private var currentRideId: Long? = null
     private var currentState: RideRecordingState = RideRecordingState.Idle
     private var pauseStartTime: Long = 0  // Timestamp when pause started (Bug #2 fix)
+    private var lastManualResumeTime: Long = 0  // Bug #5: Track manual resume to prevent immediate auto-pause
 
     private lateinit var notificationManager: NotificationManager
 
@@ -227,12 +229,15 @@ class RideRecordingService : Service() {
     }
 
     /**
-     * Resume ride recording from manual pause.
+     * Resume ride recording from manual or auto pause.
      */
     private fun resumeRecording() {
         val rideId = currentRideId ?: return
 
         serviceScope.launch {
+            // Track if resuming from auto-pause (Bug #5)
+            val wasAutoPaused = currentState is RideRecordingState.AutoPaused
+
             // Calculate paused duration and accumulate it (Bug #2 fix)
             if (pauseStartTime > 0) {
                 val pausedDuration = System.currentTimeMillis() - pauseStartTime
@@ -248,6 +253,13 @@ class RideRecordingService : Service() {
 
             currentState = RideRecordingState.Recording(rideId)
             rideRecordingStateRepository.updateRecordingState(currentState)
+
+            // If resuming from auto-pause, set grace period to prevent immediate re-trigger (Bug #5)
+            if (wasAutoPaused) {
+                lastManualResumeTime = System.currentTimeMillis()
+                android.util.Log.d("RideRecordingService",
+                    "Manual resume from auto-pause - grace period active for 30s")
+            }
 
             // Resume duration updates (Bug #1 fix)
             startDurationUpdates(rideId)
@@ -414,8 +426,12 @@ class RideRecordingService : Service() {
 
             when (currentState) {
                 is RideRecordingState.Recording -> {
+                    // Check if we're within grace period after manual resume (Bug #5 fix)
+                    val timeSinceManualResume = System.currentTimeMillis() - lastManualResumeTime
+                    val inGracePeriod = lastManualResumeTime > 0 && timeSinceManualResume < AUTO_PAUSE_GRACE_PERIOD_MS
+
                     // Check if speed dropped below pause threshold
-                    if (currentSpeed < pauseThreshold) {
+                    if (currentSpeed < pauseThreshold && !inGracePeriod) {
                         // Transition to AutoPaused
                         this.currentState = RideRecordingState.AutoPaused(rideId)
                         rideRecordingStateRepository.updateRecordingState(this.currentState)
@@ -423,18 +439,30 @@ class RideRecordingService : Service() {
                         // Update notification
                         val notification = buildNotification("Auto-paused (low speed)")
                         notificationManager.notify(NOTIFICATION_ID, notification)
+
+                        android.util.Log.d("RideRecordingService",
+                            "Auto-pause triggered: speed=$currentSpeed m/s < threshold=$pauseThreshold m/s")
+                    } else if (inGracePeriod && currentSpeed < pauseThreshold) {
+                        android.util.Log.d("RideRecordingService",
+                            "Auto-pause suppressed: in grace period (${timeSinceManualResume}ms / ${AUTO_PAUSE_GRACE_PERIOD_MS}ms)")
                     }
                 }
                 is RideRecordingState.AutoPaused -> {
                     // Check if speed went above resume threshold
                     if (currentSpeed >= resumeThreshold) {
-                        // Transition to Recording
+                        // Transition to Recording (automatic resume)
                         this.currentState = RideRecordingState.Recording(rideId)
                         rideRecordingStateRepository.updateRecordingState(this.currentState)
+
+                        // Reset grace period - automatic resume doesn't get grace period
+                        lastManualResumeTime = 0
 
                         // Update notification
                         val notification = buildNotification("Recording...")
                         notificationManager.notify(NOTIFICATION_ID, notification)
+
+                        android.util.Log.d("RideRecordingService",
+                            "Auto-resume triggered: speed=$currentSpeed m/s >= threshold=$resumeThreshold m/s")
                     }
                 }
                 else -> { /* No action for other states */ }
@@ -525,6 +553,8 @@ class RideRecordingService : Service() {
      * when the setting changes mid-ride. This ensures the new update interval
      * takes effect immediately without needing to stop and restart the ride.
      *
+     * Bug #6 fix: Use drop(1) to skip initial emission and only react to actual changes.
+     *
      * @param rideId ID of the active ride
      */
     private fun startGpsAccuracyObserver(rideId: Long) {
@@ -533,6 +563,7 @@ class RideRecordingService : Service() {
         gpsAccuracyObserverJob = serviceScope.launch {
             settingsRepository.gpsAccuracy
                 .distinctUntilChanged()  // Only react to actual changes
+                .drop(1)  // Bug #6: Skip initial emission to avoid unnecessary restarts
                 .collect { newAccuracy ->
                     // Restart location tracking with new GPS accuracy setting
                     // Only restart if we're currently recording (not paused)
@@ -658,6 +689,9 @@ class RideRecordingService : Service() {
     companion object {
         private const val CHANNEL_ID = "ride_recording_channel"
         private const val NOTIFICATION_ID = 1
+
+        // Bug #5: Grace period after manual resume from auto-pause
+        private const val AUTO_PAUSE_GRACE_PERIOD_MS = 30000L  // 30 seconds
 
         // Service actions
         const val ACTION_START_RECORDING = "com.example.bikeredlights.ACTION_START_RECORDING"
