@@ -99,8 +99,10 @@ class RideRecordingService : Service() {
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
     private var locationJob: Job? = null
+    private var durationUpdateJob: Job? = null
     private var currentRideId: Long? = null
     private var currentState: RideRecordingState = RideRecordingState.Idle
+    private var pauseStartTime: Long = 0  // Timestamp when pause started (Bug #2 fix)
 
     private lateinit var notificationManager: NotificationManager
 
@@ -160,6 +162,7 @@ class RideRecordingService : Service() {
         super.onDestroy()
         serviceScope.cancel()
         locationJob?.cancel()
+        durationUpdateJob?.cancel()
     }
 
     /**
@@ -186,6 +189,9 @@ class RideRecordingService : Service() {
 
             // Start GPS tracking
             startLocationTracking(rideId)
+
+            // Start duration updates (Bug #1 fix)
+            startDurationUpdates(rideId)
         }
     }
 
@@ -196,6 +202,12 @@ class RideRecordingService : Service() {
         val rideId = currentRideId ?: return
 
         serviceScope.launch {
+            // Stop duration updates while paused
+            durationUpdateJob?.cancel()
+
+            // Record pause start time (Bug #2 fix)
+            pauseStartTime = System.currentTimeMillis()
+
             currentState = RideRecordingState.ManuallyPaused(rideId)
             rideRecordingStateRepository.updateRecordingState(currentState)
 
@@ -212,8 +224,24 @@ class RideRecordingService : Service() {
         val rideId = currentRideId ?: return
 
         serviceScope.launch {
+            // Calculate paused duration and accumulate it (Bug #2 fix)
+            if (pauseStartTime > 0) {
+                val pausedDuration = System.currentTimeMillis() - pauseStartTime
+                val ride = rideRepository.getRideById(rideId)
+                if (ride != null) {
+                    val updatedRide = ride.copy(
+                        manualPausedDurationMillis = ride.manualPausedDurationMillis + pausedDuration
+                    )
+                    rideRepository.updateRide(updatedRide)
+                }
+                pauseStartTime = 0  // Reset
+            }
+
             currentState = RideRecordingState.Recording(rideId)
             rideRecordingStateRepository.updateRecordingState(currentState)
+
+            // Resume duration updates (Bug #1 fix)
+            startDurationUpdates(rideId)
 
             // Update notification
             val notification = buildNotification("Recording...")
@@ -235,6 +263,9 @@ class RideRecordingService : Service() {
         serviceScope.launch {
             // Stop GPS tracking
             locationJob?.cancel()
+
+            // Stop duration updates
+            durationUpdateJob?.cancel()
 
             // Update state to Stopped
             currentState = RideRecordingState.Stopped(rideId)
@@ -265,6 +296,7 @@ class RideRecordingService : Service() {
                     val notification = buildNotification("Recording... (Recovered)")
                     startForegroundService(notification)
                     startLocationTracking(state.rideId)
+                    startDurationUpdates(state.rideId)
                 }
                 is RideRecordingState.ManuallyPaused -> {
                     // Resume in paused state
@@ -415,6 +447,55 @@ class RideRecordingService : Service() {
             distanceMeters = newDistance,
             maxSpeedMetersPerSec = newMaxSpeed,
             avgSpeedMetersPerSec = avgSpeed
+        )
+
+        rideRepository.updateRide(updatedRide)
+    }
+
+    /**
+     * Start duration updates (timer-based, every 1 second).
+     *
+     * This fixes Bug #1: Duration not updating in real-time.
+     * Updates ride duration fields independently of GPS location changes.
+     */
+    private fun startDurationUpdates(rideId: Long) {
+        durationUpdateJob?.cancel()
+
+        durationUpdateJob = serviceScope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(1000)  // Update every 1 second
+                updateRideDuration(rideId)
+            }
+        }
+    }
+
+    /**
+     * Update ride duration fields in database.
+     *
+     * Calculates elapsed and moving duration based on current time and pause state.
+     * Saves to database for real-time UI updates via Flow observation.
+     *
+     * IMPORTANT: Only updates when state is Recording. Paused states should not update duration.
+     */
+    private suspend fun updateRideDuration(rideId: Long) {
+        // Only update duration when actively recording
+        val state = rideRecordingStateRepository.getCurrentState()
+        if (state !is RideRecordingState.Recording) {
+            return  // Don't update if paused or stopped
+        }
+
+        val ride = rideRepository.getRideById(rideId) ?: return
+
+        // Calculate elapsed duration (total time since start)
+        val elapsedDuration = System.currentTimeMillis() - ride.startTime
+
+        // Calculate moving duration (exclude paused time)
+        val movingDuration = elapsedDuration - ride.manualPausedDurationMillis - ride.autoPausedDurationMillis
+
+        // Update ride with duration fields
+        val updatedRide = ride.copy(
+            elapsedDurationMillis = elapsedDuration,
+            movingDurationMillis = movingDuration
         )
 
         rideRepository.updateRide(updatedRide)

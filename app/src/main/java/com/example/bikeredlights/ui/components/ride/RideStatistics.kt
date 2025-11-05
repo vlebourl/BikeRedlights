@@ -14,6 +14,9 @@ import androidx.compose.ui.unit.dp
 import com.example.bikeredlights.domain.model.Ride
 import com.example.bikeredlights.domain.model.settings.UnitsSystem
 import com.example.bikeredlights.ui.viewmodel.RideRecordingViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * Display ride statistics during active recording.
@@ -57,10 +60,9 @@ fun RideStatistics(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Duration (primary metric)
-            val duration = System.currentTimeMillis() - ride.startTime
+            // Duration (primary metric) - shows ACTIVE recording time, pauses excluded
             Text(
-                text = formatDuration(duration),
+                text = formatDuration(ride.movingDurationMillis),
                 style = MaterialTheme.typography.displayLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -115,20 +117,20 @@ fun RideStatistics(
                     modifier = Modifier.weight(1f)
                 )
 
-                // Moving time
-                val movingTimeSeconds = ride.movingDurationMillis / 1000
+                // Current time of day
+                val currentTime = SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date())
                 Column(
                     modifier = Modifier.weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Moving",
+                        text = "Time",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = formatDuration(ride.movingDurationMillis),
+                        text = currentTime,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center

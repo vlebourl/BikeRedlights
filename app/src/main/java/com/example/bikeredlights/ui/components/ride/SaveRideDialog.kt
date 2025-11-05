@@ -40,7 +40,8 @@ fun SaveRideDialog(
             Text("Save Ride?")
         },
         text = {
-            val durationSeconds = ride.elapsedDurationMillis / 1000
+            // Show moving duration (active recording time, pauses excluded) to match main timer
+            val durationSeconds = ride.movingDurationMillis / 1000
             val minutes = durationSeconds / 60
             val seconds = durationSeconds % 60
             Text("Would you like to save \"${ride.name}\"?\n\nDuration: ${minutes}m ${seconds}s")
