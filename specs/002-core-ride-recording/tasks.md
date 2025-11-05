@@ -285,19 +285,25 @@ This document provides an actionable task breakdown for implementing GPS-based r
 - [X] T078 [US5] Implement m/s → km/h/mph conversion in RideRecordingViewModel
 - [X] T079 [US5] Update RideStatistics to display units labels (km, km/h, miles, mph)
 
-### GPS Accuracy Integration
+### GPS Accuracy Integration ✅ COMPLETE
 
-- [ ] T080 [US5] Read GpsAccuracy from SettingsRepository in RideRecordingService
-- [ ] T081 [US5] Configure LocationRequest with 1000ms (High) or 4000ms (Battery Saver) interval
-- [ ] T082 [US5] Implement settings change listener to update interval mid-ride
+- [x] T080 [US5] Read GpsAccuracy from SettingsRepository - **ALREADY IMPLEMENTED** (LocationRepositoryImpl:68-74)
+- [x] T081 [US5] Configure LocationRequest with 1000ms (High) or 4000ms (Battery Saver) interval - **ALREADY IMPLEMENTED** (LocationRepositoryImpl:76-89)
+- [x] T082 [US5] Implement settings change listener to update interval mid-ride - **COMPLETE** (commit d035351)
+  - Added GPS accuracy observer in RideRecordingService
+  - Restarts location tracking when setting changes mid-ride
+  - Supports dynamic interval switching (1000ms <-> 4000ms)
 
-### Auto-Pause Implementation
+### Auto-Pause Implementation ✅ COMPLETE
 
-- [ ] T083 [US5] Read AutoPauseConfig from SettingsRepository in RideRecordingViewModel
-- [ ] T084 [US5] Implement auto-pause detection (speed < 1 km/h for threshold) in RideRecordingViewModel
-- [ ] T085 [US5] Implement auto-resume detection (speed > 1 km/h) in RideRecordingViewModel
-- [ ] T086 [US5] Add "Paused" indicator banner to LiveRideScreen
-- [ ] T087 [US5] Exclude paused duration from total duration in FinishRideUseCase
+- [x] T083 [US5] Read AutoPauseConfig from SettingsRepository - **ALREADY IMPLEMENTED** (RideRecordingService:385-389)
+- [x] T084 [US5] Implement auto-pause detection (speed < 1 km/h for threshold) - **ALREADY IMPLEMENTED** (RideRecordingService:399-409)
+- [x] T085 [US5] Implement auto-resume detection (speed > 1 km/h) - **ALREADY IMPLEMENTED** (RideRecordingService:411-422)
+- [x] T086 [US5] Add "Paused" indicator banner to LiveRideScreen - **ALREADY IMPLEMENTED** (LiveRideScreen:121-128)
+- [x] T087 [US5] Exclude paused duration from total duration in FinishRideUseCase - **COMPLETE** (commit c8cd241)
+  - Uses movingDuration for minimum duration validation
+  - Calculates final moving duration excluding pauses
+  - Updates documentation
 
 ### Test Tasks
 
