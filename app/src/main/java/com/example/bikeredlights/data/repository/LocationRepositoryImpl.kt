@@ -6,6 +6,7 @@ import android.util.Log
 import com.example.bikeredlights.domain.model.LocationData
 import com.example.bikeredlights.domain.model.settings.GpsAccuracy
 import com.example.bikeredlights.domain.repository.LocationRepository
+import com.example.bikeredlights.domain.repository.SettingsRepository
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
