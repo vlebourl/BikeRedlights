@@ -66,6 +66,18 @@ interface RideDao {
     suspend fun getRideById(rideId: Long): Ride?
 
     /**
+     * Observe a single ride by its ID as a Flow.
+     *
+     * Emits updates whenever the ride changes in the database.
+     * Used for real-time updates during ride recording.
+     *
+     * @param rideId Unique ride identifier
+     * @return Flow emitting ride updates, or null if ride not found
+     */
+    @Query("SELECT * FROM rides WHERE id = :rideId")
+    fun getRideByIdFlow(rideId: Long): Flow<Ride?>
+
+    /**
      * Get all incomplete rides (where endTime is NULL).
      *
      * Used for recovery when app crashes or is killed during recording.

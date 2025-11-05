@@ -46,6 +46,12 @@ class RideRepositoryImpl @Inject constructor(
         rideDao.getRideById(rideId)?.toDomainModel()
     }
 
+    override fun getRideByIdFlow(rideId: Long): Flow<Ride?> {
+        return rideDao.getRideByIdFlow(rideId).map { entity ->
+            entity?.toDomainModel()
+        }
+    }
+
     override fun getAllRidesFlow(): Flow<List<Ride>> {
         return rideDao.getAllRidesFlow().map { entities ->
             entities.map { it.toDomainModel() }

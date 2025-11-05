@@ -61,6 +61,17 @@ interface RideRepository {
     suspend fun getRideById(rideId: Long): Ride?
 
     /**
+     * Observe a specific ride by ID as a Flow.
+     *
+     * Emits updates whenever the ride changes in the database.
+     * Used for real-time updates during ride recording (duration, distance, etc.).
+     *
+     * @param rideId Ride identifier
+     * @return Flow emitting ride updates, or null if ride not found
+     */
+    fun getRideByIdFlow(rideId: Long): Flow<Ride?>
+
+    /**
      * Get all rides ordered by start time (most recent first).
      *
      * @return Flow emitting list of rides (updates when database changes)
