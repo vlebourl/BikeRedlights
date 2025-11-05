@@ -38,6 +38,7 @@ class RideRecordingViewModelTest {
     private lateinit var rideRecordingStateRepository: RideRecordingStateRepository
     private lateinit var rideRepository: RideRepository
     private lateinit var finishRideUseCase: FinishRideUseCase
+    private lateinit var settingsRepository: com.example.bikeredlights.data.repository.SettingsRepository
     private lateinit var viewModel: RideRecordingViewModel
 
     private lateinit var recordingStateFlow: MutableStateFlow<RideRecordingState>
@@ -50,10 +51,14 @@ class RideRecordingViewModelTest {
         rideRecordingStateRepository = mockk(relaxed = true)
         rideRepository = mockk(relaxed = true)
         finishRideUseCase = mockk()
+        settingsRepository = mockk(relaxed = true)
 
         // Mock recording state flow
         recordingStateFlow = MutableStateFlow<RideRecordingState>(RideRecordingState.Idle)
         every { rideRecordingStateRepository.getRecordingState() } returns recordingStateFlow
+
+        // Mock settings flow
+        every { settingsRepository.unitsSystem } returns MutableStateFlow(com.example.bikeredlights.domain.model.settings.UnitsSystem.METRIC)
 
         // Mock static service calls
         mockkObject(com.example.bikeredlights.service.RideRecordingService.Companion)
@@ -303,6 +308,156 @@ class RideRecordingViewModelTest {
         }
     }
 
+    // ========================================
+    // Units Conversion Tests (T088)
+    // ========================================
+
+    @Test
+    fun `convertDistance converts meters to kilometers for METRIC system`() {
+        // Given
+        val meters = 5000.0  // 5 km
+        val unitsSystem = com.example.bikeredlights.domain.model.settings.UnitsSystem.METRIC
+
+        // When
+        val result = RideRecordingViewModel.convertDistance(meters, unitsSystem)
+
+        // Then
+        assertThat(result).isWithin(0.01).of(5.0)
+    }
+
+    @Test
+    fun `convertDistance converts meters to miles for IMPERIAL system`() {
+        // Given
+        val meters = 1609.34  // 1 mile
+        val unitsSystem = com.example.bikeredlights.domain.model.settings.UnitsSystem.IMPERIAL
+
+        // When
+        val result = RideRecordingViewModel.convertDistance(meters, unitsSystem)
+
+        // Then
+        assertThat(result).isWithin(0.01).of(1.0)
+    }
+
+    @Test
+    fun `convertDistance accuracy within 1 percent for various distances`() {
+        // Test cases: (meters, expected km, expected miles)
+        val testCases = listOf(
+            Triple(1000.0, 1.0, 0.621371),      // 1 km
+            Triple(5000.0, 5.0, 3.106856),      // 5 km
+            Triple(10000.0, 10.0, 6.213712),    // 10 km
+            Triple(42195.0, 42.195, 26.21876)   // Marathon distance
+        )
+
+        testCases.forEach { (meters, expectedKm, expectedMiles) ->
+            // Test METRIC
+            val km = RideRecordingViewModel.convertDistance(meters, com.example.bikeredlights.domain.model.settings.UnitsSystem.METRIC)
+            val kmError = Math.abs((km - expectedKm) / expectedKm) * 100
+            assertThat(kmError).isLessThan(1.0)
+
+            // Test IMPERIAL
+            val miles = RideRecordingViewModel.convertDistance(meters, com.example.bikeredlights.domain.model.settings.UnitsSystem.IMPERIAL)
+            val milesError = Math.abs((miles - expectedMiles) / expectedMiles) * 100
+            assertThat(milesError).isLessThan(1.0)
+        }
+    }
+
+    @Test
+    fun `convertSpeed converts meters per second to km per hour for METRIC system`() {
+        // Given
+        val mps = 10.0  // 36 km/h
+        val unitsSystem = com.example.bikeredlights.domain.model.settings.UnitsSystem.METRIC
+
+        // When
+        val result = RideRecordingViewModel.convertSpeed(mps, unitsSystem)
+
+        // Then
+        assertThat(result).isWithin(0.01).of(36.0)
+    }
+
+    @Test
+    fun `convertSpeed converts meters per second to mph for IMPERIAL system`() {
+        // Given
+        val mps = 10.0  // 22.3694 mph
+        val unitsSystem = com.example.bikeredlights.domain.model.settings.UnitsSystem.IMPERIAL
+
+        // When
+        val result = RideRecordingViewModel.convertSpeed(mps, unitsSystem)
+
+        // Then
+        assertThat(result).isWithin(0.01).of(22.3694)
+    }
+
+    @Test
+    fun `convertSpeed accuracy within 1 percent for various speeds`() {
+        // Test cases: (m/s, expected km/h, expected mph)
+        val testCases = listOf(
+            Triple(5.0, 18.0, 11.18),      // Leisurely cycling
+            Triple(8.0, 28.8, 17.90),      // Moderate cycling
+            Triple(12.0, 43.2, 26.84),     // Fast cycling
+            Triple(15.0, 54.0, 33.55)      // Very fast cycling
+        )
+
+        testCases.forEach { (mps, expectedKmh, expectedMph) ->
+            // Test METRIC
+            val kmh = RideRecordingViewModel.convertSpeed(mps, com.example.bikeredlights.domain.model.settings.UnitsSystem.METRIC)
+            val kmhError = Math.abs((kmh - expectedKmh) / expectedKmh) * 100
+            assertThat(kmhError).isLessThan(1.0)
+
+            // Test IMPERIAL
+            val mph = RideRecordingViewModel.convertSpeed(mps, com.example.bikeredlights.domain.model.settings.UnitsSystem.IMPERIAL)
+            val mphError = Math.abs((mph - expectedMph) / expectedMph) * 100
+            assertThat(mphError).isLessThan(1.0)
+        }
+    }
+
+    @Test
+    fun `getDistanceUnit returns km for METRIC system`() {
+        // Given
+        val unitsSystem = com.example.bikeredlights.domain.model.settings.UnitsSystem.METRIC
+
+        // When
+        val result = RideRecordingViewModel.getDistanceUnit(unitsSystem)
+
+        // Then
+        assertThat(result).isEqualTo("km")
+    }
+
+    @Test
+    fun `getDistanceUnit returns mi for IMPERIAL system`() {
+        // Given
+        val unitsSystem = com.example.bikeredlights.domain.model.settings.UnitsSystem.IMPERIAL
+
+        // When
+        val result = RideRecordingViewModel.getDistanceUnit(unitsSystem)
+
+        // Then
+        assertThat(result).isEqualTo("mi")
+    }
+
+    @Test
+    fun `getSpeedUnit returns km per h for METRIC system`() {
+        // Given
+        val unitsSystem = com.example.bikeredlights.domain.model.settings.UnitsSystem.METRIC
+
+        // When
+        val result = RideRecordingViewModel.getSpeedUnit(unitsSystem)
+
+        // Then
+        assertThat(result).isEqualTo("km/h")
+    }
+
+    @Test
+    fun `getSpeedUnit returns mph for IMPERIAL system`() {
+        // Given
+        val unitsSystem = com.example.bikeredlights.domain.model.settings.UnitsSystem.IMPERIAL
+
+        // When
+        val result = RideRecordingViewModel.getSpeedUnit(unitsSystem)
+
+        // Then
+        assertThat(result).isEqualTo("mph")
+    }
+
     // Helper functions
 
     private fun createViewModel(): RideRecordingViewModel {
@@ -310,7 +465,8 @@ class RideRecordingViewModelTest {
             context = context,
             rideRecordingStateRepository = rideRecordingStateRepository,
             rideRepository = rideRepository,
-            finishRideUseCase = finishRideUseCase
+            finishRideUseCase = finishRideUseCase,
+            settingsRepository = settingsRepository
         )
     }
 
