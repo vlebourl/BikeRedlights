@@ -15,6 +15,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.bikeredlights.domain.model.Ride
 import com.example.bikeredlights.ui.components.ride.RideStatistics
 import com.example.bikeredlights.ui.components.ride.formatDuration
+import com.example.bikeredlights.ui.viewmodel.RideReviewUiState
 import com.example.bikeredlights.ui.viewmodel.RideReviewViewModel
 import java.text.SimpleDateFormat
 import java.util.*
