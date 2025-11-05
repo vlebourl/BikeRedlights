@@ -105,7 +105,8 @@ class RideRecordingService : Service() {
     private var gpsAccuracyObserverJob: Job? = null  // T082: Observe GPS accuracy changes
     private var currentRideId: Long? = null
     private var currentState: RideRecordingState = RideRecordingState.Idle
-    private var pauseStartTime: Long = 0  // Timestamp when pause started (Bug #2 fix)
+    private var pauseStartTime: Long = 0  // Timestamp when manual pause started (Bug #2 fix)
+    private var autoPauseStartTime: Long = 0  // Bug #8: Track auto-pause start time
     private var lastManualResumeTime: Long = 0  // Bug #5: Track manual resume to prevent immediate auto-pause
 
     private lateinit var notificationManager: NotificationManager
@@ -238,7 +239,22 @@ class RideRecordingService : Service() {
             // Track if resuming from auto-pause (Bug #5)
             val wasAutoPaused = currentState is RideRecordingState.AutoPaused
 
-            // Calculate paused duration and accumulate it (Bug #2 fix)
+            // Bug #8: If resuming from auto-pause, accumulate auto-pause duration
+            if (wasAutoPaused && autoPauseStartTime > 0) {
+                val autoPausedDuration = System.currentTimeMillis() - autoPauseStartTime
+                val ride = rideRepository.getRideById(rideId)
+                if (ride != null) {
+                    val updatedRide = ride.copy(
+                        autoPausedDurationMillis = ride.autoPausedDurationMillis + autoPausedDuration
+                    )
+                    rideRepository.updateRide(updatedRide)
+                    android.util.Log.d("RideRecordingService",
+                        "Manual resume from auto-pause: accumulated ${autoPausedDuration}ms, total=${updatedRide.autoPausedDurationMillis}ms")
+                }
+                autoPauseStartTime = 0  // Reset
+            }
+
+            // Calculate manual paused duration and accumulate it (Bug #2 fix)
             if (pauseStartTime > 0) {
                 val pausedDuration = System.currentTimeMillis() - pauseStartTime
                 val ride = rideRepository.getRideById(rideId)
@@ -285,6 +301,37 @@ class RideRecordingService : Service() {
         val rideId = currentRideId ?: return
 
         serviceScope.launch {
+            // Bug #12: Accumulate any current pause duration before stopping
+            // If stopping from ManuallyPaused state, accumulate manual pause duration
+            if (currentState is RideRecordingState.ManuallyPaused && pauseStartTime > 0) {
+                val pausedDuration = System.currentTimeMillis() - pauseStartTime
+                val ride = rideRepository.getRideById(rideId)
+                if (ride != null) {
+                    val updatedRide = ride.copy(
+                        manualPausedDurationMillis = ride.manualPausedDurationMillis + pausedDuration
+                    )
+                    rideRepository.updateRide(updatedRide)
+                    android.util.Log.d("RideRecordingService",
+                        "Stop from paused: accumulated manual pause ${pausedDuration}ms, total=${updatedRide.manualPausedDurationMillis}ms")
+                }
+                pauseStartTime = 0
+            }
+
+            // If stopping from AutoPaused state, accumulate auto-pause duration
+            if (currentState is RideRecordingState.AutoPaused && autoPauseStartTime > 0) {
+                val autoPausedDuration = System.currentTimeMillis() - autoPauseStartTime
+                val ride = rideRepository.getRideById(rideId)
+                if (ride != null) {
+                    val updatedRide = ride.copy(
+                        autoPausedDurationMillis = ride.autoPausedDurationMillis + autoPausedDuration
+                    )
+                    rideRepository.updateRide(updatedRide)
+                    android.util.Log.d("RideRecordingService",
+                        "Stop from auto-paused: accumulated auto-pause ${autoPausedDuration}ms, total=${updatedRide.autoPausedDurationMillis}ms")
+                }
+                autoPauseStartTime = 0
+            }
+
             // Stop GPS tracking
             locationJob?.cancel()
 
@@ -432,6 +479,9 @@ class RideRecordingService : Service() {
 
                     // Check if speed dropped below pause threshold
                     if (currentSpeed < pauseThreshold && !inGracePeriod) {
+                        // Bug #8: Track auto-pause start time
+                        autoPauseStartTime = System.currentTimeMillis()
+
                         // Transition to AutoPaused
                         this.currentState = RideRecordingState.AutoPaused(rideId)
                         rideRecordingStateRepository.updateRecordingState(this.currentState)
@@ -441,7 +491,7 @@ class RideRecordingService : Service() {
                         notificationManager.notify(NOTIFICATION_ID, notification)
 
                         android.util.Log.d("RideRecordingService",
-                            "Auto-pause triggered: speed=$currentSpeed m/s < threshold=$pauseThreshold m/s")
+                            "Auto-pause triggered: speed=$currentSpeed m/s < threshold=$pauseThreshold m/s, autoPauseStartTime=$autoPauseStartTime")
                     } else if (inGracePeriod && currentSpeed < pauseThreshold) {
                         android.util.Log.d("RideRecordingService",
                             "Auto-pause suppressed: in grace period (${timeSinceManualResume}ms / ${AUTO_PAUSE_GRACE_PERIOD_MS}ms)")
@@ -450,6 +500,23 @@ class RideRecordingService : Service() {
                 is RideRecordingState.AutoPaused -> {
                     // Check if speed went above resume threshold
                     if (currentSpeed >= resumeThreshold) {
+                        // Bug #8: Accumulate auto-pause duration before resuming
+                        if (autoPauseStartTime > 0) {
+                            val autoPausedDuration = System.currentTimeMillis() - autoPauseStartTime
+                            serviceScope.launch {
+                                val ride = rideRepository.getRideById(rideId)
+                                if (ride != null) {
+                                    val updatedRide = ride.copy(
+                                        autoPausedDurationMillis = ride.autoPausedDurationMillis + autoPausedDuration
+                                    )
+                                    rideRepository.updateRide(updatedRide)
+                                    android.util.Log.d("RideRecordingService",
+                                        "Auto-resume: accumulated auto-pause duration ${autoPausedDuration}ms, total=${updatedRide.autoPausedDurationMillis}ms")
+                                }
+                            }
+                            autoPauseStartTime = 0  // Reset
+                        }
+
                         // Transition to Recording (automatic resume)
                         this.currentState = RideRecordingState.Recording(rideId)
                         rideRecordingStateRepository.updateRecordingState(this.currentState)

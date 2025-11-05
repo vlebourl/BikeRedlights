@@ -106,6 +106,9 @@ class RideRecordingViewModel @Inject constructor(
      * - UI state will update automatically via repository observer
      */
     fun resumeRide() {
+        android.util.Log.d("RideRecordingViewModel",
+            "resumeRide() called, current UI state: ${_uiState.value}")
+
         val intent = android.content.Intent(context, RideRecordingService::class.java).apply {
             action = RideRecordingService.ACTION_RESUME_RECORDING
         }
@@ -122,8 +125,22 @@ class RideRecordingViewModel @Inject constructor(
      */
     fun stopRide() {
         viewModelScope.launch {
+            android.util.Log.d("RideRecordingViewModel",
+                "stopRide() called, current UI state: ${_uiState.value}")
+
             val state = rideRecordingStateRepository.getCurrentState()
             val rideId = state.currentRideId ?: return@launch
+
+            android.util.Log.d("RideRecordingViewModel",
+                "stopRide() stopping service for rideId=$rideId, service state=$state")
+
+            // Bug #7 fix: Cancel ride observation job to prevent it from overwriting ShowingSaveDialog
+            // Wait for cancellation to complete before proceeding
+            android.util.Log.d("RideRecordingViewModel",
+                "Cancelling ride observation job to prevent UI state override")
+            rideObservationJob?.cancel()
+            rideObservationJob?.join()  // Wait for cancellation to complete
+            rideObservationJob = null
 
             // Stop service (stops GPS tracking)
             RideRecordingService.stopRecording(context)
@@ -131,15 +148,21 @@ class RideRecordingViewModel @Inject constructor(
             // Finish ride (sets endTime, validates duration)
             when (val result = finishRideUseCase(rideId)) {
                 is FinishRideResult.Success -> {
+                    android.util.Log.d("RideRecordingViewModel",
+                        "stopRide() ride finished successfully, showing save dialog")
                     // Show save/discard dialog
                     _uiState.value = RideRecordingUiState.ShowingSaveDialog(result.ride)
                 }
                 is FinishRideResult.TooShort -> {
+                    android.util.Log.d("RideRecordingViewModel",
+                        "stopRide() ride too short (${result.durationMillis}ms), auto-discarding")
                     // Auto-discard ride (too short)
                     discardRide(rideId)
                     _uiState.value = RideRecordingUiState.Idle
                 }
                 is FinishRideResult.RideNotFound -> {
+                    android.util.Log.e("RideRecordingViewModel",
+                        "stopRide() ride not found, returning to idle")
                     // Error: ride not found
                     _uiState.value = RideRecordingUiState.Idle
                 }
@@ -213,12 +236,26 @@ class RideRecordingViewModel @Inject constructor(
      * observing the ride via Flow to get real-time updates for duration, distance, etc.
      */
     private suspend fun updateUiStateFromRecordingState(recordingState: RideRecordingState) {
+        android.util.Log.d("RideRecordingViewModel",
+            "updateUiStateFromRecordingState() received state: $recordingState, current UI state: ${_uiState.value}")
+
+        // Bug #7 fix: Don't update UI state if we're showing save dialog
+        // The dialog state is managed manually by stopRide() -> saveRide()/discardRide()
+        // If we don't guard this, the service's Idle state will overwrite ShowingSaveDialog
+        if (_uiState.value is RideRecordingUiState.ShowingSaveDialog) {
+            android.util.Log.d("RideRecordingViewModel",
+                "Ignoring service state change while showing save dialog: $recordingState")
+            return
+        }
+
         // Cancel previous ride observation
         rideObservationJob?.cancel()
         rideObservationJob = null
 
         when (recordingState) {
             is RideRecordingState.Idle -> {
+                android.util.Log.d("RideRecordingViewModel",
+                    "Service is idle, setting UI state to Idle")
                 _uiState.value = RideRecordingUiState.Idle
             }
             is RideRecordingState.Recording -> {
