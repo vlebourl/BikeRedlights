@@ -56,6 +56,9 @@ class RideRecordingViewModel @Inject constructor(
     private val _navigationEvents = Channel<NavigationEvent>(Channel.BUFFERED)
     val navigationEvents = _navigationEvents.receiveAsFlow()
 
+    // Track current ride observation job for cancellation
+    private var rideObservationJob: kotlinx.coroutines.Job? = null
+
     // Expose settings for UI (T076)
     val unitsSystem: StateFlow<com.example.bikeredlights.domain.model.settings.UnitsSystem> =
         settingsRepository.unitsSystem
@@ -205,34 +208,53 @@ class RideRecordingViewModel @Inject constructor(
 
     /**
      * Update UI state based on recording state from repository.
+     *
+     * For active recording states (Recording, Paused, AutoPaused), this starts
+     * observing the ride via Flow to get real-time updates for duration, distance, etc.
      */
     private suspend fun updateUiStateFromRecordingState(recordingState: RideRecordingState) {
+        // Cancel previous ride observation
+        rideObservationJob?.cancel()
+        rideObservationJob = null
+
         when (recordingState) {
             is RideRecordingState.Idle -> {
                 _uiState.value = RideRecordingUiState.Idle
             }
             is RideRecordingState.Recording -> {
-                val ride = rideRepository.getRideById(recordingState.rideId)
-                _uiState.value = if (ride != null) {
-                    RideRecordingUiState.Recording(ride)
-                } else {
-                    RideRecordingUiState.Idle
+                // Observe ride continuously for real-time updates
+                rideObservationJob = viewModelScope.launch {
+                    rideRepository.getRideByIdFlow(recordingState.rideId).collect { ride ->
+                        _uiState.value = if (ride != null) {
+                            RideRecordingUiState.Recording(ride)
+                        } else {
+                            RideRecordingUiState.Idle
+                        }
+                    }
                 }
             }
             is RideRecordingState.ManuallyPaused -> {
-                val ride = rideRepository.getRideById(recordingState.rideId)
-                _uiState.value = if (ride != null) {
-                    RideRecordingUiState.Paused(ride)
-                } else {
-                    RideRecordingUiState.Idle
+                // Observe ride continuously for real-time updates
+                rideObservationJob = viewModelScope.launch {
+                    rideRepository.getRideByIdFlow(recordingState.rideId).collect { ride ->
+                        _uiState.value = if (ride != null) {
+                            RideRecordingUiState.Paused(ride)
+                        } else {
+                            RideRecordingUiState.Idle
+                        }
+                    }
                 }
             }
             is RideRecordingState.AutoPaused -> {
-                val ride = rideRepository.getRideById(recordingState.rideId)
-                _uiState.value = if (ride != null) {
-                    RideRecordingUiState.AutoPaused(ride)
-                } else {
-                    RideRecordingUiState.Idle
+                // Observe ride continuously for real-time updates
+                rideObservationJob = viewModelScope.launch {
+                    rideRepository.getRideByIdFlow(recordingState.rideId).collect { ride ->
+                        _uiState.value = if (ride != null) {
+                            RideRecordingUiState.AutoPaused(ride)
+                        } else {
+                            RideRecordingUiState.Idle
+                        }
+                    }
                 }
             }
             is RideRecordingState.Stopped -> {
