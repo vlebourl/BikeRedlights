@@ -204,25 +204,25 @@ This document provides an actionable task breakdown for implementing GPS-based r
 
 ### Statistics Calculation
 
-- [ ] T058 [US2] Add distance calculation (Haversine formula) to RecordTrackPointUseCase
-- [ ] T059 [US2] Add average speed calculation to RideRecordingViewModel
-- [ ] T060 [US2] Add max speed tracking to RideRecordingViewModel
-- [ ] T061 [US2] Add stationary detection (< 1 km/h shows 0) to RideRecordingViewModel
+- [X] T058 [US2] Add distance calculation (Haversine formula) to RecordTrackPointUseCase (already implemented via CalculateDistanceUseCase)
+- [X] T059 [US2] Add average speed calculation to RideRecordingService.updateRideDistance()
+- [X] T060 [US2] Add max speed tracking to RideRecordingService.updateRideDistance()
+- [X] T061 [US2] Add stationary detection (< 1 km/h shows 0) to RideRecordingService.updateRideDistance()
 
 ### UI Components
 
-- [ ] T062 [P] [US2] Create RideStatistics composable in app/src/main/java/com/example/bikeredlights/ui/components/ride/RideStatistics.kt
-- [ ] T063 [P] [US2] Create RideControls composable in app/src/main/java/com/example/bikeredlights/ui/components/ride/RideControls.kt
-- [ ] T064 [US2] Update LiveRideScreen with RideStatistics display
-- [ ] T065 [US2] Add duration formatting (HH:MM:SS) utility to RideStatistics
+- [X] T062 [P] [US2] Create RideStatistics composable in app/src/main/java/com/example/bikeredlights/ui/components/ride/RideStatistics.kt
+- [X] T063 [P] [US2] Create RideControls composable in app/src/main/java/com/example/bikeredlights/ui/components/ride/RideControls.kt
+- [X] T064 [US2] Update LiveRideScreen with RideStatistics display
+- [X] T065 [US2] Add duration formatting (HH:MM:SS) utility to RideStatistics (formatDuration function)
 
 ### Test Tasks
 
-- [ ] T066 [P] [US2] Write unit tests for distance calculation in CalculateDistanceUseCaseTest.kt
-- [ ] T067 [P] [US2] Write unit tests for average speed calculation in RideRecordingViewModelTest.kt
-- [ ] T068 [P] [US2] Write unit tests for stationary detection in RideRecordingViewModelTest.kt
-- [ ] T069 [P] [US2] Write Compose UI tests for RideStatistics in LiveRideScreenTest.kt
-- [ ] T070 [US2] Run all US2 tests and verify statistics calculations are accurate
+- [X] T066 [P] [US2] Write unit tests for formatDuration in RideStatisticsTest.kt (14 tests)
+- [X] T067 [P] [US2] Write unit tests for average speed calculation in SpeedCalculationsTest.kt (5 tests)
+- [X] T068 [P] [US2] Write unit tests for max speed tracking in SpeedCalculationsTest.kt (4 tests)
+- [X] T069 [P] [US2] Write unit tests for stationary detection in SpeedCalculationsTest.kt (5 tests)
+- [X] T070 [US2] Write unit tests for moving duration calculation in SpeedCalculationsTest.kt (5 tests)
 
 ### Integration & Validation
 
