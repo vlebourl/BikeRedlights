@@ -47,7 +47,7 @@ class RideRecordingViewModel @Inject constructor(
     private val rideRecordingStateRepository: RideRecordingStateRepository,
     private val rideRepository: RideRepository,
     private val finishRideUseCase: FinishRideUseCase,
-    private val settingsRepository: com.example.bikeredlights.domain.repository.SettingsRepository
+    private val settingsRepository: com.example.bikeredlights.data.repository.SettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<RideRecordingUiState>(RideRecordingUiState.Idle)
@@ -58,7 +58,7 @@ class RideRecordingViewModel @Inject constructor(
 
     // Expose settings for UI (T076)
     val unitsSystem: StateFlow<com.example.bikeredlights.domain.model.settings.UnitsSystem> =
-        settingsRepository.getUnitsSystem()
+        settingsRepository.unitsSystem
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), com.example.bikeredlights.domain.model.settings.UnitsSystem.METRIC)
 
     init {

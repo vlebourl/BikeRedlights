@@ -18,6 +18,7 @@ import androidx.core.app.ServiceCompat
 import com.example.bikeredlights.MainActivity
 import com.example.bikeredlights.R
 import com.example.bikeredlights.domain.model.RideRecordingState
+import com.example.bikeredlights.data.repository.SettingsRepository
 import com.example.bikeredlights.domain.repository.LocationRepository
 import com.example.bikeredlights.domain.repository.RideRecordingStateRepository
 import com.example.bikeredlights.domain.repository.RideRepository
@@ -31,6 +32,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -91,6 +93,9 @@ class RideRecordingService : Service() {
 
     @Inject
     lateinit var calculateDistanceUseCase: CalculateDistanceUseCase
+
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
     private var locationJob: Job? = null
@@ -342,6 +347,49 @@ class RideRecordingService : Service() {
             0.0  // Stationary
         } else {
             lastPoint.speedMetersPerSec
+        }
+
+        // Auto-pause detection (T083-T085)
+        val autoPauseConfig = try {
+            settingsRepository.autoPauseConfig.first()
+        } catch (e: Exception) {
+            com.example.bikeredlights.domain.model.settings.AutoPauseConfig.default()
+        }
+
+        if (autoPauseConfig.enabled) {
+            val currentState = rideRecordingStateRepository.getCurrentState()
+
+            // Auto-pause/resume thresholds: 1 km/h = 0.278 m/s
+            val pauseThreshold = 0.278  // Speed below which to auto-pause (< 1 km/h)
+            val resumeThreshold = 0.278  // Speed above which to auto-resume (> 1 km/h)
+
+            when (currentState) {
+                is RideRecordingState.Recording -> {
+                    // Check if speed dropped below pause threshold
+                    if (currentSpeed < pauseThreshold) {
+                        // Transition to AutoPaused
+                        this.currentState = RideRecordingState.AutoPaused(rideId)
+                        rideRecordingStateRepository.updateRecordingState(this.currentState)
+
+                        // Update notification
+                        val notification = buildNotification("Auto-paused (low speed)")
+                        notificationManager.notify(NOTIFICATION_ID, notification)
+                    }
+                }
+                is RideRecordingState.AutoPaused -> {
+                    // Check if speed went above resume threshold
+                    if (currentSpeed >= resumeThreshold) {
+                        // Transition to Recording
+                        this.currentState = RideRecordingState.Recording(rideId)
+                        rideRecordingStateRepository.updateRecordingState(this.currentState)
+
+                        // Update notification
+                        val notification = buildNotification("Recording...")
+                        notificationManager.notify(NOTIFICATION_ID, notification)
+                    }
+                }
+                else -> { /* No action for other states */ }
+            }
         }
 
         // Get current ride
