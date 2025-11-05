@@ -69,6 +69,34 @@ class RideRecordingViewModel @Inject constructor(
     }
 
     /**
+     * Pause ride recording (manual pause).
+     *
+     * - Sends pause action to RideRecordingService
+     * - Service updates state to ManuallyPaused
+     * - UI state will update automatically via repository observer
+     */
+    fun pauseRide() {
+        val intent = android.content.Intent(context, RideRecordingService::class.java).apply {
+            action = RideRecordingService.ACTION_PAUSE_RECORDING
+        }
+        context.startService(intent)
+    }
+
+    /**
+     * Resume ride recording from manual pause.
+     *
+     * - Sends resume action to RideRecordingService
+     * - Service updates state to Recording
+     * - UI state will update automatically via repository observer
+     */
+    fun resumeRide() {
+        val intent = android.content.Intent(context, RideRecordingService::class.java).apply {
+            action = RideRecordingService.ACTION_RESUME_RECORDING
+        }
+        context.startService(intent)
+    }
+
+    /**
      * Stop ride recording.
      *
      * - Stops GPS tracking
