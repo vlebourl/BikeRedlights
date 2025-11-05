@@ -246,18 +246,44 @@ This document provides an actionable task breakdown for implementing GPS-based r
 
 ## Phase 6: User Story 5 (P2) - Settings Integration
 
+**Status**: ⚠️ **PARTIALLY COMPLETE - KNOWN BUGS** (See [bugs/BUGS.md](../bugs/BUGS.md))
+
 **Goal**: Respect user preferences for units, GPS accuracy, and auto-pause
 
 **Independent Test**: Change settings mid-ride, verify stats update to new units without data loss
 
 **Dependencies**: Requires US2 complete (stats display), F2A (settings infrastructure)
 
+### Phase 6 Status Summary
+
+**Completed** (2025-11-05):
+- ✅ T076-T079: Units conversion implementation (Metric/Imperial)
+- ✅ Flow-based ride observation infrastructure (enables real-time updates when Service fixed)
+
+**Blocked by Critical Bugs** (Documented in [bugs/BUGS.md](../bugs/BUGS.md)):
+- ❌ **Bug #1**: Duration not updating in real-time (Service only updates on GPS events, not timer-based)
+- ❌ **Bug #2**: Duration continues when paused (no pause timestamp tracking)
+- ❌ **Bug #3**: Missing permission request UI (app crashes on first launch)
+- ⚠️ **Bug #4**: Missing current time display (enhancement request)
+
+**Tasks Blocked**: T080-T099 (GPS accuracy, auto-pause testing) cannot proceed until Bugs #1 and #2 are resolved.
+
+**Next Actions**:
+1. Fix Bug #1: Implement timer-based duration updates in RideRecordingService
+2. Fix Bug #2: Add pause timestamp tracking and exclude paused time from duration
+3. Resume Phase 6 testing and complete remaining tasks
+
+**Testing Notes**:
+- Emulator testing revealed fundamental issues with Service update logic
+- Units conversion code works correctly, but cannot validate in live recording due to Bug #1
+- Permission crash (Bug #3) worked around via manual adb grant for testing purposes
+
 ### Units Conversion
 
-- [ ] T076 [US5] Read UnitsSystem from SettingsRepository in RideRecordingViewModel
-- [ ] T077 [US5] Implement meters → km/miles conversion in RideRecordingViewModel
-- [ ] T078 [US5] Implement m/s → km/h/mph conversion in RideRecordingViewModel
-- [ ] T079 [US5] Update RideStatistics to display units labels (km, km/h, miles, mph)
+- [X] T076 [US5] Read UnitsSystem from SettingsRepository in RideRecordingViewModel
+- [X] T077 [US5] Implement meters → km/miles conversion in RideRecordingViewModel
+- [X] T078 [US5] Implement m/s → km/h/mph conversion in RideRecordingViewModel
+- [X] T079 [US5] Update RideStatistics to display units labels (km, km/h, miles, mph)
 
 ### GPS Accuracy Integration
 
