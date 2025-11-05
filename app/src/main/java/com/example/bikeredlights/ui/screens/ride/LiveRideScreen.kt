@@ -10,6 +10,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.bikeredlights.ui.components.ride.RideControls
+import com.example.bikeredlights.ui.components.ride.RideStatistics
 import com.example.bikeredlights.ui.components.ride.SaveRideDialog
 import com.example.bikeredlights.ui.viewmodel.RideRecordingUiState
 import com.example.bikeredlights.ui.viewmodel.RideRecordingViewModel
@@ -65,6 +67,7 @@ fun LiveRideScreen(
                 val ride = (uiState as RideRecordingUiState.Recording).ride
                 RecordingContent(
                     ride = ride,
+                    onPauseRide = { viewModel.pauseRide() },
                     onStopRide = { viewModel.stopRide() }
                 )
             }
@@ -72,6 +75,7 @@ fun LiveRideScreen(
                 val ride = (uiState as RideRecordingUiState.Paused).ride
                 PausedContent(
                     ride = ride,
+                    onResumeRide = { viewModel.resumeRide() },
                     onStopRide = { viewModel.stopRide() }
                 )
             }
@@ -79,6 +83,7 @@ fun LiveRideScreen(
                 val ride = (uiState as RideRecordingUiState.AutoPaused).ride
                 AutoPausedContent(
                     ride = ride,
+                    onResumeRide = { viewModel.resumeRide() },
                     onStopRide = { viewModel.stopRide() }
                 )
             }
@@ -87,6 +92,7 @@ fun LiveRideScreen(
                 val ride = (uiState as RideRecordingUiState.ShowingSaveDialog).ride
                 RecordingContent(
                     ride = ride,
+                    onPauseRide = { }, // No action while dialog is shown
                     onStopRide = { } // No action while dialog is shown
                 )
             }
@@ -127,50 +133,44 @@ private fun IdleContent(
 @Composable
 private fun RecordingContent(
     ride: com.example.bikeredlights.domain.model.Ride,
+    onPauseRide: () -> Unit,
     onStopRide: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.padding(16.dp),
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
+        // Status indicator
         Text(
             text = "Recording",
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(bottom = 24.dp)
+            fontWeight = FontWeight.Bold
         )
 
-        // Elapsed time
-        val elapsedSeconds = (System.currentTimeMillis() - ride.startTime) / 1000
-        val minutes = elapsedSeconds / 60
-        val seconds = elapsedSeconds % 60
-        Text(
-            text = String.format("%02d:%02d", minutes, seconds),
-            style = MaterialTheme.typography.displayLarge,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 16.dp)
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Ride statistics (duration, distance, speeds)
+        RideStatistics(
+            ride = ride,
+            currentSpeed = 0.0, // TODO: Expose current speed from service
+            modifier = Modifier.fillMaxWidth()
         )
 
-        // Distance
-        val distanceKm = ride.distanceMeters / 1000.0
-        Text(
-            text = String.format("%.2f km", distanceKm),
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 32.dp)
-        )
+        Spacer(modifier = Modifier.weight(1f))
 
-        // Stop button
-        Button(
-            onClick = onStopRide,
-            modifier = Modifier.fillMaxWidth(0.6f),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.error
-            )
-        ) {
-            Text("Stop Ride")
-        }
+        // Control buttons (pause, stop)
+        RideControls(
+            isPaused = false,
+            onPauseClick = onPauseRide,
+            onResumeClick = { }, // Not used when not paused
+            onStopClick = onStopRide,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
@@ -180,50 +180,44 @@ private fun RecordingContent(
 @Composable
 private fun PausedContent(
     ride: com.example.bikeredlights.domain.model.Ride,
+    onResumeRide: () -> Unit,
     onStopRide: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.padding(16.dp),
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
+        // Status indicator
         Text(
             text = "Paused",
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.secondary,
-            modifier = Modifier.padding(bottom = 24.dp)
+            fontWeight = FontWeight.Bold
         )
 
-        // Elapsed time (frozen)
-        val elapsedSeconds = ride.elapsedDurationMillis / 1000
-        val minutes = elapsedSeconds / 60
-        val seconds = elapsedSeconds % 60
-        Text(
-            text = String.format("%02d:%02d", minutes, seconds),
-            style = MaterialTheme.typography.displayLarge,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 16.dp)
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Ride statistics (frozen at pause time)
+        RideStatistics(
+            ride = ride,
+            currentSpeed = 0.0, // Zero when paused
+            modifier = Modifier.fillMaxWidth()
         )
 
-        // Distance
-        val distanceKm = ride.distanceMeters / 1000.0
-        Text(
-            text = String.format("%.2f km", distanceKm),
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 32.dp)
-        )
+        Spacer(modifier = Modifier.weight(1f))
 
-        // Stop button
-        Button(
-            onClick = onStopRide,
-            modifier = Modifier.fillMaxWidth(0.6f),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.error
-            )
-        ) {
-            Text("Stop Ride")
-        }
+        // Control buttons (resume, stop)
+        RideControls(
+            isPaused = true,
+            onPauseClick = { }, // Not used when paused
+            onResumeClick = onResumeRide,
+            onStopClick = onStopRide,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
@@ -233,9 +227,44 @@ private fun PausedContent(
 @Composable
 private fun AutoPausedContent(
     ride: com.example.bikeredlights.domain.model.Ride,
+    onResumeRide: () -> Unit,
     onStopRide: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Same as paused for now
-    PausedContent(ride, onStopRide, modifier)
+    // Same as paused, but with "Auto-paused" label
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        // Status indicator
+        Text(
+            text = "Auto-paused",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.tertiary,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Ride statistics (frozen at auto-pause)
+        RideStatistics(
+            ride = ride,
+            currentSpeed = 0.0, // Zero when auto-paused
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Control buttons (resume, stop)
+        RideControls(
+            isPaused = true,
+            onPauseClick = { }, // Not used when auto-paused
+            onResumeClick = onResumeRide,
+            onStopClick = onStopRide,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
 }
