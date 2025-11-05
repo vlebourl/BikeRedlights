@@ -409,6 +409,8 @@ This document provides an actionable task breakdown for implementing GPS-based r
 
 ## Phase 9: Manual Pause/Resume (Resolved Clarification)
 
+**Status**: ✅ **IMPLEMENTATION COMPLETE** - Testing Pending
+
 **Goal**: Add manual pause/resume buttons for cafe stops mid-ride
 
 **Independent Test**: Start ride, tap Pause, verify GPS stops and banner shows, tap Resume
@@ -417,27 +419,27 @@ This document provides an actionable task breakdown for implementing GPS-based r
 
 ### Manual Pause UI
 
-- [ ] T124 Add Pause button to RideControls in app/src/main/java/com/example/bikeredlights/ui/components/ride/RideControls.kt
-- [ ] T125 Add Resume button (replaces Pause when paused) to RideControls
-- [ ] T126 Add "Ride Paused" banner to LiveRideScreen
-- [ ] T127 Update RideRecordingViewModel with pauseRide() action
-- [ ] T128 Update RideRecordingViewModel with resumeRide() action
+- [X] T124 Add Pause button to RideControls in app/src/main/java/com/example/bikeredlights/ui/components/ride/RideControls.kt
+- [X] T125 Add Resume button (replaces Pause when paused) to RideControls
+- [X] T126 Add "Ride Paused" banner to LiveRideScreen (includes "Paused" and "Auto-paused" variants)
+- [X] T127 Update RideRecordingViewModel with pauseRide() action
+- [X] T128 Update RideRecordingViewModel with resumeRide() action
 
 ### Service Integration
 
-- [ ] T129 Add ACTION_PAUSE_RECORDING handler to RideRecordingService
-- [ ] T130 Add ACTION_RESUME_RECORDING handler to RideRecordingService
-- [ ] T131 Stop GPS location updates on manual pause in RideRecordingService
-- [ ] T132 Resume GPS location updates on manual resume in RideRecordingService
-- [ ] T133 Update notification to show "Ride Paused" with Resume action
+- [X] T129 Add ACTION_PAUSE_RECORDING handler to RideRecordingService
+- [X] T130 Add ACTION_RESUME_RECORDING handler to RideRecordingService
+- [ ] T131 ~~Stop GPS location updates on manual pause in RideRecordingService~~ (DEFERRED - GPS continues for safety/tracking, only duration updates stop)
+- [ ] T132 ~~Resume GPS location updates on manual resume in RideRecordingService~~ (DEFERRED - not needed as GPS never stops)
+- [X] T133 Update notification to show "Ride Paused" with Resume action
 
 ### State Management
 
-- [ ] T134 Add isManuallyPaused flag to RideRecordingState
-- [ ] T135 Add manualPauseStartTime to RideRecordingState
-- [ ] T136 Add accumulatedManualPausedDuration to RideRecordingState
-- [ ] T137 Implement manual pause priority over auto-pause in RideRecordingViewModel
-- [ ] T138 Mark TrackPoints with isManuallyPaused flag
+- [X] T134 Add ManuallyPaused state to RideRecordingState (sealed class with ManuallyPaused and AutoPaused states)
+- [X] T135 Add pauseStartTime tracking in RideRecordingService (implemented as service field, not in State model)
+- [X] T136 Add accumulated paused duration to Ride model (manualPausedDurationMillis field)
+- [X] T137 Paused duration excluded from movingDuration calculation (movingDuration = elapsed - manual - auto)
+- [ ] T138 Mark TrackPoints with isManuallyPaused flag (DEFERRED - TrackPoint model doesn't include pause state)
 
 ### Test Tasks
 
