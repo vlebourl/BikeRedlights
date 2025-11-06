@@ -896,6 +896,8 @@ When working on this project:
 - Kotlin 2.0.21 with Jetpack Compose + Play Services Location 21.3.0, Jetpack Compose (BOM 2024.11.00), Material 3 (001-speed-tracking)
 - None for MVP (no persistence of location data) (001-speed-tracking)
 - DataStore Preferences (key-value pairs, local device only) (001-settings-infrastructure)
+- Kotlin 2.0.21 + Room 2.6.1, Play Services Location 21.3.0, Jetpack Compose BOM 2024.11.00, Kotlin Coroutines 1.9.0 (002-core-ride-recording)
+- Room database (SQLite), local device only, no cloud sync in v0.3.0 (002-core-ride-recording)
 
 ## Recent Changes
 - 001-speed-tracking: Added Kotlin 2.0.21 with Jetpack Compose + Play Services Location 21.3.0, Jetpack Compose (BOM 2024.11.00), Material 3

@@ -3,6 +3,7 @@ package com.example.bikeredlights.data.repository
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
+import com.example.bikeredlights.data.repository.SettingsRepository
 import com.example.bikeredlights.domain.model.LocationData
 import com.example.bikeredlights.domain.model.settings.GpsAccuracy
 import com.example.bikeredlights.domain.repository.LocationRepository

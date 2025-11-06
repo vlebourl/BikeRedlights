@@ -33,10 +33,11 @@ object PreferencesKeys {
     val AUTO_PAUSE_ENABLED = booleanPreferencesKey("auto_pause_enabled")
 
     /**
-     * Auto-pause threshold in minutes.
-     * Allowed values: 1, 2, 3, 5, 10, 15
-     * Default: 5
-     * Maps to: AutoPauseConfig.thresholdMinutes
+     * Auto-pause threshold in seconds.
+     * Bug #10: Changed from minutes to seconds for better UX.
+     * Allowed values: 5, 10, 15, 20, 30, 45, 60
+     * Default: 30
+     * Maps to: AutoPauseConfig.thresholdSeconds
      */
-    val AUTO_PAUSE_MINUTES = intPreferencesKey("auto_pause_minutes")
+    val AUTO_PAUSE_SECONDS = intPreferencesKey("auto_pause_seconds")
 }

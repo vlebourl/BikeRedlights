@@ -76,8 +76,8 @@ class SettingsRepositoryImpl(
         }
         .map { preferences ->
             val enabled = preferences[PreferencesKeys.AUTO_PAUSE_ENABLED] ?: false
-            val minutes = preferences[PreferencesKeys.AUTO_PAUSE_MINUTES] ?: 5
-            AutoPauseConfig.fromDataStore(enabled, minutes)
+            val seconds = preferences[PreferencesKeys.AUTO_PAUSE_SECONDS] ?: 30
+            AutoPauseConfig.fromDataStore(enabled, seconds)
         }
 
     override suspend fun setUnitsSystem(units: UnitsSystem) {
@@ -107,9 +107,9 @@ class SettingsRepositoryImpl(
         try {
             context.dataStore.edit { preferences ->
                 preferences[PreferencesKeys.AUTO_PAUSE_ENABLED] = config.enabled
-                preferences[PreferencesKeys.AUTO_PAUSE_MINUTES] = config.thresholdMinutes
+                preferences[PreferencesKeys.AUTO_PAUSE_SECONDS] = config.thresholdSeconds
             }
-            Log.d(TAG, "Auto-pause config updated: enabled=${config.enabled}, threshold=${config.thresholdMinutes}min")
+            Log.d(TAG, "Auto-pause config updated: enabled=${config.enabled}, threshold=${config.thresholdSeconds}s")
         } catch (e: IOException) {
             Log.e(TAG, "Error writing auto-pause preferences", e)
         }

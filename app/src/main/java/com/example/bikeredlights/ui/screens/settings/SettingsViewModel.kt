@@ -6,11 +6,13 @@ import com.example.bikeredlights.data.repository.SettingsRepository
 import com.example.bikeredlights.domain.model.settings.AutoPauseConfig
 import com.example.bikeredlights.domain.model.settings.GpsAccuracy
 import com.example.bikeredlights.domain.model.settings.UnitsSystem
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * ViewModel for Settings screens.
@@ -20,7 +22,8 @@ import kotlinx.coroutines.launch
  *
  * @param settingsRepository Repository for settings persistence
  */
-class SettingsViewModel(
+@HiltViewModel
+class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
@@ -82,14 +85,15 @@ class SettingsViewModel(
     /**
      * Update user's auto-pause threshold.
      *
-     * @param thresholdMinutes Threshold in minutes (must be valid: 1, 2, 3, 5, 10, 15)
+     * Bug #10: Changed from minutes to seconds (5-60s range).
+     * @param thresholdSeconds Threshold in seconds (must be valid: 5, 10, 15, 20, 30, 45, 60)
      */
-    fun setAutoPauseThreshold(thresholdMinutes: Int) {
+    fun setAutoPauseThreshold(thresholdSeconds: Int) {
         viewModelScope.launch {
             val currentConfig = uiState.value.autoPauseConfig
             val newConfig = AutoPauseConfig(
                 enabled = currentConfig.enabled,
-                thresholdMinutes = thresholdMinutes
+                thresholdSeconds = thresholdSeconds
             )
             settingsRepository.setAutoPauseConfig(newConfig)
         }

@@ -5,10 +5,10 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    // TODO v0.1.0: Re-enable Hilt after resolving Gradle plugin compatibility
-    // alias(libs.plugins.hilt)
+    alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    jacoco
 }
 
 // Load keystore configuration for release signing
@@ -59,6 +59,7 @@ android {
         }
         debug {
             isMinifyEnabled = false
+            enableUnitTestCoverage = true
         }
     }
 
@@ -104,11 +105,10 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
-    // Dependency Injection - Hilt (temporarily disabled for v0.0.0)
-    // TODO v0.1.0: Re-enable Hilt after resolving Gradle plugin compatibility
-    // implementation(libs.hilt.android)
-    // ksp(libs.hilt.compiler)
-    // implementation(libs.hilt.navigation.compose)
+    // Dependency Injection - Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
 
     // Database - Room
     implementation(libs.androidx.room.runtime)
@@ -149,4 +149,39 @@ dependencies {
     androidTestImplementation(libs.mockk)  // For mocking in instrumented tests
     androidTestImplementation(libs.kotlinx.coroutines.test)  // For runTest in instrumented tests
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
+// Jacoco code coverage configuration
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest")
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+
+    val fileFilter = listOf(
+        "**/R.class",
+        "**/R$*.class",
+        "**/BuildConfig.*",
+        "**/Manifest*.*",
+        "**/*Test*.*",
+        "android/**/*.*",
+        "**/*_Hilt*.*",
+        "**/*_Factory.*",
+        "**/*_MembersInjector.*",
+        "**/Hilt_*.*"
+    )
+
+    val debugTree = fileTree("${buildDir}/tmp/kotlin-classes/debug") {
+        exclude(fileFilter)
+    }
+
+    val mainSrc = "${project.projectDir}/src/main/java"
+
+    sourceDirectories.setFrom(files(mainSrc))
+    classDirectories.setFrom(files(debugTree))
+    executionData.setFrom(fileTree(buildDir) {
+        include("jacoco/testDebugUnitTest.exec")
+    })
 }
