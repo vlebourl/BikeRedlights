@@ -3,6 +3,7 @@ package com.example.bikeredlights.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bikeredlights.domain.model.display.RideListItem
+import com.example.bikeredlights.domain.model.history.DateRangeFilter
 import com.example.bikeredlights.domain.model.history.SortPreference
 import com.example.bikeredlights.domain.usecase.DeleteRideUseCase
 import com.example.bikeredlights.domain.usecase.GetAllRidesUseCase
@@ -56,20 +57,24 @@ class RideHistoryViewModel @Inject constructor(
     private val _currentSort = MutableStateFlow(SortPreference.NEWEST_FIRST)
     val currentSort: StateFlow<SortPreference> = _currentSort.asStateFlow()
 
+    private val _dateFilter = MutableStateFlow<DateRangeFilter>(DateRangeFilter.None)
+    val dateFilter: StateFlow<DateRangeFilter> = _dateFilter.asStateFlow()
+
     init {
         observeRides()
     }
 
     /**
-     * Observe rides with combined sort and unit preferences.
+     * Observe rides with combined sort, unit, and date filter preferences.
      *
-     * Combines three reactive streams:
+     * Combines four reactive streams:
      * 1. Ride sort preference (from SettingsRepository)
      * 2. Units preference (from SettingsRepository)
-     * 3. Rides (from GetAllRidesUseCase, depends on sort)
+     * 3. Date filter (from local state)
+     * 4. Rides (from GetAllRidesUseCase, depends on sort and filter)
      *
-     * Uses flatMapLatest to switch between sorted flows when preferences change.
-     * This cancels the previous flow and starts a new one with the updated sort.
+     * Uses flatMapLatest to switch between sorted/filtered flows when preferences change.
+     * This cancels the previous flow and starts a new one with the updated parameters.
      *
      * Emits updated UI state whenever any stream changes.
      */
@@ -77,14 +82,15 @@ class RideHistoryViewModel @Inject constructor(
     private fun observeRides() {
         combine(
             settingsRepository.rideSortPreference,
-            settingsRepository.unitsSystem
-        ) { sortPreference, unitsSystem ->
+            settingsRepository.unitsSystem,
+            _dateFilter
+        ) { sortPreference, unitsSystem, dateFilter ->
             _currentSort.value = sortPreference
-            Pair(sortPreference, unitsSystem)
+            Triple(sortPreference, unitsSystem, dateFilter)
         }
-            .flatMapLatest { (sortPreference, unitsSystem) ->
-                // Switch to appropriate sorted flow when preferences change
-                getAllRidesUseCase(sortPreference, unitsSystem)
+            .flatMapLatest { (sortPreference, unitsSystem, dateFilter) ->
+                // Switch to appropriate sorted/filtered flow when preferences change
+                getAllRidesUseCase(sortPreference, unitsSystem, dateFilter)
             }
             .catch { error ->
                 _uiState.value = RideHistoryUiState.Error(
@@ -112,6 +118,18 @@ class RideHistoryViewModel @Inject constructor(
         viewModelScope.launch {
             settingsRepository.setRideSortPreference(sortPreference)
         }
+    }
+
+    /**
+     * Update date range filter.
+     *
+     * Updates local filter state and triggers ride list requery.
+     * Filter is not persisted across app restarts.
+     *
+     * @param dateFilter New date range filter (None or Custom)
+     */
+    fun updateDateFilter(dateFilter: DateRangeFilter) {
+        _dateFilter.value = dateFilter
     }
 
     /**
