@@ -1,21 +1,16 @@
 package com.example.bikeredlights.ui.navigation
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.bikeredlights.ui.screens.history.RideHistoryScreen
 import com.example.bikeredlights.ui.screens.ride.LiveRideScreen
 import com.example.bikeredlights.ui.screens.ride.RideReviewScreen
 import com.example.bikeredlights.ui.screens.settings.RideTrackingSettingsScreen
@@ -79,9 +74,14 @@ fun AppNavigation(
             )
         }
 
-        // Rides tab - Placeholder for Feature 3 (Core Ride Recording)
+        // Rides tab - Feature 3 (Ride History)
         composable(BottomNavDestination.RIDES.route) {
-            RidesPlaceholderScreen()
+            RideHistoryScreen(
+                onRideClick = { rideId ->
+                    // TODO: Navigate to detail screen (User Story 2)
+                },
+                modifier = Modifier.fillMaxSize()
+            )
         }
 
         // Settings tab - Feature 2A home screen
@@ -119,22 +119,3 @@ fun AppNavigation(
     }
 }
 
-/**
- * Placeholder screen for Rides tab.
- * Will be replaced by actual Ride History screen in Feature 3.
- */
-@Composable
-private fun RidesPlaceholderScreen() {
-    Surface {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Rides History\n\nComing in Feature 3",
-                style = MaterialTheme.typography.headlineMedium,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
