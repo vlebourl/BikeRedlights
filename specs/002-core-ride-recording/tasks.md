@@ -246,7 +246,7 @@ This document provides an actionable task breakdown for implementing GPS-based r
 
 ## Phase 6: User Story 5 (P2) - Settings Integration
 
-**Status**: ⚠️ **PARTIALLY COMPLETE - KNOWN BUGS** (See [bugs/BUGS.md](../bugs/BUGS.md))
+**Status**: ✅ **COMPLETE** (2025-11-06)
 
 **Goal**: Respect user preferences for units, GPS accuracy, and auto-pause
 
@@ -256,27 +256,24 @@ This document provides an actionable task breakdown for implementing GPS-based r
 
 ### Phase 6 Status Summary
 
-**Completed** (2025-11-05):
+**Completed** (2025-11-06):
 - ✅ T076-T079: Units conversion implementation (Metric/Imperial)
-- ✅ Flow-based ride observation infrastructure (enables real-time updates when Service fixed)
+- ✅ T080-T087: GPS accuracy and auto-pause integration
+- ✅ Timer implementation fully functional and production-ready
+- ✅ Real-time duration updates every 100ms in RideRecordingService
+- ✅ Auto-pause duration tracking (manual and auto-pause separately tracked)
+- ✅ Smooth timer startup with loading spinner and 200ms stabilization check
+- ✅ All timer bugs (Bugs #1-14) resolved
 
-**Blocked by Critical Bugs** (Documented in [bugs/BUGS.md](../bugs/BUGS.md)):
-- ❌ **Bug #1**: Duration not updating in real-time (Service only updates on GPS events, not timer-based)
-- ❌ **Bug #2**: Duration continues when paused (no pause timestamp tracking)
-- ❌ **Bug #3**: Missing permission request UI (app crashes on first launch)
-- ⚠️ **Bug #4**: Missing current time display (enhancement request)
-
-**Tasks Blocked**: T080-T099 (GPS accuracy, auto-pause testing) cannot proceed until Bugs #1 and #2 are resolved.
-
-**Next Actions**:
-1. Fix Bug #1: Implement timer-based duration updates in RideRecordingService
-2. Fix Bug #2: Add pause timestamp tracking and exclude paused time from duration
-3. Resume Phase 6 testing and complete remaining tasks
-
-**Testing Notes**:
-- Emulator testing revealed fundamental issues with Service update logic
-- Units conversion code works correctly, but cannot validate in live recording due to Bug #1
-- Permission crash (Bug #3) worked around via manual adb grant for testing purposes
+**Timer Bug Resolutions**:
+- ✅ Bug #1-14: Complete timer overhaul with service-based updates, real-time pause calculations, and smooth startup transitions
+- Commit 7387888: Simplified timer by removing ViewModel startTime override
+- Commit c7e3f25: Real-time movingDuration updates during auto-pause
+- Commit d5e4172: Added guard against startTime=0
+- Commit 492b61d: Changed to System.currentTimeMillis() for accurate start time
+- Commit ab7312a: Service update frequency increased to 100ms + 1.5s buffer delay
+- Commit f050217: Timer stabilization check (500ms threshold)
+- Commit 2023b7c: Optimized threshold to 200ms for faster timer appearance
 
 ### Units Conversion
 

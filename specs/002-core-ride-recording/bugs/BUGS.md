@@ -2,25 +2,43 @@
 
 **Feature**: F1A - Core Ride Recording (v0.3.0)
 **Phase**: Phase 6 - User Story 5 (P2) - Settings Integration
-**Status**: ✅ **ALL BUGS FIXED** (as of 2025-11-05)
+**Status**: ✅ **ALL BUGS FIXED** (as of 2025-11-06)
 **Date Reported**: 2025-11-05
-**Date Resolved**: 2025-11-05
+**Date Resolved**: 2025-11-06 (final resolution)
 **Reporter**: Emulator Testing Session
 
 ---
 
 ## Summary
 
-Phase 6 testing revealed **4 bugs** related to real-time UI updates, pause behavior, permissions, and UX enhancements. All bugs have been successfully resolved:
+Phase 6 testing revealed **14 bugs** related to real-time UI updates, pause behavior, permissions, timer regressions, and UX enhancements. All bugs have been successfully resolved through multiple iterations:
 
+### Initial Bugs (2025-11-05)
 - ✅ **Bug #1** (CRITICAL): Duration not updating in real-time - **FIXED** (commit e420703)
 - ✅ **Bug #2** (CRITICAL): Duration continues when paused - **FIXED** (commit e420703)
 - ✅ **Bug #3** (HIGH): Missing permission request UI - **FIXED** (commit b534d23)
 - ✅ **Bug #4** (LOW): Missing current time display - **FIXED** (commit e420703)
 
-**Previous Impact**: Users could not see live duration/distance/speed updates during ride recording. The UI only updated when user interacted (pause/resume) or navigated away and back.
+### Timer Regression Bugs (2025-11-06)
+- ✅ **Bug #5** (CRITICAL): Timer showing cumulative time across rides - **FIXED** (commit 7387888)
+- ✅ **Bug #6** (CRITICAL): Auto-pause causing timer/dialog mismatch (22s vs 14s) - **FIXED** (commit c7e3f25)
+- ✅ **Bug #7** (CRITICAL): Timer starting at huge values (~55 million years) - **FIXED** (commit d5e4172)
+- ✅ **Bug #8** (CRITICAL): Timer starting at 5-8 seconds offset - **FIXED** (commit 492b61d)
+- ✅ **Bug #9** (HIGH): Slow first timer tick (frozen for few seconds) - **FIXED** (commit ab7312a)
+- ✅ **Bug #10** (HIGH): UI updates skipping seconds - **FIXED** (commit ab7312a)
+- ✅ **Bug #11** (MEDIUM): Timer showing 00:00:00 instead of loading spinner - **FIXED** (commit f050217)
+- ✅ **Bug #12** (MEDIUM): No buffer between GPS init and timer start - **FIXED** (commit ab7312a)
+- ✅ **Bug #13** (LOW): Timer stabilization threshold too high (500ms) - **FIXED** (commit 2023b7c)
+- ✅ **Bug #14** (LOW): Loading spinner visible during frozen timer - **FIXED** (commit f050217)
 
-**Current Status**: All critical bugs resolved. Real-time updates work correctly, pause behavior is accurate, permissions are requested properly, and current time is displayed.
+**Previous Impact**: Multiple critical timer issues prevented accurate ride recording. Users experienced incorrect durations, frozen timers, and confusing state transitions.
+
+**Current Status**: Complete timer overhaul implemented. All 14 bugs resolved with production-ready timer implementation featuring:
+- Service-based updates every 100ms for smooth display
+- Real-time pause duration calculations (manual and auto-pause)
+- Smooth startup transition with loading spinner and 200ms stabilization
+- Accurate start time using System.currentTimeMillis()
+- Single source of truth architecture (Service → Database → UI)
 
 ---
 
@@ -454,6 +472,373 @@ Text(
 
 ---
 
+## Bug #5: Timer Showing Cumulative Time Across Rides
+
+### Status
+✅ **FIXED** (commit 7387888, 2025-11-06)
+
+### Severity
+**CRITICAL** - Starting new rides continued timer from previous ride value
+
+### Description
+When starting a new ride, the timer did not reset to 00:00:00. Instead, it continued from the previous ride's final duration value, showing cumulative time across multiple rides.
+
+### Root Cause
+**File**: `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt`
+
+The ViewModel was overriding `startTime` with a new value, creating race conditions with Service updates. Multiple sources were attempting to set startTime, causing conflicts.
+
+### Fix Implementation (commit 7387888)
+Removed ViewModel's startTime override logic entirely, establishing single source of truth in Service.
+
+**Before (complex with race conditions)**:
+```kotlin
+if (ride.startTime == 0L) {
+    RideRecordingUiState.WaitingForGps(ride)
+} else if (!hasSetTimerStartTime) {
+    hasSetTimerStartTime = true
+    val now = System.currentTimeMillis()
+    rideRepository.updateRide(ride.copy(startTime = now))
+    RideRecordingUiState.WaitingForGps(ride)
+} else {
+    RideRecordingUiState.Recording(ride)
+}
+```
+
+**After (simple, single source of truth)**:
+```kotlin
+if (ride.startTime == 0L) {
+    RideRecordingUiState.WaitingForGps(ride)
+} else {
+    RideRecordingUiState.Recording(ride)
+}
+```
+
+---
+
+## Bug #6: Auto-Pause Timer/Dialog Mismatch
+
+### Status
+✅ **FIXED** (commit c7e3f25, 2025-11-06)
+
+### Severity
+**CRITICAL** - Timer showed 22s elapsed, but save dialog showed 14s (correct moving time)
+
+### Description
+When auto-pause was triggered during recording, the live timer display showed total elapsed time (including pause time) rather than moving time. However, the save dialog correctly showed only moving time, creating a confusing mismatch.
+
+### Root Cause
+**File**: `app/src/main/java/com/example/bikeredlights/service/RideRecordingService.kt`
+
+The Service only accumulated `autoPausedDurationMillis` when exiting auto-pause state, not during the active pause period. This meant `movingDurationMillis` was calculated incorrectly in real-time.
+
+### Fix Implementation (commit c7e3f25)
+Modified `updateRideDuration()` to calculate `movingDuration` in real-time during AutoPaused state:
+
+```kotlin
+is RideRecordingState.AutoPaused -> {
+    // Update moving duration in real-time during auto-pause
+    if (autoPauseStartTime > 0) {
+        val currentPauseDuration = System.currentTimeMillis() - autoPauseStartTime
+        val totalAutoPause = ride.autoPausedDurationMillis + currentPauseDuration
+        val movingDuration = elapsedDuration - ride.manualPausedDurationMillis - totalAutoPause
+
+        val updatedRide = ride.copy(
+            elapsedDurationMillis = elapsedDuration,
+            movingDurationMillis = movingDuration
+        )
+        rideRepository.updateRide(updatedRide)
+    }
+}
+```
+
+---
+
+## Bug #7: Timer Starting at Huge Values
+
+### Status
+✅ **FIXED** (commit d5e4172, 2025-11-06)
+
+### Severity
+**CRITICAL** - Timer showed ~55 million years when starting
+
+### Description
+When starting a new ride, the timer briefly displayed astronomical values (~55 million years) before GPS initialization completed.
+
+### Root Cause
+**File**: `app/src/main/java/com/example/bikeredlights/service/RideRecordingService.kt`
+
+The Service calculated `elapsedDuration = System.currentTimeMillis() - 0` when `startTime = 0` (before GPS initialized).
+
+```kotlin
+val elapsedDuration = System.currentTimeMillis() - ride.startTime
+// If startTime = 0, this equals current timestamp in milliseconds (huge number)
+```
+
+### Fix Implementation (commit d5e4172)
+Added guard in `updateRideDuration()`:
+
+```kotlin
+private suspend fun updateRideDuration(rideId: Long) {
+    val ride = rideRepository.getRideById(rideId) ?: return
+
+    // Don't update if GPS hasn't initialized yet (startTime = 0)
+    if (ride.startTime == 0L) {
+        return
+    }
+
+    val elapsedDuration = System.currentTimeMillis() - ride.startTime
+    // ...
+}
+```
+
+---
+
+## Bug #8: Timer Starting at 5-8 Seconds Offset
+
+### Status
+✅ **FIXED** (commit 492b61d, 2025-11-06)
+
+### Severity
+**CRITICAL** - New rides showed timer starting at 00:00:05 to 00:00:08 instead of 00:00:00
+
+### Description
+Every new ride started with a 5-8 second offset. The timer displayed 00:00:05, 00:00:06, 00:00:07, or 00:00:08 immediately after GPS lock, rather than starting at 00:00:00.
+
+### Evidence from Logs
+```
+Ride 51: Started at 12:26:43, but startTime=1762428395332 (12:26:35 - 8 seconds earlier)
+Ride 52: Started at 12:26:50, but had SAME startTime as Ride 51 (old cached GPS data)
+```
+
+### Root Cause
+**File**: `app/src/main/java/com/example/bikeredlights/domain/usecase/RecordTrackPointUseCase.kt`
+
+Used `locationData.timestamp` (GPS chip's acquisition time from the past) instead of current time:
+
+```kotlin
+// WRONG: Uses GPS timestamp (5-10 seconds in the past)
+val updatedRide = ride.copy(startTime = locationData.timestamp)
+```
+
+The GPS chip reports when it acquired the location fix, which is several seconds before the app receives it.
+
+### Fix Implementation (commit 492b61d)
+Changed to `System.currentTimeMillis()` and added 1.5s buffer:
+
+```kotlin
+val ride = rideRepository.getRideById(rideId)
+if (ride != null && ride.startTime == 0L) {
+    kotlinx.coroutines.delay(1500)  // 1.5 second buffer before timer starts
+    val updatedRide = ride.copy(startTime = System.currentTimeMillis())
+    rideRepository.updateRide(updatedRide)
+}
+```
+
+**Why This Matters**: User expectation is that "start time" is when the timer display starts changing, not when GPS chip acquired first fix.
+
+---
+
+## Bug #9: Slow First Timer Tick
+
+### Status
+✅ **FIXED** (commit ab7312a, 2025-11-06)
+
+### Severity
+**HIGH** - Timer appeared but stayed frozen at 00:00:00 for few seconds
+
+### Description
+After GPS initialization, the timer would display 00:00:00 but remain frozen for 2-5 seconds before the first tick to 00:00:01 occurred.
+
+### Root Cause
+**File**: `app/src/main/java/com/example/bikeredlights/service/RideRecordingService.kt`
+
+Service update frequency was only 1000ms (1 second), which combined with timing jitter meant the first visible update could take several seconds:
+
+```kotlin
+// BEFORE: 1 second update interval (too slow)
+durationUpdateJob = serviceScope.launch {
+    while (true) {
+        kotlinx.coroutines.delay(1000)  // ← Slow updates
+        updateRideDuration(rideId)
+    }
+}
+```
+
+### Fix Implementation (commit ab7312a)
+1. Increased service update frequency to 100ms:
+```kotlin
+durationUpdateJob = serviceScope.launch {
+    while (true) {
+        kotlinx.coroutines.delay(100)  // Update every 100ms for smooth timer display
+        updateRideDuration(rideId)
+    }
+}
+```
+
+2. Added 1.5s buffer delay in RecordTrackPointUseCase:
+```kotlin
+kotlinx.coroutines.delay(1500)  // Buffer delay before timer starts
+val updatedRide = ride.copy(startTime = System.currentTimeMillis())
+```
+
+**Result**: Timer updates 10x more frequently, providing smooth second-by-second transitions.
+
+---
+
+## Bug #10: UI Updates Skipping Seconds
+
+### Status
+✅ **FIXED** (commit ab7312a, 2025-11-06)
+
+### Severity
+**HIGH** - Timer sometimes displayed 00:00:01, 00:00:03, 00:00:04 (skipped 2 seconds)
+
+### Description
+The timer would occasionally skip seconds, jumping from 00:00:01 directly to 00:00:03, creating a confusing and unprofessional user experience.
+
+### Root Cause
+Same as Bug #9 - 1000ms update frequency was too slow and subject to timing jitter. With coroutine delay and database write times, updates could take >1 second, causing the UI to skip displayed values.
+
+### Fix Implementation
+Same as Bug #9 (commit ab7312a) - 100ms update frequency ensures UI always catches every second transition.
+
+---
+
+## Bug #11: Timer Showing 00:00:00 Instead of Loading Spinner
+
+### Status
+✅ **FIXED** (commit f050217, 2025-11-06)
+
+### Severity
+**MEDIUM** - UX confusion during startup
+
+### Description
+During GPS initialization, the timer displayed 00:00:00 for several seconds before starting to count. User requested a loading spinner instead to indicate the app is waiting for GPS lock.
+
+### User Feedback
+> "replace the startup delay from showing the live timer at 00 for few seconds to a spinner or loading indicator"
+
+### Root Cause
+**File**: `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt`
+
+ViewModel immediately switched to `Recording` state as soon as `startTime != 0`, even though timer wasn't actively counting yet:
+
+```kotlin
+// BEFORE: Shows timer immediately when startTime set
+if (ride.startTime == 0L) {
+    RideRecordingUiState.WaitingForGps(ride)
+} else {
+    RideRecordingUiState.Recording(ride)  // ← Shows 00:00:00 frozen timer
+}
+```
+
+### Fix Implementation (commit f050217)
+Added timer stabilization check - wait for `movingDurationMillis >= 500ms` before showing timer:
+
+```kotlin
+rideObservationJob = viewModelScope.launch {
+    rideRepository.getRideByIdFlow(recordingState.rideId).collect { ride ->
+        _uiState.value = if (ride != null) {
+            // Wait until timer is actively counting
+            if (ride.startTime == 0L || ride.movingDurationMillis < 500) {
+                // Still waiting for GPS or timer to stabilize
+                RideRecordingUiState.WaitingForGps(ride)  // Shows loading spinner
+            } else {
+                // Timer is actively counting, show recording state
+                RideRecordingUiState.Recording(ride)
+            }
+        } else {
+            RideRecordingUiState.Idle
+        }
+    }
+}
+```
+
+**Result**: Loading spinner stays visible until timer is actively incrementing, then smooth transition to counting timer.
+
+---
+
+## Bug #12: No Buffer Between GPS Init and Timer Start
+
+### Status
+✅ **FIXED** (commit ab7312a, 2025-11-06)
+
+### Severity
+**MEDIUM** - Timer started immediately after GPS lock without transition period
+
+### Description
+User requested 1-2 second buffer between GPS initialization completing and timer starting to ensure smooth startup without the timer stalling.
+
+### User Feedback
+> "you can add 1 or 2 seconds between the end of the 'loading' period, and the actual start of the timer, so that when the timer does starts, it ACTUALLY starts and not stall for few seconds"
+
+### Fix Implementation (commit ab7312a)
+Added 1.5s delay in RecordTrackPointUseCase before setting startTime:
+
+```kotlin
+val ride = rideRepository.getRideById(rideId)
+if (ride != null && ride.startTime == 0L) {
+    kotlinx.coroutines.delay(1500)  // 1.5 second buffer before timer starts
+    val updatedRide = ride.copy(startTime = System.currentTimeMillis())
+    rideRepository.updateRide(updatedRide)
+}
+```
+
+**Result**: 1.5s buffer ensures Service has time to establish update loop before timer becomes visible.
+
+---
+
+## Bug #13: Timer Stabilization Threshold Too High
+
+### Status
+✅ **FIXED** (commit 2023b7c, 2025-11-06)
+
+### Severity
+**LOW** - Minor UX optimization
+
+### Description
+Initial implementation used 500ms stabilization threshold, which felt slightly too long. User requested reducing to 200ms for faster timer appearance.
+
+### User Feedback
+> "maybe reduce the 500ms to 200?"
+
+### Fix Implementation (commit 2023b7c)
+Reduced threshold from 500ms to 200ms:
+
+```kotlin
+// BEFORE:
+if (ride.startTime == 0L || ride.movingDurationMillis < 500) {
+
+// AFTER:
+if (ride.startTime == 0L || ride.movingDurationMillis < 200) {
+```
+
+**Result**: Timer appears 300ms faster while still ensuring smooth startup.
+
+---
+
+## Bug #14: Loading Spinner Not Visible During Frozen Timer
+
+### Status
+✅ **FIXED** (commit f050217, 2025-11-06)
+
+### Severity
+**LOW** - UX polish
+
+### Description
+During the "frozen" startup period, the loading spinner was not visible, leaving the user staring at a static 00:00:00 display.
+
+### User Feedback
+> "during that 'frozen' time, make sure the loading animation is showing"
+
+### Fix Implementation (commit f050217)
+Same fix as Bug #11 - the `WaitingForGps` state keeps loading spinner visible until `movingDurationMillis >= 200ms`, ensuring smooth visual transition.
+
+**Result**: Loading spinner remains visible throughout GPS initialization and timer stabilization period.
+
+---
+
 ## Phase 6 Task Status
 
 ### Completed Tasks
@@ -461,59 +846,71 @@ Text(
 ✅ **T077**: Implement meters → km/miles conversion in RideRecordingViewModel
 ✅ **T078**: Implement m/s → km/h/mph conversion in RideRecordingViewModel
 ✅ **T079**: Update RideStatistics to display units labels (km, km/h, miles, mph)
+✅ **T080-T087**: GPS accuracy and auto-pause integration complete
+✅ **All timer bugs (#1-14)**: Resolved with production-ready implementation
 
-### Blocked Tasks (Pending Bug Fixes)
-❌ **T080-T099**: All remaining Phase 6 tasks blocked by Bug #1 and Bug #2
-
-**Reason**: Cannot test GPS accuracy settings, auto-pause, or units conversion in live recording until real-time updates are fixed. The bugs prevent accurate validation of these features.
+### Previously Blocked Tasks (Now Complete)
+✅ **T080-T099**: All Phase 6 tasks completed after bug resolution
 
 ---
 
 ## Impact Assessment
 
-### User Experience Impact
-- **Critical**: Users cannot use app as intended (no live statistics)
-- **Frustrating**: Must interact with UI or navigate away to see updates
-- **Confusing**: Duration continues when paused (incorrect statistics)
-- **Blocking**: App crashes on first launch without manual permission grant
+### Original User Experience Impact (Before Fixes)
+- **Critical**: Users could not use app as intended (no live statistics)
+- **Frustrating**: Had to interact with UI or navigate away to see updates
+- **Confusing**: Duration continued when paused (incorrect statistics)
+- **Blocking**: App crashed on first launch without manual permission grant
+- **Professional**: Timer appeared unprofessional with skipped seconds and frozen displays
 
-### Development Impact
-- **Phase 6 incomplete**: ~19 of 24 tasks blocked by Bug #1 and Bug #2
-- **Phase 7+ delayed**: Review screen, edge cases, and polish cannot be tested properly
-- **Test coverage**: Cannot achieve 90%+ coverage requirement until bugs fixed
-- **Release timeline**: v0.3.0 release delayed until critical bugs resolved
+### Post-Fix User Experience (Current)
+- ✅ **Production-ready**: Timer updates smoothly every 100ms
+- ✅ **Accurate**: Pause durations correctly excluded from moving time
+- ✅ **Professional**: Smooth startup transition with loading spinner
+- ✅ **Intuitive**: Timer starts at 00:00:00 from user's perspective
+- ✅ **Reliable**: No crashes, no frozen states, no skipped seconds
 
-### Technical Debt
-- **Architecture decision**: Event-driven vs timer-based updates needs architectural review
-- **State management**: Pause state tracking needs refactor
-- **Permission handling**: Runtime permission flow needs implementation from scratch
+### Development Impact Resolution
+- ✅ **Phase 6 complete**: All 24 tasks completed (T076-T099)
+- ✅ **Phase 7+ unblocked**: Review screen and edge cases ready for testing
+- ✅ **Architecture improved**: Single source of truth (Service → Database → UI)
+- ✅ **Release timeline**: v0.3.0 on track for completion
 
----
-
-## Recommended Priority
-
-**Immediate (This Sprint)**:
-1. **Bug #1**: Duration not updating (CRITICAL - core feature broken)
-2. **Bug #2**: Duration continues when paused (CRITICAL - data integrity issue)
-
-**Next Sprint**:
-3. **Bug #3**: Missing permission request UI (HIGH - crashes on first launch)
-
-**Future Enhancement**:
-4. **Bug #4**: Missing current time display (LOW - nice-to-have, not blocking)
+### Technical Improvements
+- ✅ **Architecture**: Service-based timer with 100ms updates (10x improvement)
+- ✅ **State management**: Real-time pause calculations with separate manual/auto tracking
+- ✅ **Permission handling**: Compose-based permission flow with user education
+- ✅ **UX polish**: Loading spinner, buffer delay, stabilization check
 
 ---
 
-## Next Steps
+## Resolution Summary
 
-1. **Create separate bug fix branch**: `bugfix/002-real-time-updates`
-2. **Fix Bug #1**: Implement timer-based duration updates in Service
-3. **Fix Bug #2**: Add pause timestamp tracking and exclude from duration
-4. **Test fixes on emulator**: Verify real-time updates work without GPS movement
-5. **Merge bug fixes**: Back to `002-core-ride-recording` branch
-6. **Resume Phase 6**: Complete remaining tasks (T080-T099)
-7. **Create separate enhancement branch**: `feat/002-permission-flow` for Bug #3
-8. **Defer Bug #4**: Add to Feature 003 or future enhancement backlog
+**All 14 bugs resolved** through systematic debugging and architecture improvements:
+
+**Week 1 (2025-11-05)**: Initial bug discovery and fixes
+- Bugs #1-4: Core timer and permission issues resolved
+
+**Week 2 (2025-11-06)**: Timer regression hunting and final resolution
+- Bugs #5-14: Multiple iterations to achieve production-ready timer
+- 7 commits deployed to resolve all regressions
+- Comprehensive emulator testing validated fixes
+
+**Final Architecture**:
+- Service updates database every 100ms with calculated durations
+- ViewModel observes database via Flow (reactive pattern)
+- UI displays database values (pure presentation layer)
+- Loading spinner → 1.5s buffer → 200ms stabilization → smooth counting timer
+
+---
+
+## Lessons Learned
+
+1. **Timer implementations are deceptively complex**: What seemed like a "simple timer" required 14 bug fixes across 7 commits
+2. **GPS timestamps != user time**: User-facing timers should use System.currentTimeMillis(), not GPS data timestamps
+3. **Update frequency matters**: 100ms service updates provide smooth UX, 1000ms causes skipped seconds
+4. **State transitions need buffering**: 1.5s buffer + 200ms stabilization prevents frozen startup displays
+5. **Architecture simplification helps**: Removing ViewModel timer logic and relying on Service eliminated race conditions
 
 ---
 
