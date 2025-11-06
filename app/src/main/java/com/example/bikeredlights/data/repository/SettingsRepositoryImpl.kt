@@ -8,6 +8,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.bikeredlights.data.preferences.PreferencesKeys
+import com.example.bikeredlights.domain.model.history.DateRangeFilter
+import com.example.bikeredlights.domain.model.history.SortPreference
 import com.example.bikeredlights.domain.model.settings.AutoPauseConfig
 import com.example.bikeredlights.domain.model.settings.GpsAccuracy
 import com.example.bikeredlights.domain.model.settings.UnitsSystem
@@ -112,6 +114,78 @@ class SettingsRepositoryImpl(
             Log.d(TAG, "Auto-pause config updated: enabled=${config.enabled}, threshold=${config.thresholdSeconds}s")
         } catch (e: IOException) {
             Log.e(TAG, "Error writing auto-pause preferences", e)
+        }
+    }
+
+    override val rideSortPreference: Flow<SortPreference> = context.dataStore.data
+        .catch { exception ->
+            if (exception is IOException) {
+                Log.e(TAG, "Error reading ride sort preference", exception)
+                emit(emptyPreferences())
+            } else {
+                throw exception
+            }
+        }
+        .map { preferences ->
+            val value = preferences[PreferencesKeys.RIDE_SORT_PREFERENCE]
+            SortPreference.fromString(value)
+        }
+
+    override val rideDateRangeFilter: Flow<DateRangeFilter> = context.dataStore.data
+        .catch { exception ->
+            if (exception is IOException) {
+                Log.e(TAG, "Error reading ride filter preference", exception)
+                emit(emptyPreferences())
+            } else {
+                throw exception
+            }
+        }
+        .map { preferences ->
+            val typeValue = preferences[PreferencesKeys.RIDE_FILTER_TYPE]
+            val type = DateRangeFilter.FilterType.fromString(typeValue)
+            val customStart = preferences[PreferencesKeys.RIDE_FILTER_CUSTOM_START]
+            val customEnd = preferences[PreferencesKeys.RIDE_FILTER_CUSTOM_END]
+
+            DateRangeFilter(
+                type = type,
+                customStartDate = customStart,
+                customEndDate = customEnd
+            )
+        }
+
+    override suspend fun setRideSortPreference(sortPreference: SortPreference) {
+        try {
+            context.dataStore.edit { preferences ->
+                preferences[PreferencesKeys.RIDE_SORT_PREFERENCE] = sortPreference.name
+            }
+            Log.d(TAG, "Ride sort preference updated to: $sortPreference")
+        } catch (e: IOException) {
+            Log.e(TAG, "Error writing ride sort preference", e)
+        }
+    }
+
+    override suspend fun setRideDateRangeFilter(filter: DateRangeFilter) {
+        try {
+            context.dataStore.edit { preferences ->
+                preferences[PreferencesKeys.RIDE_FILTER_TYPE] = filter.type.name
+
+                // Store custom dates only if filter type is CUSTOM
+                if (filter.type == DateRangeFilter.FilterType.CUSTOM) {
+                    filter.customStartDate?.let {
+                        preferences[PreferencesKeys.RIDE_FILTER_CUSTOM_START] = it
+                    }
+                    filter.customEndDate?.let {
+                        preferences[PreferencesKeys.RIDE_FILTER_CUSTOM_END] = it
+                    }
+                } else {
+                    // Clear custom dates for non-custom filters
+                    preferences.remove(PreferencesKeys.RIDE_FILTER_CUSTOM_START)
+                    preferences.remove(PreferencesKeys.RIDE_FILTER_CUSTOM_END)
+                }
+            }
+            Log.d(TAG, "Ride filter updated: type=${filter.type}, start=${filter.customStartDate}, end=${filter.customEndDate}")
+        } catch (e: IOException) {
+            Log.e(TAG, "Error writing ride filter preference", e)
         }
     }
 }

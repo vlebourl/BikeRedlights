@@ -2,6 +2,7 @@ package com.example.bikeredlights.data.preferences
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 
 /**
@@ -40,4 +41,32 @@ object PreferencesKeys {
      * Maps to: AutoPauseConfig.thresholdSeconds
      */
     val AUTO_PAUSE_SECONDS = intPreferencesKey("auto_pause_seconds")
+
+    /**
+     * User's preferred sort order for ride history list.
+     * Allowed values: "NEWEST_FIRST" (default), "OLDEST_FIRST", "LONGEST_DISTANCE", "LONGEST_DURATION"
+     * Maps to: SortPreference enum
+     */
+    val RIDE_SORT_PREFERENCE = stringPreferencesKey("ride_sort_preference")
+
+    /**
+     * User's ride history date range filter type.
+     * Allowed values: "ALL_TIME" (default), "LAST_7_DAYS", "LAST_30_DAYS", "THIS_YEAR", "CUSTOM"
+     * Maps to: DateRangeFilter.FilterType enum
+     */
+    val RIDE_FILTER_TYPE = stringPreferencesKey("ride_filter_type")
+
+    /**
+     * Custom date range filter start date (epoch milliseconds).
+     * Only used when RIDE_FILTER_TYPE is "CUSTOM"
+     * Maps to: DateRangeFilter.customStartDate
+     */
+    val RIDE_FILTER_CUSTOM_START = longPreferencesKey("ride_filter_custom_start")
+
+    /**
+     * Custom date range filter end date (epoch milliseconds).
+     * Only used when RIDE_FILTER_TYPE is "CUSTOM"
+     * Maps to: DateRangeFilter.customEndDate
+     */
+    val RIDE_FILTER_CUSTOM_END = longPreferencesKey("ride_filter_custom_end")
 }
