@@ -1,6 +1,7 @@
 package com.example.bikeredlights.domain.repository
 
 import com.example.bikeredlights.domain.model.Ride
+import com.example.bikeredlights.domain.model.history.SortPreference
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -93,4 +94,44 @@ interface RideRepository {
      * @return List of incomplete rides
      */
     suspend fun getIncompleteRides(): List<Ride>
+
+    /**
+     * Get all rides with custom sort order as a reactive Flow.
+     *
+     * Emits updated list whenever database changes, sorted according to preference.
+     * Used by ride history screen to display sorted list.
+     *
+     * @param sortPreference Sort order preference
+     * @return Flow emitting sorted list of rides
+     */
+    fun getAllRidesSorted(sortPreference: SortPreference): Flow<List<Ride>>
+
+    /**
+     * Get rides within a date range as a reactive Flow.
+     *
+     * Filters rides where startTime falls between startMillis and endMillis (inclusive).
+     * Emits updated list whenever database changes.
+     *
+     * @param startMillis Start of date range (epoch milliseconds, inclusive)
+     * @param endMillis End of date range (epoch milliseconds, inclusive)
+     * @return Flow emitting filtered list of rides
+     */
+    fun getRidesInDateRange(startMillis: Long, endMillis: Long): Flow<List<Ride>>
+
+    /**
+     * Get rides with both custom sort and date filter as a reactive Flow.
+     *
+     * Combines filtering by date range and sorting by preference.
+     * Emits updated list whenever database changes.
+     *
+     * @param startMillis Start of date range (epoch milliseconds, inclusive)
+     * @param endMillis End of date range (epoch milliseconds, inclusive)
+     * @param sortPreference Sort order preference
+     * @return Flow emitting filtered and sorted list of rides
+     */
+    fun getRidesInDateRangeSorted(
+        startMillis: Long,
+        endMillis: Long,
+        sortPreference: SortPreference
+    ): Flow<List<Ride>>
 }

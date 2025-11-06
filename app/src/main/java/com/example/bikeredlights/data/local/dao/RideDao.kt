@@ -110,4 +110,70 @@ interface RideDao {
      */
     @Query("SELECT * FROM rides ORDER BY start_time DESC")
     suspend fun getAllRides(): List<Ride>
+
+    // ===== Sorted Queries =====
+
+    /**
+     * Get all rides sorted by start time descending (newest first).
+     */
+    @Query("SELECT * FROM rides ORDER BY start_time DESC")
+    fun getAllRidesNewestFirst(): Flow<List<Ride>>
+
+    /**
+     * Get all rides sorted by start time ascending (oldest first).
+     */
+    @Query("SELECT * FROM rides ORDER BY start_time ASC")
+    fun getAllRidesOldestFirst(): Flow<List<Ride>>
+
+    /**
+     * Get all rides sorted by distance descending (longest distance first).
+     * Secondary sort by start_time DESC for stable ordering.
+     */
+    @Query("SELECT * FROM rides ORDER BY distance_meters DESC, start_time DESC")
+    fun getAllRidesLongestDistance(): Flow<List<Ride>>
+
+    /**
+     * Get all rides sorted by moving duration descending (longest duration first).
+     * Secondary sort by start_time DESC for stable ordering.
+     */
+    @Query("SELECT * FROM rides ORDER BY moving_duration_millis DESC, start_time DESC")
+    fun getAllRidesLongestDuration(): Flow<List<Ride>>
+
+    // ===== Date Range Queries =====
+
+    /**
+     * Get rides within a date range.
+     *
+     * @param startMillis Start of date range (epoch milliseconds, inclusive)
+     * @param endMillis End of date range (epoch milliseconds, inclusive)
+     * @return Flow emitting rides in the date range, sorted newest first
+     */
+    @Query("SELECT * FROM rides WHERE start_time BETWEEN :startMillis AND :endMillis ORDER BY start_time DESC")
+    fun getRidesInDateRange(startMillis: Long, endMillis: Long): Flow<List<Ride>>
+
+    // ===== Combined Date Range + Sort Queries =====
+
+    /**
+     * Get rides in date range sorted by start time descending (newest first).
+     */
+    @Query("SELECT * FROM rides WHERE start_time BETWEEN :startMillis AND :endMillis ORDER BY start_time DESC")
+    fun getRidesInDateRangeNewestFirst(startMillis: Long, endMillis: Long): Flow<List<Ride>>
+
+    /**
+     * Get rides in date range sorted by start time ascending (oldest first).
+     */
+    @Query("SELECT * FROM rides WHERE start_time BETWEEN :startMillis AND :endMillis ORDER BY start_time ASC")
+    fun getRidesInDateRangeOldestFirst(startMillis: Long, endMillis: Long): Flow<List<Ride>>
+
+    /**
+     * Get rides in date range sorted by distance descending (longest distance first).
+     */
+    @Query("SELECT * FROM rides WHERE start_time BETWEEN :startMillis AND :endMillis ORDER BY distance_meters DESC, start_time DESC")
+    fun getRidesInDateRangeLongestDistance(startMillis: Long, endMillis: Long): Flow<List<Ride>>
+
+    /**
+     * Get rides in date range sorted by moving duration descending (longest duration first).
+     */
+    @Query("SELECT * FROM rides WHERE start_time BETWEEN :startMillis AND :endMillis ORDER BY moving_duration_millis DESC, start_time DESC")
+    fun getRidesInDateRangeLongestDuration(startMillis: Long, endMillis: Long): Flow<List<Ride>>
 }

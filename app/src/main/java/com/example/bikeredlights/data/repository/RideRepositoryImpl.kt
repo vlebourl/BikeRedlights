@@ -2,6 +2,7 @@ package com.example.bikeredlights.data.repository
 
 import com.example.bikeredlights.data.local.dao.RideDao
 import com.example.bikeredlights.domain.model.Ride
+import com.example.bikeredlights.domain.model.history.SortPreference
 import com.example.bikeredlights.domain.repository.RideRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -64,6 +65,40 @@ class RideRepositoryImpl @Inject constructor(
 
     override suspend fun getIncompleteRides(): List<Ride> = withContext(Dispatchers.IO) {
         rideDao.getIncompleteRides().map { it.toDomainModel() }
+    }
+
+    override fun getAllRidesSorted(sortPreference: SortPreference): Flow<List<Ride>> {
+        val daoFlow = when (sortPreference) {
+            SortPreference.NEWEST_FIRST -> rideDao.getAllRidesNewestFirst()
+            SortPreference.OLDEST_FIRST -> rideDao.getAllRidesOldestFirst()
+            SortPreference.LONGEST_DISTANCE -> rideDao.getAllRidesLongestDistance()
+            SortPreference.LONGEST_DURATION -> rideDao.getAllRidesLongestDuration()
+        }
+        return daoFlow.map { entities ->
+            entities.map { it.toDomainModel() }
+        }
+    }
+
+    override fun getRidesInDateRange(startMillis: Long, endMillis: Long): Flow<List<Ride>> {
+        return rideDao.getRidesInDateRange(startMillis, endMillis).map { entities ->
+            entities.map { it.toDomainModel() }
+        }
+    }
+
+    override fun getRidesInDateRangeSorted(
+        startMillis: Long,
+        endMillis: Long,
+        sortPreference: SortPreference
+    ): Flow<List<Ride>> {
+        val daoFlow = when (sortPreference) {
+            SortPreference.NEWEST_FIRST -> rideDao.getRidesInDateRangeNewestFirst(startMillis, endMillis)
+            SortPreference.OLDEST_FIRST -> rideDao.getRidesInDateRangeOldestFirst(startMillis, endMillis)
+            SortPreference.LONGEST_DISTANCE -> rideDao.getRidesInDateRangeLongestDistance(startMillis, endMillis)
+            SortPreference.LONGEST_DURATION -> rideDao.getRidesInDateRangeLongestDuration(startMillis, endMillis)
+        }
+        return daoFlow.map { entities ->
+            entities.map { it.toDomainModel() }
+        }
     }
 
     /**
