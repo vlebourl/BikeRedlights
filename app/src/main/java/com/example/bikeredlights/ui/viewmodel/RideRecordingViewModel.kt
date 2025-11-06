@@ -306,13 +306,14 @@ class RideRecordingViewModel @Inject constructor(
                 rideObservationJob = viewModelScope.launch {
                     rideRepository.getRideByIdFlow(recordingState.rideId).collect { ride ->
                         _uiState.value = if (ride != null) {
-                            // Bug #14 fix: Check if GPS is initialized (first track point received)
+                            // Bug #14 fix: Check if GPS is initialized AND timer is actively counting
                             // startTime is set by RecordTrackPointUseCase when first GPS fix arrives
-                            if (ride.startTime == 0L) {
-                                // Still waiting for GPS to initialize
+                            // Wait until movingDuration >= 500ms to ensure timer updates smoothly
+                            if (ride.startTime == 0L || ride.movingDurationMillis < 500) {
+                                // Still waiting for GPS or timer to stabilize
                                 RideRecordingUiState.WaitingForGps(ride)
                             } else {
-                                // GPS ready, show recording state with timer
+                                // GPS ready and timer is actively counting, show recording state
                                 RideRecordingUiState.Recording(ride)
                             }
                         } else {
