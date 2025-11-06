@@ -606,7 +606,7 @@ class RideRecordingService : Service() {
 
         durationUpdateJob = serviceScope.launch {
             while (true) {
-                kotlinx.coroutines.delay(1000)  // Update every 1 second
+                kotlinx.coroutines.delay(100)  // Update every 100ms for smooth timer display
                 updateRideDuration(rideId)
             }
         }

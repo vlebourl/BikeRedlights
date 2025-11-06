@@ -59,8 +59,12 @@ class RecordTrackPointUseCase @Inject constructor(
         // Bug #14 fix: Set ride startTime on first track point (when GPS is actually working)
         // Use current time (not GPS timestamp) to ensure timer starts at 00:00:00
         // GPS timestamp can be several seconds old by the time we receive it
+        //
+        // Add 1.5 second buffer delay after GPS initialization to allow service to stabilize
+        // This prevents the timer from stalling on first tick (smooth 00:00:00 → 00:00:01 transition)
         val ride = rideRepository.getRideById(rideId)
         if (ride != null && ride.startTime == 0L) {
+            kotlinx.coroutines.delay(1500)  // 1.5 second buffer before timer starts
             val updatedRide = ride.copy(startTime = System.currentTimeMillis())
             rideRepository.updateRide(updatedRide)
         }
