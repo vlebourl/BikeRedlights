@@ -308,8 +308,8 @@ class RideRecordingViewModel @Inject constructor(
                         _uiState.value = if (ride != null) {
                             // Bug #14 fix: Check if GPS is initialized AND timer is actively counting
                             // startTime is set by RecordTrackPointUseCase when first GPS fix arrives
-                            // Wait until movingDuration >= 500ms to ensure timer updates smoothly
-                            if (ride.startTime == 0L || ride.movingDurationMillis < 500) {
+                            // Wait until movingDuration >= 200ms to ensure timer updates smoothly
+                            if (ride.startTime == 0L || ride.movingDurationMillis < 200) {
                                 // Still waiting for GPS or timer to stabilize
                                 RideRecordingUiState.WaitingForGps(ride)
                             } else {
