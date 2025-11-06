@@ -1,6 +1,6 @@
 # BikeRedlights - Project TODO
 
-> **Last Updated**: 2025-11-04
+> **Last Updated**: 2025-11-06
 > **Purpose**: Unified progress tracking for all features, tasks, and pending work
 
 ## 📋 In Progress
@@ -44,6 +44,59 @@ _(No features currently planned)_
 ## ✅ Completed
 
 _Features completed and merged_
+
+### Feature 003: Ride History and List View
+- **Completed**: 2025-11-06
+- **Description**: Complete ride history management with sorting, filtering, deletion, and detailed statistics
+- **Status**: ✅ All 5 user stories complete, fully tested on emulator, released as v0.4.0
+- **Details**:
+  - **User Story 1: View List of All Rides**
+    - Material 3 ride history screen with reactive state management (RideHistoryViewModel + Flow)
+    - Custom ride list item cards with swipe-to-delete functionality
+    - Empty state view for first-time users with friendly guidance
+    - Loading and error state handling with sealed RideHistoryUiState class
+    - Automatic list updates via Room Flow queries
+  - **User Story 2: View Detailed Ride Statistics**
+    - Dedicated ride detail screen with comprehensive statistics (RideDetailScreen)
+    - Display metrics: start time, end time, duration, distance, average speed, max speed
+    - Unit system support (metric/imperial) from user preferences
+    - Top app bar with ride name and back navigation
+    - Material 3 card layout for stat grouping with emoji icons
+  - **User Story 3: Sort Rides by Multiple Criteria**
+    - Sort dialog with 6 sorting options (newest/oldest, longest/shortest distance/duration)
+    - Persistent sort preference using DataStore Preferences
+    - Real-time list updates when sort changes using `flatMapLatest` operator
+    - Sort icon button in top app bar with visual indicator for current selection
+  - **User Story 4: Delete Rides**
+    - Swipe-to-reveal delete button on ride cards
+    - Confirmation dialog before permanent deletion (DeleteConfirmationDialog)
+    - Cascade deletion of all associated data (ride entity + all location data points)
+    - Automatic list refresh after deletion via Flow
+    - Error handling with snackbar feedback
+  - **User Story 5: Filter Rides by Date Range**
+    - Date range filter dialog with Material 3 DatePickerDialog
+    - Custom date range selection (start date + end date)
+    - "Clear Filter" option to show all rides
+    - Filter icon button in top app bar
+    - Real-time list updates when filter changes
+    - Filter state maintained during session (not persisted across restarts)
+  - **Architecture**:
+    - Domain: RideListItem, RideDetailItem, DateRangeFilter, SortPreference models
+    - Domain: GetAllRidesUseCase, GetRideDetailUseCase, DeleteRideUseCase
+    - Data: Extended RideRepository with 12 new Room queries (6 sort variants + filtering + deletion)
+    - UI: RideHistoryViewModel, RideDetailViewModel with reactive Flow state
+    - UI: RideHistoryScreen, RideDetailScreen, 5 reusable components (cards, dialogs, empty state)
+  - **Quality Assurance**:
+    - Fully tested on Pixel 9 Pro emulator (Android 15 / API 35)
+    - All 8 test scenarios validated (empty state, sorting, filtering, deletion, detail nav, units, dark mode, rotation)
+    - Material 3 theming with dark mode support
+    - Accessibility: content descriptions, 48dp touch targets, high contrast
+- **Critical Bug Fix**: Fixed sort preference not updating list by using `flatMapLatest` instead of nested `.onEach { collect() }` for proper Flow cancellation
+- **Test Coverage**: All user stories validated on emulator
+- **Architecture**: MVVM + Clean Architecture with reactive Flow and sealed state classes
+- **Git Commits**: 32 commits across 5 user stories + critical bug fix
+- **Release**: v0.4.0 (GitHub release with signed 22MB APK)
+- **Pull Request**: #4
 
 ### Feature 2A: Basic Settings Infrastructure
 - **Completed**: 2025-11-04
