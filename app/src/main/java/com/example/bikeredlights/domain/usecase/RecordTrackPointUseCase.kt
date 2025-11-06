@@ -57,10 +57,11 @@ class RecordTrackPointUseCase @Inject constructor(
         isAutoPaused: Boolean = false
     ): Long {
         // Bug #14 fix: Set ride startTime on first track point (when GPS is actually working)
-        // This ensures timer starts from actual GPS fix, not button press
+        // Use current time (not GPS timestamp) to ensure timer starts at 00:00:00
+        // GPS timestamp can be several seconds old by the time we receive it
         val ride = rideRepository.getRideById(rideId)
         if (ride != null && ride.startTime == 0L) {
-            val updatedRide = ride.copy(startTime = locationData.timestamp)
+            val updatedRide = ride.copy(startTime = System.currentTimeMillis())
             rideRepository.updateRide(updatedRide)
         }
 
