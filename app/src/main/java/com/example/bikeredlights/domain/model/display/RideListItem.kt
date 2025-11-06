@@ -1,7 +1,7 @@
 package com.example.bikeredlights.domain.model.display
 
 import com.example.bikeredlights.domain.model.Ride
-import com.example.bikeredlights.domain.model.UnitsSystem
+import com.example.bikeredlights.domain.model.settings.UnitsSystem
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter

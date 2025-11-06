@@ -1,7 +1,7 @@
 package com.example.bikeredlights.domain.usecase
 
 import com.example.bikeredlights.domain.model.Ride
-import com.example.bikeredlights.domain.model.UnitsSystem
+import com.example.bikeredlights.domain.model.settings.UnitsSystem
 import com.example.bikeredlights.domain.model.display.RideListItem
 import com.example.bikeredlights.domain.model.display.toListItem
 import com.example.bikeredlights.domain.model.history.SortPreference
