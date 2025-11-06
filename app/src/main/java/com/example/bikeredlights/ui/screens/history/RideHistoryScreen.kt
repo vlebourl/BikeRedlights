@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -30,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.bikeredlights.domain.model.display.RideListItem
+import com.example.bikeredlights.ui.components.history.DateRangeFilterDialog
 import com.example.bikeredlights.ui.components.history.DeleteConfirmationDialog
 import com.example.bikeredlights.ui.components.history.EmptyStateView
 import com.example.bikeredlights.ui.components.history.RideListItemCard
@@ -73,8 +75,10 @@ fun RideHistoryScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val currentSort by viewModel.currentSort.collectAsStateWithLifecycle()
+    val dateFilter by viewModel.dateFilter.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var showSortDialog by remember { mutableStateOf(false) }
+    var showFilterDialog by remember { mutableStateOf(false) }
     var rideToDelete by remember { mutableStateOf<RideListItem?>(null) }
 
     Scaffold(
@@ -83,6 +87,14 @@ fun RideHistoryScreen(
             TopAppBar(
                 title = { Text("My Rides") },
                 actions = {
+                    // Filter button
+                    IconButton(onClick = { showFilterDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.FilterList,
+                            contentDescription = "Filter rides by date"
+                        )
+                    }
+                    // Sort button
                     IconButton(onClick = { showSortDialog = true }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Sort,
@@ -129,6 +141,17 @@ fun RideHistoryScreen(
                 viewModel.updateSortPreference(sortPreference)
             },
             onDismiss = { showSortDialog = false }
+        )
+    }
+
+    // Date range filter dialog
+    if (showFilterDialog) {
+        DateRangeFilterDialog(
+            currentFilter = dateFilter,
+            onFilterSelected = { filter ->
+                viewModel.updateDateFilter(filter)
+            },
+            onDismiss = { showFilterDialog = false }
         )
     }
 
