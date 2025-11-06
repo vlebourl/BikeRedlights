@@ -57,33 +57,12 @@ fun RideStatistics(
     unitsSystem: UnitsSystem = UnitsSystem.METRIC,
     modifier: Modifier = Modifier
 ) {
-    // Timer logic: Simple calculation from ride.startTime
-    // - Active ride: Calculate elapsed time from startTime (matches FinishRideUseCase)
-    // - Finished ride: Use stored movingDurationMillis from database
-    // - Waiting for GPS: Show 0
-    var currentDuration by remember(ride.id) { mutableLongStateOf(0L) }
-
-    LaunchedEffect(ride.id, ride.startTime, ride.endTime) {
-        if (ride.endTime == null && ride.startTime != 0L) {
-            // Active ride: Update timer continuously
-            while (isActive) {
-                val now = System.currentTimeMillis()
-                val elapsed = now - ride.startTime
-
-                // Subtract pauses to show only moving time
-                val paused = ride.manualPausedDurationMillis + ride.autoPausedDurationMillis
-                currentDuration = (elapsed - paused).coerceAtLeast(0L)
-
-                delay(100L)  // Update every 100ms for smooth display
-            }
-        } else if (ride.endTime != null) {
-            // Finished ride: Show final duration from database
-            currentDuration = ride.movingDurationMillis
-        } else {
-            // Waiting for GPS: Show 0
-            currentDuration = 0L
-        }
-    }
+    // Timer display: Use movingDurationMillis from database
+    // The service updates this field every second, accounting for pauses in real-time
+    // - Active ride: Shows moving time (excludes pauses)
+    // - Finished ride: Shows final moving duration
+    // - Waiting for GPS: Shows 0
+    val currentDuration = ride.movingDurationMillis
 
     Card(
         modifier = modifier.fillMaxWidth(),
