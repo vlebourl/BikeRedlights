@@ -134,6 +134,49 @@ class RideRecordingViewModel @Inject constructor(
             android.util.Log.d("RideRecordingViewModel",
                 "stopRide() stopping service for rideId=$rideId, service state=$state")
 
+            // Bug #13 fix: Accumulate pause duration BEFORE stopping service to avoid race condition
+            // The service's stopRecording() runs asynchronously, so we do it here synchronously
+            if (state is RideRecordingState.ManuallyPaused || state is RideRecordingState.AutoPaused) {
+                val ride = rideRepository.getRideById(rideId)
+                if (ride != null) {
+                    val endTime = System.currentTimeMillis()
+
+                    val updatedRide = when (state) {
+                        is RideRecordingState.ManuallyPaused -> {
+                            // Calculate manual pause duration from current pause session
+                            // Note: We can't access pauseStartTime from the service, so we calculate it
+                            // by finding the gap between accumulated pauses and total time
+                            val elapsedTime = endTime - ride.startTime
+                            val recordedPauseDuration = ride.manualPausedDurationMillis + ride.autoPausedDurationMillis
+                            val currentPauseDuration = elapsedTime - recordedPauseDuration - ride.movingDurationMillis
+
+                            ride.copy(
+                                manualPausedDurationMillis = ride.manualPausedDurationMillis + currentPauseDuration
+                            )
+                        }
+                        is RideRecordingState.AutoPaused -> {
+                            // Calculate auto-pause duration from current pause session
+                            val elapsedTime = endTime - ride.startTime
+                            val recordedPauseDuration = ride.manualPausedDurationMillis + ride.autoPausedDurationMillis
+                            val currentPauseDuration = elapsedTime - recordedPauseDuration - ride.movingDurationMillis
+
+                            ride.copy(
+                                autoPausedDurationMillis = ride.autoPausedDurationMillis + currentPauseDuration
+                            )
+                        }
+                        else -> ride
+                    }
+
+                    rideRepository.updateRide(updatedRide)
+                    android.util.Log.d("RideRecordingViewModel",
+                        "Accumulated pause duration before stopping: state=$state, pause=${when(state) {
+                            is RideRecordingState.ManuallyPaused -> updatedRide.manualPausedDurationMillis
+                            is RideRecordingState.AutoPaused -> updatedRide.autoPausedDurationMillis
+                            else -> 0
+                        }}ms")
+                }
+            }
+
             // Bug #7 fix: Cancel ride observation job to prevent it from overwriting ShowingSaveDialog
             // Wait for cancellation to complete before proceeding
             android.util.Log.d("RideRecordingViewModel",
@@ -263,7 +306,15 @@ class RideRecordingViewModel @Inject constructor(
                 rideObservationJob = viewModelScope.launch {
                     rideRepository.getRideByIdFlow(recordingState.rideId).collect { ride ->
                         _uiState.value = if (ride != null) {
-                            RideRecordingUiState.Recording(ride)
+                            // Bug #14 fix: Check if GPS is initialized (first track point received)
+                            // startTime is set by RecordTrackPointUseCase when first GPS fix arrives
+                            if (ride.startTime == 0L) {
+                                // Still waiting for GPS to initialize
+                                RideRecordingUiState.WaitingForGps(ride)
+                            } else {
+                                // GPS ready, show recording state with timer
+                                RideRecordingUiState.Recording(ride)
+                            }
                         } else {
                             RideRecordingUiState.Idle
                         }
@@ -366,6 +417,16 @@ sealed class RideRecordingUiState {
      * No active ride recording.
      */
     data object Idle : RideRecordingUiState()
+
+    /**
+     * Waiting for GPS to initialize (Bug #14 fix).
+     *
+     * Shows loading indicator while GPS acquires first fix.
+     * Ride has started but startTime = 0 until first track point is recorded.
+     *
+     * @property ride Current ride (startTime = 0)
+     */
+    data class WaitingForGps(val ride: Ride) : RideRecordingUiState()
 
     /**
      * Ride is actively recording.

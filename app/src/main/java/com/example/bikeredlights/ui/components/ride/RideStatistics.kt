@@ -1,6 +1,5 @@
 package com.example.bikeredlights.ui.components.ride
 
-import android.os.SystemClock
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -58,29 +57,33 @@ fun RideStatistics(
     unitsSystem: UnitsSystem = UnitsSystem.METRIC,
     modifier: Modifier = Modifier
 ) {
-    // SIMPLE TIMER: Independent of GPS, uses SystemClock for accurate timing
-    // Starts at 0, counts up based on actual elapsed time (prevents drift)
-    // Resets per ride using ride.id as key
-    var elapsedMillis by remember(ride.id) { mutableLongStateOf(0L) }
-    val isTimerRunning = ride.endTime == null && ride.startTime != 0L
+    // Timer logic: Simple calculation from ride.startTime
+    // - Active ride: Calculate elapsed time from startTime (matches FinishRideUseCase)
+    // - Finished ride: Use stored movingDurationMillis from database
+    // - Waiting for GPS: Show 0
+    var currentDuration by remember(ride.id) { mutableLongStateOf(0L) }
 
-    LaunchedEffect(ride.id, isTimerRunning) {
-        if (isTimerRunning) {
-            // Timer is running: calculate elapsed time from SystemClock
-            val timerStartTime = SystemClock.uptimeMillis()
+    LaunchedEffect(ride.id, ride.startTime, ride.endTime) {
+        if (ride.endTime == null && ride.startTime != 0L) {
+            // Active ride: Update timer continuously
             while (isActive) {
-                // Calculate actual elapsed time (prevents drift from delay inaccuracies)
-                elapsedMillis = SystemClock.uptimeMillis() - timerStartTime
+                val now = System.currentTimeMillis()
+                val elapsed = now - ride.startTime
+
+                // Subtract pauses to show only moving time
+                val paused = ride.manualPausedDurationMillis + ride.autoPausedDurationMillis
+                currentDuration = (elapsed - paused).coerceAtLeast(0L)
+
                 delay(100L)  // Update every 100ms for smooth display
             }
         } else if (ride.endTime != null) {
-            // Finished ride: show stored duration from database
-            elapsedMillis = ride.movingDurationMillis
+            // Finished ride: Show final duration from database
+            currentDuration = ride.movingDurationMillis
+        } else {
+            // Waiting for GPS: Show 0
+            currentDuration = 0L
         }
-        // If waiting for GPS (startTime==0): elapsedMillis stays at 0
     }
-
-    val displayDuration = elapsedMillis
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -92,9 +95,9 @@ fun RideStatistics(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Duration (primary metric) - simple timer counting seconds
+            // Duration (primary metric)
             Text(
-                text = formatDuration(displayDuration),
+                text = formatDuration(currentDuration),
                 style = MaterialTheme.typography.displayLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary

@@ -1,8 +1,11 @@
 package com.example.bikeredlights.domain.usecase
 
+import android.util.Log
 import com.example.bikeredlights.domain.model.Ride
 import com.example.bikeredlights.domain.repository.RideRepository
 import javax.inject.Inject
+
+private const val TAG = "FinishRideUseCase"
 
 /**
  * Use case for finishing a ride recording session.
@@ -59,11 +62,14 @@ class FinishRideUseCase @Inject constructor(
         val elapsedDuration = endTime - ride.startTime
 
         // Calculate moving duration (active recording time, excludes pauses) - T087
+        // Bug #13 fix: Use pause durations directly from ride object.
+        // The ViewModel should ensure pause durations are accumulated BEFORE calling this use case.
         val movingDuration = elapsedDuration - ride.manualPausedDurationMillis - ride.autoPausedDurationMillis
 
         // Validate minimum duration using moving time (5 seconds = 5000ms) - T087
         // Use movingDuration instead of elapsedDuration to exclude paused time from validation
         if (movingDuration < MIN_RIDE_DURATION_MILLIS) {
+            Log.w(TAG, "Ride too short: movingDuration=${movingDuration}ms < minimum ${MIN_RIDE_DURATION_MILLIS}ms")
             return FinishRideResult.TooShort(movingDuration)
         }
 
