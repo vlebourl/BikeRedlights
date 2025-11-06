@@ -4,6 +4,7 @@ import com.example.bikeredlights.domain.model.Ride
 import com.example.bikeredlights.domain.model.settings.UnitsSystem
 import com.example.bikeredlights.domain.model.display.RideListItem
 import com.example.bikeredlights.domain.model.display.toListItem
+import com.example.bikeredlights.domain.model.history.DateRangeFilter
 import com.example.bikeredlights.domain.model.history.SortPreference
 import com.example.bikeredlights.domain.repository.RideRepository
 import kotlinx.coroutines.flow.Flow
@@ -39,18 +40,30 @@ class GetAllRidesUseCase @Inject constructor(
     }
 
     /**
-     * Get all rides with custom sort order.
+     * Get all rides with custom sort order and optional date range filter.
      *
      * @param sortPreference Desired sort order
      * @param unitsSystem User's preferred unit system
-     * @return Flow emitting sorted list of display-ready ride items
+     * @param dateFilter Optional date range filter (defaults to None)
+     * @return Flow emitting sorted and filtered list of display-ready ride items
      */
     operator fun invoke(
         sortPreference: SortPreference,
-        unitsSystem: UnitsSystem
+        unitsSystem: UnitsSystem,
+        dateFilter: DateRangeFilter = DateRangeFilter.None
     ): Flow<List<RideListItem>> {
         return rideRepository.getAllRidesSorted(sortPreference).map { rides ->
-            rides.map { it.toListItem(unitsSystem) }
+            // Apply date filtering if custom range specified
+            val filteredRides = when (dateFilter) {
+                is DateRangeFilter.None -> rides
+                is DateRangeFilter.Custom -> rides.filter { ride ->
+                    ride.startTime >= dateFilter.startMillis &&
+                    ride.startTime <= dateFilter.endMillis
+                }
+            }
+
+            // Convert to display models
+            filteredRides.map { it.toListItem(unitsSystem) }
         }
     }
 }
