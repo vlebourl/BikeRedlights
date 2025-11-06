@@ -7,14 +7,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.bikeredlights.domain.model.display.RideListItem
 import com.example.bikeredlights.ui.components.history.EmptyStateView
 import com.example.bikeredlights.ui.components.history.RideListItemCard
+import com.example.bikeredlights.ui.components.history.SortDialog
 import com.example.bikeredlights.ui.theme.BikeRedlightsTheme
 import com.example.bikeredlights.ui.viewmodel.RideHistoryUiState
 import com.example.bikeredlights.ui.viewmodel.RideHistoryViewModel
@@ -33,11 +42,12 @@ import com.example.bikeredlights.ui.viewmodel.RideHistoryViewModel
  *
  * **Features**:
  * - Reactive list of rides from database
+ * - Sort rides with dialog (User Story 3)
  * - Empty state when no rides exist
  * - Loading state during data fetch
  * - Error state with snackbar message
  * - Smooth scrolling with LazyColumn
- * - Click to navigate to ride details (future feature)
+ * - Click to navigate to ride details
  *
  * **Architecture**:
  * - Stateless screen composable
@@ -53,6 +63,7 @@ import com.example.bikeredlights.ui.viewmodel.RideHistoryViewModel
  * @param viewModel ViewModel managing ride list state
  * @param modifier Optional modifier for layout customization
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RideHistoryScreen(
     onRideClick: (Long) -> Unit,
@@ -60,10 +71,25 @@ fun RideHistoryScreen(
     viewModel: RideHistoryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val currentSort by viewModel.currentSort.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showSortDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
+        topBar = {
+            TopAppBar(
+                title = { Text("My Rides") },
+                actions = {
+                    IconButton(onClick = { showSortDialog = true }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Sort,
+                            contentDescription = "Sort rides"
+                        )
+                    }
+                }
+            )
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         when (val state = uiState) {
@@ -90,6 +116,17 @@ fun RideHistoryScreen(
                 )
             }
         }
+    }
+
+    // Sort dialog
+    if (showSortDialog) {
+        SortDialog(
+            currentSort = currentSort,
+            onSortSelected = { sortPreference ->
+                viewModel.updateSortPreference(sortPreference)
+            },
+            onDismiss = { showSortDialog = false }
+        )
     }
 }
 

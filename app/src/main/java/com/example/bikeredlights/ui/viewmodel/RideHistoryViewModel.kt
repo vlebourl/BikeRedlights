@@ -49,6 +49,9 @@ class RideHistoryViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<RideHistoryUiState>(RideHistoryUiState.Loading)
     val uiState: StateFlow<RideHistoryUiState> = _uiState.asStateFlow()
 
+    private val _currentSort = MutableStateFlow(SortPreference.NEWEST_FIRST)
+    val currentSort: StateFlow<SortPreference> = _currentSort.asStateFlow()
+
     init {
         observeRides()
     }
@@ -68,6 +71,7 @@ class RideHistoryViewModel @Inject constructor(
             settingsRepository.rideSortPreference,
             settingsRepository.unitsSystem
         ) { sortPreference, unitsSystem ->
+            _currentSort.value = sortPreference
             Pair(sortPreference, unitsSystem)
         }
             .onEach { (sortPreference, unitsSystem) ->
