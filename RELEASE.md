@@ -12,6 +12,128 @@ _Features and changes completed but not yet released_
 
 ---
 
+## v0.4.0 - Ride History and List View (2025-11-06)
+
+### 📋 Complete Ride History Management
+
+**Status**: ✅ COMPLETE - Full-featured ride history with sorting, filtering, and deletion
+**Focus**: View saved rides, detailed statistics, multi-criteria sorting, date filtering, ride management
+**APK Size**: TBD (release build pending)
+**Tested On**: Pixel 9 Pro Emulator (Android 15 / API 35)
+
+### ✨ Features Added
+
+**Feature 003: Ride History and List View** ([spec](specs/003-ride-history-list/spec.md))
+
+- **User Story 1: View List of All Rides** ✅
+  - Material 3 ride history screen with reactive state management
+  - Custom ride list item cards displaying:
+    - Ride name and date
+    - Duration (HH:MM:SS format)
+    - Distance with units
+    - Average speed
+  - Empty state view for first-time users with helpful message
+  - Loading state with progress indicator
+  - Error state with message display
+  - Automatic list updates via Room Flow queries
+  - Tap ride card to view detailed information
+
+- **User Story 2: View Detailed Ride Information** ✅
+  - Comprehensive detail screen with statistics grid layout
+  - Displays all ride data:
+    - Start time and end time
+    - Total duration (excluding paused time)
+    - Total distance
+    - Average speed
+    - Max speed achieved
+    - Paused duration (if applicable)
+  - Type-safe navigation from list to detail with ride ID
+  - Back button returns to list
+  - Unit-aware formatting (metric/imperial)
+
+- **User Story 3: Sort Rides** ✅
+  - Sort dialog with 6 sorting options:
+    - Newest First (default)
+    - Oldest First
+    - Longest Duration
+    - Shortest Duration
+    - Farthest Distance
+    - Nearest Distance
+  - Sort preference persisted in DataStore
+  - Reactive sorting with automatic list updates
+  - Sort button in TopAppBar
+  - **Bug fix**: Used `flatMapLatest` to properly switch between sorted flows
+
+- **User Story 4: Delete Rides** ✅
+  - Delete icon button on each ride card
+  - Confirmation dialog prevents accidental deletions
+  - Clear warning message about permanent deletion
+  - Destructive action styling (red delete button)
+  - Cancel button to abort deletion
+  - Automatic list updates after successful deletion
+  - Cascade deletion of all associated track points
+
+- **User Story 5: Search/Filter by Date Range** ✅
+  - Material 3 DatePicker for intuitive date selection
+  - Two-step selection flow:
+    1. Select start date
+    2. Select end date
+  - Validation ensures start date ≤ end date
+  - "Show All" button clears filter
+  - "Apply" button (enabled only when both dates selected)
+  - Filter button in TopAppBar
+  - Session-only filter (clears on app restart)
+  - Client-side filtering for simplicity
+
+### 🏗️ Architecture
+
+**MVVM + Clean Architecture**:
+- **Domain Layer**:
+  - Display models: `RideListItem`, `RideDetailData` with formatted data
+  - Use cases: `GetAllRidesUseCase`, `GetRideByIdUseCase`, `DeleteRideUseCase`
+  - Models: `SortPreference` enum, `DateRangeFilter` sealed class
+- **Data Layer**:
+  - Extended `RideRepository` with sort/filter methods
+  - 12 new Room queries for sorted/filtered data
+  - DataStore Preferences for sort persistence
+  - Reactive Flow-based data access
+- **UI Layer**:
+  - ViewModels: `RideHistoryViewModel`, `RideDetailViewModel`
+  - Screens: `RideHistoryScreen`, `RideDetailScreen`
+  - Components: `RideListItemCard`, `EmptyStateView`, `DetailStatCard`
+  - Dialogs: `SortDialog`, `DateRangeFilterDialog`, `DeleteConfirmationDialog`
+
+**Key Technical Features**:
+- 🔄 Reactive data flow: Room Flow → Repository → UseCase → ViewModel StateFlow → UI
+- 🎯 `flatMapLatest` for proper flow cancellation when sort/filter changes
+- 📊 Automatic UI updates on data changes (add/modify/delete rides)
+- 🎨 Material 3 Expressive theme with proper semantic colors
+- 💉 Hilt dependency injection throughout
+- 🔒 Type-safe Navigation Compose with route arguments
+
+### 🐛 Bugs Fixed
+- Fixed sort not updating list by using `flatMapLatest` instead of `.onEach { collect() }`
+  - **Problem**: Nested collect() blocked flow switching
+  - **Solution**: flatMapLatest cancels previous flow and starts new one
+  - **Impact**: Sort changes now trigger immediate list updates
+
+### 📦 Dependencies
+- No new dependencies added (uses existing Jetpack Compose, Room, DataStore, Hilt)
+
+### 🔬 Testing
+- ✅ Emulator tested: List displays rides correctly
+- ✅ Emulator tested: Detail navigation works
+- ✅ Emulator tested: Sort updates list immediately
+- ✅ Emulator tested: Delete with confirmation works
+- ✅ Emulator tested: Date filter narrows list
+- ✅ No runtime errors or crashes
+- ✅ Material 3 theming consistent
+
+### 📝 Breaking Changes
+None. This feature adds new screens without modifying existing functionality.
+
+---
+
 ## v0.3.0 - Core Ride Recording (2025-11-06)
 
 ### 🚴 Full Ride Recording System
