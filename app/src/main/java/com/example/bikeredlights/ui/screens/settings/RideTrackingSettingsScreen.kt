@@ -117,16 +117,16 @@ fun RideTrackingSettingsScreen(
                 ToggleWithPickerSetting(
                     label = "Auto-Pause Rides",
                     enabled = autoPauseConfig.enabled,
-                    selectedValue = autoPauseConfig.thresholdMinutes,
+                    selectedValue = autoPauseConfig.thresholdSeconds,
                     options = AutoPauseConfig.VALID_THRESHOLDS,
-                    valueFormatter = { minutes ->
-                        if (minutes == 1) "1 minute" else "$minutes minutes"
+                    valueFormatter = { seconds ->
+                        if (seconds == 1) "1 second" else "$seconds seconds"
                     },
                     onEnabledChange = { enabled ->
                         onAutoPauseChange(autoPauseConfig.copy(enabled = enabled))
                     },
-                    onValueChange = { minutes ->
-                        onAutoPauseChange(autoPauseConfig.copy(thresholdMinutes = minutes))
+                    onValueChange = { seconds ->
+                        onAutoPauseChange(autoPauseConfig.copy(thresholdSeconds = seconds))
                     }
                 )
             }
@@ -163,7 +163,7 @@ private fun RideTrackingSettingsScreenPreviewImperial() {
         RideTrackingSettingsScreen(
             unitsSystem = UnitsSystem.IMPERIAL,
             gpsAccuracy = GpsAccuracy.BATTERY_SAVER,
-            autoPauseConfig = AutoPauseConfig(enabled = true, thresholdMinutes = 5),
+            autoPauseConfig = AutoPauseConfig(enabled = true, thresholdSeconds = 30),
             onUnitsChange = {},
             onGpsAccuracyChange = {},
             onAutoPauseChange = {},

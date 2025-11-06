@@ -85,14 +85,15 @@ class SettingsViewModel @Inject constructor(
     /**
      * Update user's auto-pause threshold.
      *
-     * @param thresholdMinutes Threshold in minutes (must be valid: 1, 2, 3, 5, 10, 15)
+     * Bug #10: Changed from minutes to seconds (5-60s range).
+     * @param thresholdSeconds Threshold in seconds (must be valid: 5, 10, 15, 20, 30, 45, 60)
      */
-    fun setAutoPauseThreshold(thresholdMinutes: Int) {
+    fun setAutoPauseThreshold(thresholdSeconds: Int) {
         viewModelScope.launch {
             val currentConfig = uiState.value.autoPauseConfig
             val newConfig = AutoPauseConfig(
                 enabled = currentConfig.enabled,
-                thresholdMinutes = thresholdMinutes
+                thresholdSeconds = thresholdSeconds
             )
             settingsRepository.setAutoPauseConfig(newConfig)
         }
