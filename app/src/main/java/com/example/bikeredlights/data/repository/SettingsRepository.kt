@@ -1,6 +1,5 @@
 package com.example.bikeredlights.data.repository
 
-import com.example.bikeredlights.domain.model.history.DateRangeFilter
 import com.example.bikeredlights.domain.model.history.SortPreference
 import com.example.bikeredlights.domain.model.settings.AutoPauseConfig
 import com.example.bikeredlights.domain.model.settings.GpsAccuracy
@@ -71,25 +70,10 @@ interface SettingsRepository {
     val rideSortPreference: Flow<SortPreference>
 
     /**
-     * Reactive stream of user's ride list date range filter.
-     * Emits default value (ALL_TIME) on first read if not yet set.
-     * Emits new values whenever setting changes.
-     */
-    val rideDateRangeFilter: Flow<DateRangeFilter>
-
-    /**
      * Update user's ride list sort preference.
      * Change persists immediately to DataStore.
      *
      * @param sortPreference New sort preference
      */
     suspend fun setRideSortPreference(sortPreference: SortPreference)
-
-    /**
-     * Update user's ride list date range filter.
-     * Change persists immediately to DataStore.
-     *
-     * @param filter New date range filter
-     */
-    suspend fun setRideDateRangeFilter(filter: DateRangeFilter)
 }
