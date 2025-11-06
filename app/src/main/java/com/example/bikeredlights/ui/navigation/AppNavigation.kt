@@ -10,6 +10,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.bikeredlights.ui.screens.history.RideDetailScreen
 import com.example.bikeredlights.ui.screens.history.RideHistoryScreen
 import com.example.bikeredlights.ui.screens.ride.LiveRideScreen
 import com.example.bikeredlights.ui.screens.ride.RideReviewScreen
@@ -78,9 +79,25 @@ fun AppNavigation(
         composable(BottomNavDestination.RIDES.route) {
             RideHistoryScreen(
                 onRideClick = { rideId ->
-                    // TODO: Navigate to detail screen (User Story 2)
+                    navController.navigate("ride_detail/$rideId")
                 },
                 modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        // Ride detail screen (Feature 003) - shows detailed ride statistics
+        composable(
+            route = "ride_detail/{rideId}",
+            arguments = listOf(
+                navArgument("rideId") {
+                    type = NavType.LongType
+                }
+            )
+        ) {
+            RideDetailScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
             )
         }
 
