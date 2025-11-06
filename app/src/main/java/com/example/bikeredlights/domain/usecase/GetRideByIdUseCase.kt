@@ -45,7 +45,7 @@ class GetRideByIdUseCase @Inject constructor(
         rideId: Long,
         unitsSystem: UnitsSystem
     ): Flow<RideDetailData?> {
-        return rideRepository.getRideById(rideId).map { ride ->
+        return rideRepository.getRideByIdFlow(rideId).map { ride ->
             ride?.toDetailData(unitsSystem)
         }
     }

@@ -69,7 +69,7 @@ fun RideDetailScreen(
 
     Scaffold(
         modifier = modifier,
-        topAppBar = {
+        topBar = {
             TopAppBar(
                 title = {
                     when (val state = uiState) {
@@ -192,13 +192,6 @@ private fun RideDetailContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Ride date
-        Text(
-            text = rideDetail.dateFormatted,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
         // Statistics grid
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
@@ -214,27 +207,11 @@ private fun RideDetailContent(
                 )
             }
 
-            // Elapsed Duration
+            // Duration
             item {
                 DetailStatCard(
-                    label = "Elapsed Time",
-                    value = rideDetail.elapsedDurationFormatted
-                )
-            }
-
-            // Moving Duration
-            item {
-                DetailStatCard(
-                    label = "Moving Time",
-                    value = rideDetail.movingDurationFormatted
-                )
-            }
-
-            // Total Paused
-            item {
-                DetailStatCard(
-                    label = "Total Paused",
-                    value = rideDetail.totalPausedFormatted
+                    label = "Duration",
+                    value = rideDetail.durationFormatted
                 )
             }
 
@@ -269,6 +246,16 @@ private fun RideDetailContent(
                     value = rideDetail.endTimeFormatted
                 )
             }
+
+            // Paused Time (only if ride has pauses)
+            if (rideDetail.hasPauses) {
+                item {
+                    DetailStatCard(
+                        label = "Paused Time",
+                        value = rideDetail.pausedTimeFormatted
+                    )
+                }
+            }
         }
     }
 }
@@ -283,16 +270,14 @@ private fun RideDetailScreenSuccessPreview() {
             rideDetail = RideDetailData(
                 id = 1,
                 name = "Morning Commute",
-                dateFormatted = "Nov 6, 2025",
-                startTimeFormatted = "08:15 AM",
-                endTimeFormatted = "09:05 AM",
-                elapsedDurationFormatted = "00:50:00",
-                movingDurationFormatted = "00:42:15",
-                totalPausedFormatted = "00:07:45",
+                startTimeFormatted = "Nov 6, 2025, 08:15 AM",
+                endTimeFormatted = "Nov 6, 2025, 09:05 AM",
+                durationFormatted = "00:42:15",
                 distanceFormatted = "12.5 km",
                 avgSpeedFormatted = "17.7 km/h",
                 maxSpeedFormatted = "32.4 km/h",
-                startTimeMillis = System.currentTimeMillis()
+                pausedTimeFormatted = "00:07:45",
+                hasPauses = true
             )
         )
     }
