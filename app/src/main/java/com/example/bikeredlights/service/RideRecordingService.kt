@@ -623,6 +623,11 @@ class RideRecordingService : Service() {
         val state = rideRecordingStateRepository.getCurrentState()
         val ride = rideRepository.getRideById(rideId) ?: return
 
+        // Don't update if GPS hasn't initialized yet (startTime = 0)
+        if (ride.startTime == 0L) {
+            return
+        }
+
         // Calculate elapsed duration (total time since start)
         val elapsedDuration = System.currentTimeMillis() - ride.startTime
 
