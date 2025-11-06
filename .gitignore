@@ -19,3 +19,21 @@ keystore.properties
 # APK/AAB files (optional - can commit for releases if desired)
 *.apk
 *.aab
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE
+*.swp
+*.swo
+*~
+
+# Kotlin/Android specific
+bin/
+out/
+*.class

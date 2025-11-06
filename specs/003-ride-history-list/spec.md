@@ -36,7 +36,7 @@ As a cyclist, I want to tap on a ride in the list to see complete details about 
 **Acceptance Scenarios**:
 
 1. **Given** ride list is displayed, **When** user taps on any ride item, **Then** app navigates to Ride Detail screen for that specific ride
-2. **Given** Ride Detail screen is open, **When** viewing ride information, **Then** screen displays ride name, start date/time, end date/time, total duration, total distance, average speed, max speed, total paused time, and pause count
+2. **Given** Ride Detail screen is open, **When** viewing ride information, **Then** screen displays ride name, start date/time, end date/time, total duration, total distance, average speed, max speed, and total paused time
 3. **Given** Ride Detail screen is open, **When** user taps back button, **Then** user returns to History list at same scroll position
 4. **Given** Ride Detail screen is open, **When** viewing statistics, **Then** all values use user's preferred units from settings
 5. **Given** Ride Detail screen is open, **When** looking for map, **Then** a placeholder message "Route map coming soon" is displayed (route visualization deferred to future feature)
@@ -153,7 +153,7 @@ As a cyclist, I want to filter my ride history by date range (e.g., last week, l
 - **FR-005**: System MUST display empty state when no rides exist with helpful message and guidance
 - **FR-006**: System MUST use lazy/efficient list rendering for performance with large datasets (LazyColumn provides built-in item windowing - only visible items are composed and rendered)
 - **FR-007**: System MUST navigate to Ride Detail screen when user taps ride item
-- **FR-008**: System MUST display complete ride details on Ride Detail screen including start/end times, all statistics, and pause information (total paused time, pause count)
+- **FR-008**: System MUST display complete ride details on Ride Detail screen including start/end times, all statistics, and pause information (total paused time). Note: Pause count not available in v0.4.0 (deferred to v0.5.0)
 - **FR-009**: System MUST show placeholder message for future route map visualization on detail screen
 - **FR-010**: System MUST provide sort functionality with options: Newest First, Oldest First, Longest Distance, Longest Duration
 - **FR-011**: System MUST persist sort preference when user leaves and returns to History tab
@@ -173,7 +173,7 @@ As a cyclist, I want to filter my ride history by date range (e.g., last week, l
 
 ### Key Entities *(include if feature involves data)*
 
-- **Ride**: Existing entity from F1A (v0.3.0). Contains ride ID, name, start/end timestamps, duration (seconds), distance (meters), average speed (m/s), max speed (m/s), total paused time (seconds), and pause count. One-to-many relationship with TrackPoints.
+- **Ride**: Existing entity from F1A (v0.3.0). Contains ride ID, name, start/end timestamps (Long epoch millis), moving duration (millis), pause durations (manual/auto in millis), distance (Double meters), average/max speed (Double m/s). Note: Actual implementation uses Long timestamps and Double measurements, not Instant/Float. One-to-many relationship with TrackPoints.
 
 - **RideListItem**: Display model derived from Ride entity for list view. Includes formatted strings for date, duration, distance, and speeds based on user's unit preferences. Not persisted to database.
 

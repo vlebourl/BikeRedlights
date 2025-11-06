@@ -26,10 +26,10 @@ Android project structure:
 
 **Purpose**: Create directory structure and base configuration
 
-- [ ] T001 [P] Create ui/components/history directory in app/src/main/java/com/example/bikeredlights/ui/components/history/
-- [ ] T002 [P] Create ui/screens/history directory in app/src/main/java/com/example/bikeredlights/ui/screens/history/
-- [ ] T003 [P] Create domain/model/display directory in app/src/main/java/com/example/bikeredlights/domain/model/display/
-- [ ] T004 [P] Create test directory structure for history feature in app/src/test/java/com/example/bikeredlights/
+- [X] T001 [P] Create ui/components/history directory in app/src/main/java/com/example/bikeredlights/ui/components/history/
+- [X] T002 [P] Create ui/screens/history directory in app/src/main/java/com/example/bikeredlights/ui/screens/history/
+- [X] T003 [P] Create domain/model/display directory in app/src/main/java/com/example/bikeredlights/domain/model/display/
+- [X] T004 [P] Create test directory structure for history feature in app/src/test/java/com/example/bikeredlights/
 
 ---
 
