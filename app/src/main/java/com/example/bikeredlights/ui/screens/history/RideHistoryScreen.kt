@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.bikeredlights.domain.model.display.RideListItem
+import com.example.bikeredlights.ui.components.history.DeleteConfirmationDialog
 import com.example.bikeredlights.ui.components.history.EmptyStateView
 import com.example.bikeredlights.ui.components.history.RideListItemCard
 import com.example.bikeredlights.ui.components.history.SortDialog
@@ -74,6 +75,7 @@ fun RideHistoryScreen(
     val currentSort by viewModel.currentSort.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var showSortDialog by remember { mutableStateOf(false) }
+    var rideToDelete by remember { mutableStateOf<RideListItem?>(null) }
 
     Scaffold(
         modifier = modifier,
@@ -105,6 +107,7 @@ fun RideHistoryScreen(
                 RideListContent(
                     rides = state.rides,
                     onRideClick = onRideClick,
+                    onDeleteClick = { ride -> rideToDelete = ride },
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -126,6 +129,17 @@ fun RideHistoryScreen(
                 viewModel.updateSortPreference(sortPreference)
             },
             onDismiss = { showSortDialog = false }
+        )
+    }
+
+    // Delete confirmation dialog
+    rideToDelete?.let { ride ->
+        DeleteConfirmationDialog(
+            rideName = ride.name,
+            onConfirm = {
+                viewModel.deleteRide(ride.id)
+            },
+            onDismiss = { rideToDelete = null }
         )
     }
 }
@@ -155,12 +169,14 @@ private fun LoadingView(
  *
  * @param rides List of rides to display
  * @param onRideClick Callback when ride is tapped
+ * @param onDeleteClick Callback when delete button is tapped
  * @param modifier Optional modifier
  */
 @Composable
 private fun RideListContent(
     rides: List<RideListItem>,
     onRideClick: (Long) -> Unit,
+    onDeleteClick: (RideListItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -174,7 +190,8 @@ private fun RideListContent(
         ) { ride ->
             RideListItemCard(
                 ride = ride,
-                onClick = { onRideClick(ride.id) }
+                onClick = { onRideClick(ride.id) },
+                onDeleteClick = { onDeleteClick(ride) }
             )
         }
     }
@@ -222,6 +239,8 @@ private fun RideHistoryScreenEmptyPreview() {
 private fun RideHistoryScreenSuccessPreview() {
     BikeRedlightsTheme {
         RideListContent(
+            onRideClick = {},
+            onDeleteClick = {},
             rides = listOf(
                 RideListItem(
                     id = 1,
@@ -250,8 +269,7 @@ private fun RideHistoryScreenSuccessPreview() {
                     avgSpeedFormatted = "19.8 km/h",
                     startTimeMillis = System.currentTimeMillis() - 172800000
                 )
-            ),
-            onRideClick = {}
+            )
         )
     }
 }

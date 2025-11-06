@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bikeredlights.domain.model.display.RideListItem
 import com.example.bikeredlights.domain.model.history.SortPreference
+import com.example.bikeredlights.domain.usecase.DeleteRideUseCase
 import com.example.bikeredlights.domain.usecase.GetAllRidesUseCase
 import com.example.bikeredlights.data.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -45,6 +46,7 @@ import javax.inject.Inject
 @HiltViewModel
 class RideHistoryViewModel @Inject constructor(
     private val getAllRidesUseCase: GetAllRidesUseCase,
+    private val deleteRideUseCase: DeleteRideUseCase,
     private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
@@ -109,6 +111,27 @@ class RideHistoryViewModel @Inject constructor(
     fun updateSortPreference(sortPreference: SortPreference) {
         viewModelScope.launch {
             settingsRepository.setRideSortPreference(sortPreference)
+        }
+    }
+
+    /**
+     * Delete a ride by its ID.
+     *
+     * Removes ride and all associated data from database.
+     * UI layer is responsible for showing confirmation dialog before calling.
+     *
+     * @param rideId Unique identifier for ride to delete
+     */
+    fun deleteRide(rideId: Long) {
+        viewModelScope.launch {
+            try {
+                deleteRideUseCase(rideId)
+                // UI state updates automatically via observeRides() flow
+            } catch (e: Exception) {
+                _uiState.value = RideHistoryUiState.Error(
+                    message = e.message ?: "Failed to delete ride"
+                )
+            }
         }
     }
 }

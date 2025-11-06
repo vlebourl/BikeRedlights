@@ -6,8 +6,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,21 +34,25 @@ import com.example.bikeredlights.ui.theme.BikeRedlightsTheme
  *
  * **Interaction**:
  * - Clickable card navigates to ride detail screen
+ * - Delete button shows confirmation dialog
  * - Material 3 elevation and ripple effect
  *
  * **Accessibility**:
  * - Ride name truncates with ellipsis if too long (max 2 lines)
  * - All statistics displayed with units
  * - Semantic content description for screen readers
+ * - Delete button clearly labeled for accessibility
  *
  * @param ride Display model containing formatted ride data
  * @param onClick Callback invoked when card is tapped
+ * @param onDeleteClick Callback invoked when delete button is tapped
  * @param modifier Optional modifier for layout customization
  */
 @Composable
 fun RideListItemCard(
     ride: RideListItem,
     onClick: () -> Unit,
+    onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -58,11 +67,11 @@ fun RideListItemCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Top row: Ride name and date
+            // Top row: Ride name, date, and delete button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = ride.name,
@@ -71,12 +80,27 @@ fun RideListItemCard(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
-                Text(
-                    text = ride.dateFormatted,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = ride.dateFormatted,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    IconButton(
+                        onClick = onDeleteClick,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete ride",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
             }
 
             // Statistics row: Duration, distance, average speed
@@ -156,7 +180,8 @@ private fun RideListItemCardPreview() {
                 avgSpeedFormatted = "17.7 km/h",
                 startTimeMillis = System.currentTimeMillis()
             ),
-            onClick = {}
+            onClick = {},
+            onDeleteClick = {}
         )
     }
 }
@@ -175,7 +200,8 @@ private fun RideListItemCardLongNamePreview() {
                 avgSpeedFormatted = "19.6 km/h",
                 startTimeMillis = System.currentTimeMillis()
             ),
-            onClick = {}
+            onClick = {},
+            onDeleteClick = {}
         )
     }
 }
