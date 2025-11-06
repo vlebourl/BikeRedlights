@@ -7,11 +7,13 @@ import com.example.bikeredlights.domain.model.history.SortPreference
 import com.example.bikeredlights.domain.usecase.GetAllRidesUseCase
 import com.example.bikeredlights.data.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -64,8 +66,12 @@ class RideHistoryViewModel @Inject constructor(
      * 2. Units preference (from SettingsRepository)
      * 3. Rides (from GetAllRidesUseCase, depends on sort)
      *
+     * Uses flatMapLatest to switch between sorted flows when preferences change.
+     * This cancels the previous flow and starts a new one with the updated sort.
+     *
      * Emits updated UI state whenever any stream changes.
      */
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeRides() {
         combine(
             settingsRepository.rideSortPreference,
@@ -74,21 +80,21 @@ class RideHistoryViewModel @Inject constructor(
             _currentSort.value = sortPreference
             Pair(sortPreference, unitsSystem)
         }
-            .onEach { (sortPreference, unitsSystem) ->
+            .flatMapLatest { (sortPreference, unitsSystem) ->
                 // Switch to appropriate sorted flow when preferences change
                 getAllRidesUseCase(sortPreference, unitsSystem)
-                    .catch { error ->
-                        _uiState.value = RideHistoryUiState.Error(
-                            message = error.message ?: "Failed to load rides"
-                        )
-                    }
-                    .collect { rides ->
-                        _uiState.value = if (rides.isEmpty()) {
-                            RideHistoryUiState.Empty
-                        } else {
-                            RideHistoryUiState.Success(rides = rides)
-                        }
-                    }
+            }
+            .catch { error ->
+                _uiState.value = RideHistoryUiState.Error(
+                    message = error.message ?: "Failed to load rides"
+                )
+            }
+            .onEach { rides ->
+                _uiState.value = if (rides.isEmpty()) {
+                    RideHistoryUiState.Empty
+                } else {
+                    RideHistoryUiState.Success(rides = rides)
+                }
             }
             .launchIn(viewModelScope)
     }
