@@ -735,7 +735,7 @@ class RideRecordingService : Service() {
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Ride Recording")
             .setContentText(contentText)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)  // TODO: Use proper icon
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
