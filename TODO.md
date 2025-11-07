@@ -11,7 +11,7 @@ _Features currently being developed_
 - **Started**: 2025-11-07
 - **Type**: P1 Bug Fix (UX-Critical)
 - **Description**: Fix current speed displaying hardcoded 0.0 km/h on Live tab during recording
-- **Status**: ✅ Static analysis complete - ready for physical device testing
+- **Status**: 📝 Draft PR created - awaiting physical device testing
 - **Implementation Summary**:
   - Domain layer: Added `getCurrentSpeed(): StateFlow<Double>` to repository interface
   - Data layer: Implemented StateFlow with `updateCurrentSpeed()` and `resetCurrentSpeed()` methods
@@ -42,11 +42,12 @@ _Features currently being developed_
   - [x] UI layer: Collect and display current speed (T017-T019)
   - [x] Static analysis: Verify data flow correctness
   - [x] Research: GPS speed best practices (Doppler vs calculated)
+  - [x] Draft PR created (PR #6)
   - [ ] **NEXT**: Physical device testing with real GPS (MANDATORY)
   - [ ] Unit tests: Repository and ViewModel coverage (T020-T029) - Optional for bug fix
   - [ ] UI tests: Compose test scenarios (T030-T034) - Optional for bug fix
-  - [ ] Documentation: PR preparation (T052-T058)
 - **Branch**: `005-fix-live-speed` (pushed to GitHub)
+- **Pull Request**: #6 (Draft) - https://github.com/vlebourl/BikeRedlights/pull/6
 - **Target Release**: v0.4.2 (patch release)
 - **Testing Requirements**:
   - ✅ Constitution exception granted: Emulator testing skipped due to technical limitation
