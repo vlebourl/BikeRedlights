@@ -1,6 +1,6 @@
 # BikeRedlights - Project TODO
 
-> **Last Updated**: 2025-11-06
+> **Last Updated**: 2025-11-07
 > **Purpose**: Unified progress tracking for all features, tasks, and pending work
 
 ## 📋 In Progress
@@ -37,7 +37,77 @@ _Features planned for upcoming development_
 - **Notes**: Core safety feature, requires GPS accuracy validation
 -->
 
-_(No features currently planned)_
+### Bug: Auto-Resume Not Working After Auto-Pause
+- **Priority**: P0 - Critical (Safety Issue)
+- **Type**: Bug Fix
+- **Discovered In**: v0.4.0 real-world ride test (2025-11-07)
+- **Description**: Auto-pause correctly triggers when speed < 1 km/h, but does NOT automatically resume recording when speed increases above threshold
+- **Current Behavior**: User must manually tap "Resume" button while cycling, requiring phone interaction during ride
+- **Expected Behavior**: Should automatically resume recording when speed > 1 km/h (per FR-010 specification from v0.3.0)
+- **Impact**: Safety-critical - forces cyclists to interact with phone while moving
+- **Investigation Needed**:
+  - Auto-resume code exists in `RideRecordingService.kt:530-565`
+  - Logic appears correct but not triggering in production environment
+  - Potential causes:
+    - GPS update frequency issue (HIGH_ACCURACY vs BATTERY_SAVER mode)
+    - State transition bug in service lifecycle
+    - Race condition between pause/resume logic
+    - Grace period logic (30 seconds) preventing immediate resume
+- **Related Files**:
+  - `app/src/main/java/com/example/bikeredlights/service/RideRecordingService.kt` (service logic)
+  - `app/src/main/java/com/example/bikeredlights/domain/model/settings/AutoPauseConfig.kt` (thresholds)
+- **Testing Required**: Physical device testing with real GPS movement patterns
+- **Estimated Effort**: 3-5 hours (investigation + fix + testing)
+- **Target Release**: v0.4.1 (patch release)
+
+### Bug: Live Current Speed Stuck at 0.0
+- **Priority**: P1 - High (UX-Critical)
+- **Type**: Bug Fix
+- **Discovered In**: v0.4.0 real-world ride test (2025-11-07)
+- **Description**: Current speed always displays 0.0 km/h on Live tab during recording, even though max speed and average speed update correctly with real values
+- **Current Behavior**: Hardcoded 0.0 value in UI, speed metric is non-functional
+- **Expected Behavior**: Display real-time GPS speed from latest track point
+- **Impact**: Defeats purpose of live tracking, prevents speed awareness during ride
+- **Root Cause**: Hardcoded value in `LiveRideScreen.kt:347-452` with existing TODO comment
+- **Solution Architecture** (Clean Architecture pattern):
+  1. **Service Layer**: Add `currentSpeedMetersPerSec` to ride state broadcasts
+  2. **Repository Layer**: Store current speed in `RideRecordingStateRepository` (StateFlow or DataStore)
+  3. **ViewModel Layer**: Expose `currentSpeed: StateFlow<Double>` in `RideRecordingViewModel`
+  4. **UI Layer**: Collect StateFlow in `LiveRideScreen` and pass to `RideStatistics` component
+- **Related Files**:
+  - `app/src/main/java/com/example/bikeredlights/service/RideRecordingService.kt` (broadcast logic)
+  - `app/src/main/java/com/example/bikeredlights/data/repository/RideRecordingStateRepositoryImpl.kt` (state storage)
+  - `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt` (expose StateFlow)
+  - `app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt` (UI integration, lines 347-452)
+  - `app/src/main/java/com/example/bikeredlights/ui/components/ride/RideStatistics.kt` (component ready, just needs data)
+- **Testing Required**: Emulator testing with GPS simulation + physical device testing
+- **Estimated Effort**: 2-3 hours
+- **Target Release**: v0.4.1 (patch release)
+
+### Enhancement: Prioritize Current Speed Over Elapsed Time in UI
+- **Priority**: P2 - Medium (UX Improvement)
+- **Type**: Enhancement
+- **Discovered In**: v0.4.0 real-world ride test (2025-11-07)
+- **Description**: Make current speed the PRIMARY display element (largest/most prominent) and elapsed time SECONDARY
+- **Current Layout**: Elapsed time = displayLarge typography (most prominent), current speed = headlineMedium in 2x2 grid with other metrics
+- **Proposed Layout**: Current speed = displayLarge (hero metric), elapsed time = headlineMedium (supporting metric)
+- **Rationale**:
+  - Speed is critical for core safety mission (red light warnings depend on speed awareness)
+  - Timer is informational, not safety-critical
+  - Aligns UI priority with app purpose (safety > fitness tracking)
+- **Dependencies**:
+  - **BLOCKED**: Must fix "Live Current Speed Stuck at 0.0" bug first (P1)
+  - No point making 0.0 the primary display
+- **Related Files**:
+  - `app/src/main/java/com/example/bikeredlights/ui/components/ride/RideStatistics.kt` (lines 77-133, layout refactoring)
+- **Design Considerations**:
+  - Material 3 typography scale adjustments
+  - Maintain accessibility (minimum touch targets, contrast)
+  - Ensure dark mode compatibility
+  - Consider tablet/landscape layouts
+- **Testing Required**: Visual regression testing on multiple screen sizes and orientations
+- **Estimated Effort**: 1-2 hours (UI refactoring only, no logic changes)
+- **Target Release**: v0.5.0 (minor feature release after P0/P1 bugs fixed)
 
 ---
 
