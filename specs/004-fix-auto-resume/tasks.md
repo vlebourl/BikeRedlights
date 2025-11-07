@@ -24,13 +24,13 @@
 
 ### Environment Setup
 
-- [ ] T001 [P] Setup: Create feature branch `004-fix-auto-resume` from main
+- [x] T001 [P] Setup: Create feature branch `004-fix-auto-resume` from main
   - `git checkout -b 004-fix-auto-resume`
 
-- [ ] T002 [P] Setup: Verify development environment (Java 17, Kotlin 2.0.21)
+- [x] T002 [P] Setup: Verify development environment (Java 17, Kotlin 2.0.21)
   - Run `java -version` and `./gradlew --version`
 
-- [ ] T003 [P] Setup: Update TODO.md to mark feature as "In Progress"
+- [x] T003 [P] Setup: Update TODO.md to mark feature as "In Progress"
   - File: `TODO.md`
 
 ---
@@ -39,9 +39,9 @@
 
 ### Core Service Logic
 
-- [ ] T004 [US1] Implement: Extract `checkAutoResume()` function in RideRecordingService
+- [x] T004 [US1] Implement: Extract `checkAutoResume()` function in RideRecordingService
   - File: `app/src/main/java/com/example/bikeredlights/service/RideRecordingService.kt`
-  - Location: After `checkAutoPause()` function (~line 520)
+  - Location: After `startLocationTracking()` function (line 440)
   - Signature: `private suspend fun checkAutoResume(rideId: Long, currentSpeed: Double)`
   - Implementation:
     - Check `autoPauseConfig.enabled` feature toggle
@@ -51,12 +51,12 @@
     - Reset tracking variables (`autoPauseStartTime`, `lastManualResumeTime`, `lowSpeedStartTime`)
     - Update notification to "Recording..."
     - **Log debug event (FR-012)**: Include timestamp, speed (m/s), GPS accuracy (m), rideId in log message
-      - Example: `Log.d("RideRecordingService", "Auto-resume triggered: rideId=$rideId speed=${currentSpeed}m/s accuracy=${locationData.accuracy}m")`
+      - Example: `Log.d("RideRecordingService", "Auto-resume triggered: rideId=$rideId speed=${currentSpeed}m/s >= threshold=0.278m/s")`
   - Reference: `specs/004-fix-auto-resume/quickstart.md` lines 78-125
 
-- [ ] T005 [US1] Integrate: Call `checkAutoResume()` before pause gate in `startLocationTracking()`
+- [x] T005 [US1] Integrate: Call `checkAutoResume()` before pause gate in `startLocationTracking()`
   - File: `app/src/main/java/com/example/bikeredlights/service/RideRecordingService.kt`
-  - Location: Inside `locationRepository.getLocationUpdates().collect` block (~line 450)
+  - Location: Inside `locationRepository.getLocationUpdates().collect` block (line 434-436)
   - Code change:
     ```kotlin
     // After recording track point
@@ -64,7 +64,8 @@
 
     // NEW: Check for auto-resume (before pause gate)
     if (isAutoPaused) {
-        checkAutoResume(rideId, locationData.speedMetersPerSec)
+        val currentSpeed = (locationData.speedMps ?: 0f).toDouble()
+        checkAutoResume(rideId, currentSpeed)
     }
 
     // Existing distance calculation (pause gate)
@@ -74,15 +75,15 @@
     ```
   - Reference: `specs/004-fix-auto-resume/contracts/service-interface.md` lines 166-191
 
-- [ ] T006 [US1] Cleanup: Remove unreachable auto-resume logic from `updateRideDistance()`
+- [x] T006 [US1] Cleanup: Remove unreachable auto-resume logic from `updateRideDistance()`
   - File: `app/src/main/java/com/example/bikeredlights/service/RideRecordingService.kt`
-  - Location: Lines 530-565 (inside `updateRideDistance()`)
-  - Action: Delete the entire auto-resume block (now extracted to `checkAutoResume()`)
+  - Location: Lines 598-633 (inside `updateRideDistance()`)
+  - Action: Deleted entire `is RideRecordingState.AutoPaused` case (now in `checkAutoResume()`)
   - Rationale: Logic was structurally unreachable; moved to proper location in T005
 
-- [ ] T007 [P] Build: Compile project and verify no compilation errors
+- [x] T007 [P] Build: Compile project and verify no compilation errors
   - Command: `./gradlew assembleDebug`
-  - Expected: Build succeeds with 0 errors
+  - Expected: Build succeeds with 0 errors ✅ BUILD SUCCESSFUL
 
 ---
 

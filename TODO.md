@@ -7,58 +7,25 @@
 
 _Features currently being developed_
 
-<!-- Example:
-### Feature: Speed Detection System
-- **Started**: 2025-11-02
-- **Status**: Implementation in progress
-- **Description**: Implement GPS-based speed detection with configurable thresholds
-- **Tasks Remaining**:
-  - [ ] Domain layer use case
-  - [ ] ViewModel integration
-  - [ ] UI composable
-  - [x] Repository setup
+### Feature 004: Fix Auto-Resume After Auto-Pause
+- **Started**: 2025-11-07
+- **Status**: Implementation in progress (Phase 1: Setup complete)
+- **Type**: P0 Critical Bug Fix (Safety Issue)
+- **Description**: Fix critical bug where auto-resume does not trigger after auto-pause, forcing cyclists to manually interact with phone while riding
+- **Specification**: `specs/004-fix-auto-resume/spec.md`
+- **Tasks Remaining** (30 total):
+  - [x] T001-T003: Setup & Prerequisites
+  - [ ] T004-T007: Core implementation
+  - [ ] T008-T016: Unit tests & emulator validation (3 user stories)
+  - [ ] T017-T021: Physical device testing (5 real bike rides)
+  - [ ] T022-T030: Documentation & release preparation
 - **Blockers**: None
--->
-
-_(No features currently in progress)_
 
 ---
 
 ## 🎯 Planned
 
 _Features planned for upcoming development_
-
-<!-- Example:
-### Feature: Red Light Warning System
-- **Priority**: P1 - Critical
-- **Description**: Alert cyclists when approaching red lights at speed
-- **Dependencies**: Speed Detection System
-- **Estimated Effort**: 5-7 days
-- **Notes**: Core safety feature, requires GPS accuracy validation
--->
-
-### Bug: Auto-Resume Not Working After Auto-Pause
-- **Priority**: P0 - Critical (Safety Issue)
-- **Type**: Bug Fix
-- **Discovered In**: v0.4.0 real-world ride test (2025-11-07)
-- **Description**: Auto-pause correctly triggers when speed < 1 km/h, but does NOT automatically resume recording when speed increases above threshold
-- **Current Behavior**: User must manually tap "Resume" button while cycling, requiring phone interaction during ride
-- **Expected Behavior**: Should automatically resume recording when speed > 1 km/h (per FR-010 specification from v0.3.0)
-- **Impact**: Safety-critical - forces cyclists to interact with phone while moving
-- **Investigation Needed**:
-  - Auto-resume code exists in `RideRecordingService.kt:530-565`
-  - Logic appears correct but not triggering in production environment
-  - Potential causes:
-    - GPS update frequency issue (HIGH_ACCURACY vs BATTERY_SAVER mode)
-    - State transition bug in service lifecycle
-    - Race condition between pause/resume logic
-    - Grace period logic (30 seconds) preventing immediate resume
-- **Related Files**:
-  - `app/src/main/java/com/example/bikeredlights/service/RideRecordingService.kt` (service logic)
-  - `app/src/main/java/com/example/bikeredlights/domain/model/settings/AutoPauseConfig.kt` (thresholds)
-- **Testing Required**: Physical device testing with real GPS movement patterns
-- **Estimated Effort**: 3-5 hours (investigation + fix + testing)
-- **Target Release**: v0.4.1 (patch release)
 
 ### Bug: Live Current Speed Stuck at 0.0
 - **Priority**: P1 - High (UX-Critical)
