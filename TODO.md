@@ -1,43 +1,37 @@
 # BikeRedlights - Project TODO
 
-> **Last Updated**: 2025-11-07 (Feature 004: Auto-Resume bug fix implementation complete)
+> **Last Updated**: 2025-11-07 (Feature 005: Live Current Speed bug fix in progress)
 > **Purpose**: Unified progress tracking for all features, tasks, and pending work
 
 ## 📋 In Progress
 
 _Features currently being developed_
 
-_(No features currently in development - Feature 004 ready for testing)_
+### Feature 005: Fix Live Current Speed Display Bug
+- **Started**: 2025-11-07
+- **Type**: P1 Bug Fix (UX-Critical)
+- **Description**: Fix current speed displaying hardcoded 0.0 km/h on Live tab during recording
+- **Status**: Implementation in progress - adding StateFlow plumbing through Service → Repository → ViewModel → UI layers
+- **Tasks Progress**:
+  - [x] Specification created (spec.md, plan.md, research.md, data-model.md, contracts/, quickstart.md, tasks.md)
+  - [ ] Domain layer: Add getCurrentSpeed() interface method (T003)
+  - [ ] Data layer: Implement StateFlow with update/reset methods (T004-T008)
+  - [ ] Service layer: Emit GPS speed on location updates (T009-T013)
+  - [ ] ViewModel layer: Expose StateFlow to UI (T014-T016)
+  - [ ] UI layer: Collect and display current speed (T017-T019)
+  - [ ] Unit tests: Repository and ViewModel coverage (T020-T029)
+  - [ ] UI tests: Compose test scenarios (T030-T034)
+  - [ ] Emulator testing: GPS simulation validation (T035-T044)
+  - [ ] Physical device testing: Real-world validation (T045-T051)
+  - [ ] Documentation: PR preparation (T052-T058)
+- **Branch**: `005-fix-live-speed`
+- **Target Release**: v0.4.1 (patch release)
 
 ---
 
 ## 🎯 Planned
 
 _Features planned for upcoming development_
-
-### Bug: Live Current Speed Stuck at 0.0
-- **Priority**: P1 - High (UX-Critical)
-- **Type**: Bug Fix
-- **Discovered In**: v0.4.0 real-world ride test (2025-11-07)
-- **Description**: Current speed always displays 0.0 km/h on Live tab during recording, even though max speed and average speed update correctly with real values
-- **Current Behavior**: Hardcoded 0.0 value in UI, speed metric is non-functional
-- **Expected Behavior**: Display real-time GPS speed from latest track point
-- **Impact**: Defeats purpose of live tracking, prevents speed awareness during ride
-- **Root Cause**: Hardcoded value in `LiveRideScreen.kt:347-452` with existing TODO comment
-- **Solution Architecture** (Clean Architecture pattern):
-  1. **Service Layer**: Add `currentSpeedMetersPerSec` to ride state broadcasts
-  2. **Repository Layer**: Store current speed in `RideRecordingStateRepository` (StateFlow or DataStore)
-  3. **ViewModel Layer**: Expose `currentSpeed: StateFlow<Double>` in `RideRecordingViewModel`
-  4. **UI Layer**: Collect StateFlow in `LiveRideScreen` and pass to `RideStatistics` component
-- **Related Files**:
-  - `app/src/main/java/com/example/bikeredlights/service/RideRecordingService.kt` (broadcast logic)
-  - `app/src/main/java/com/example/bikeredlights/data/repository/RideRecordingStateRepositoryImpl.kt` (state storage)
-  - `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt` (expose StateFlow)
-  - `app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt` (UI integration, lines 347-452)
-  - `app/src/main/java/com/example/bikeredlights/ui/components/ride/RideStatistics.kt` (component ready, just needs data)
-- **Testing Required**: Emulator testing with GPS simulation + physical device testing
-- **Estimated Effort**: 2-3 hours
-- **Target Release**: v0.4.1 (patch release)
 
 ### Enhancement: Prioritize Current Speed Over Elapsed Time in UI
 - **Priority**: P2 - Medium (UX Improvement)

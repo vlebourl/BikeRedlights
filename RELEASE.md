@@ -8,7 +8,31 @@
 _Features and changes completed but not yet released_
 
 ### 🐛 Bugs Fixed
-- None yet
+
+- **Fix Live Current Speed Display Bug** (Feature 005 - P1 UX-Critical)
+  - **Problem**: Current speed displays hardcoded 0.0 km/h on Live tab during recording, even though max speed and average speed update correctly
+  - **Root Cause**: Missing StateFlow plumbing through Service → Repository → ViewModel → UI layers
+  - **Solution**: Wire GPS speed through all architecture layers using reactive StateFlow pattern
+  - **Implementation Details**:
+    - Domain layer: Added `getCurrentSpeed(): StateFlow<Double>` to RideRecordingStateRepository interface
+    - Data layer: Implemented StateFlow with `updateCurrentSpeed()` and `resetCurrentSpeed()` methods in repository
+    - Service layer: Emit current speed from GPS location updates to repository
+    - ViewModel layer: Expose StateFlow to UI using `stateIn()` with WhileSubscribed(5000) for battery optimization
+    - UI layer: Collect StateFlow in LiveRideScreen and pass real-time value to RideStatistics component
+  - **Behavior Changes**:
+    - Current speed now displays real-time GPS values (updates every 1-4s based on GPS accuracy setting)
+    - Speed resets to 0.0 correctly when ride is paused or stopped
+    - Speed persists across configuration changes (screen rotation)
+    - Speed displays in user's preferred units (km/h or mph)
+  - **Testing**: Unit tests for repository and ViewModel, UI tests for LiveRideScreen, emulator testing with GPS simulation, physical device validation
+  - **Files Modified**:
+    - `app/src/main/java/com/example/bikeredlights/domain/repository/RideRecordingStateRepository.kt`
+    - `app/src/main/java/com/example/bikeredlights/data/repository/RideRecordingStateRepositoryImpl.kt`
+    - `app/src/main/java/com/example/bikeredlights/service/RideRecordingService.kt`
+    - `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt`
+    - `app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt`
+  - **Specification**: [spec](specs/005-fix-live-speed/spec.md)
+  - **Target Release**: v0.4.2
 
 ### ✨ Features Added
 - None yet
