@@ -7,24 +7,36 @@
 
 _Features currently being developed_
 
-### Feature 005: Fix Live Current Speed Display Bug
+### Feature 005: Fix Live Current Speed Display Bug + UI Prioritization
 - **Started**: 2025-11-07
-- **Type**: P1 Bug Fix (UX-Critical)
-- **Description**: Fix current speed displaying hardcoded 0.0 km/h on Live tab during recording
+- **Type**: P1 Bug Fix + P2 UX Enhancement (combined in single PR)
+- **Description**:
+  1. Fix current speed displaying hardcoded 0.0 km/h on Live tab during recording
+  2. Prioritize current speed as hero metric (displayLarge) for safety-first design
 - **Status**: 📝 Draft PR created - awaiting physical device testing
 - **Implementation Summary**:
-  - Domain layer: Added `getCurrentSpeed(): StateFlow<Double>` to repository interface
-  - Data layer: Implemented StateFlow with `updateCurrentSpeed()` and `resetCurrentSpeed()` methods
-  - Service layer: Emit GPS speed on every location update, reset on pause/stop
-  - ViewModel layer: Expose StateFlow with `stateIn(WhileSubscribed(5000))` for battery optimization
-  - UI layer: Collect speed from ViewModel and wire to RideStatistics component
-  - Uses GPS Doppler speed (`location.getSpeed()`) when available (most accurate method per Android best practices)
+  - **Bug Fix (Speed Data Flow)**:
+    - Domain layer: Added `getCurrentSpeed(): StateFlow<Double>` to repository interface
+    - Data layer: Implemented StateFlow with `updateCurrentSpeed()` and `resetCurrentSpeed()` methods
+    - Service layer: Emit GPS speed on every location update, reset on pause/stop
+    - ViewModel layer: Expose StateFlow with `stateIn(WhileSubscribed(5000))` for battery optimization
+    - UI layer: Collect speed from ViewModel and wire to RideStatistics component
+    - Uses GPS Doppler speed (`location.getSpeed()`) when available (most accurate method per Android best practices)
+  - **UI Enhancement (Safety-First Layout)**:
+    - Current speed now PRIMARY display (displayLarge: 57sp) - hero metric
+    - Duration/distance moved to SECONDARY row (headlineMedium: 28sp)
+    - Average/max speed in supporting grid (titleLarge: 22sp)
+    - Removed time-of-day display (low value, cluttered UI)
+    - Aligns UI priority with safety mission (speed awareness > fitness tracking)
 - **Git Commits**:
   - feba18f: docs - specification and tracking
   - ecdf7a7: feat(data) - repository StateFlow implementation
   - ccc7c08: feat(service) - GPS speed emission
   - be34815: feat(viewmodel) - StateFlow exposure
   - 7bdc739: fix(ui) - wire to LiveRideScreen
+  - 24bd901: docs - emulator limitation and testing requirements
+  - c240657: docs - update TODO.md with draft PR #6 link
+  - 16df838: feat(ui) - prioritize current speed as hero metric
 - **Build Status**: ✅ Debug APK builds successfully
 - **Static Analysis**: ✅ Data flow verified correct (GPS → Service → Repository → ViewModel → UI)
 - **Emulator Limitation**:
@@ -59,30 +71,7 @@ _Features currently being developed_
 
 _Features planned for upcoming development_
 
-### Enhancement: Prioritize Current Speed Over Elapsed Time in UI
-- **Priority**: P2 - Medium (UX Improvement)
-- **Type**: Enhancement
-- **Discovered In**: v0.4.0 real-world ride test (2025-11-07)
-- **Description**: Make current speed the PRIMARY display element (largest/most prominent) and elapsed time SECONDARY
-- **Current Layout**: Elapsed time = displayLarge typography (most prominent), current speed = headlineMedium in 2x2 grid with other metrics
-- **Proposed Layout**: Current speed = displayLarge (hero metric), elapsed time = headlineMedium (supporting metric)
-- **Rationale**:
-  - Speed is critical for core safety mission (red light warnings depend on speed awareness)
-  - Timer is informational, not safety-critical
-  - Aligns UI priority with app purpose (safety > fitness tracking)
-- **Dependencies**:
-  - **BLOCKED**: Must fix "Live Current Speed Stuck at 0.0" bug first (P1)
-  - No point making 0.0 the primary display
-- **Related Files**:
-  - `app/src/main/java/com/example/bikeredlights/ui/components/ride/RideStatistics.kt` (lines 77-133, layout refactoring)
-- **Design Considerations**:
-  - Material 3 typography scale adjustments
-  - Maintain accessibility (minimum touch targets, contrast)
-  - Ensure dark mode compatibility
-  - Consider tablet/landscape layouts
-- **Testing Required**: Visual regression testing on multiple screen sizes and orientations
-- **Estimated Effort**: 1-2 hours (UI refactoring only, no logic changes)
-- **Target Release**: v0.5.0 (minor feature release after P0/P1 bugs fixed)
+_(No planned features currently - all identified enhancements have been implemented)_
 
 ---
 
