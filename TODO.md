@@ -11,21 +11,34 @@ _Features currently being developed_
 - **Started**: 2025-11-07
 - **Type**: P1 Bug Fix (UX-Critical)
 - **Description**: Fix current speed displaying hardcoded 0.0 km/h on Live tab during recording
-- **Status**: Implementation in progress - adding StateFlow plumbing through Service → Repository → ViewModel → UI layers
+- **Status**: ✅ Core implementation complete - ready for emulator testing
+- **Implementation Summary**:
+  - Domain layer: Added `getCurrentSpeed(): StateFlow<Double>` to repository interface
+  - Data layer: Implemented StateFlow with `updateCurrentSpeed()` and `resetCurrentSpeed()` methods
+  - Service layer: Emit GPS speed on every location update, reset on pause/stop
+  - ViewModel layer: Expose StateFlow with `stateIn(WhileSubscribed(5000))` for battery optimization
+  - UI layer: Collect speed from ViewModel and wire to RideStatistics component
+- **Git Commits**:
+  - feba18f: docs - specification and tracking
+  - ecdf7a7: feat(data) - repository StateFlow implementation
+  - ccc7c08: feat(service) - GPS speed emission
+  - be34815: feat(viewmodel) - StateFlow exposure
+  - 7bdc739: fix(ui) - wire to LiveRideScreen
+- **Build Status**: ✅ Debug APK builds successfully
 - **Tasks Progress**:
   - [x] Specification created (spec.md, plan.md, research.md, data-model.md, contracts/, quickstart.md, tasks.md)
-  - [ ] Domain layer: Add getCurrentSpeed() interface method (T003)
-  - [ ] Data layer: Implement StateFlow with update/reset methods (T004-T008)
-  - [ ] Service layer: Emit GPS speed on location updates (T009-T013)
-  - [ ] ViewModel layer: Expose StateFlow to UI (T014-T016)
-  - [ ] UI layer: Collect and display current speed (T017-T019)
-  - [ ] Unit tests: Repository and ViewModel coverage (T020-T029)
-  - [ ] UI tests: Compose test scenarios (T030-T034)
-  - [ ] Emulator testing: GPS simulation validation (T035-T044)
-  - [ ] Physical device testing: Real-world validation (T045-T051)
+  - [x] Domain layer: Add getCurrentSpeed() interface method (T003)
+  - [x] Data layer: Implement StateFlow with update/reset methods (T004-T008)
+  - [x] Service layer: Emit GPS speed on location updates (T009-T013)
+  - [x] ViewModel layer: Expose StateFlow to UI (T014-T016)
+  - [x] UI layer: Collect and display current speed (T017-T019)
+  - [ ] **NEXT**: Emulator testing with GPS simulation (T035-T044)
+  - [ ] Unit tests: Repository and ViewModel coverage (T020-T029) - Optional for bug fix
+  - [ ] UI tests: Compose test scenarios (T030-T034) - Optional for bug fix
+  - [ ] Physical device testing: Real-world validation (T045-T051) - Recommended
   - [ ] Documentation: PR preparation (T052-T058)
-- **Branch**: `005-fix-live-speed`
-- **Target Release**: v0.4.1 (patch release)
+- **Branch**: `005-fix-live-speed` (pushed to GitHub)
+- **Target Release**: v0.4.2 (patch release)
 
 ---
 
