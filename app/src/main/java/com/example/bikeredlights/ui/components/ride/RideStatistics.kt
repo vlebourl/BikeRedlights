@@ -29,17 +29,22 @@ import kotlinx.coroutines.isActive
  * Display ride statistics during active recording.
  *
  * **Features**:
+ * - Current speed (hero metric - safety critical)
  * - Duration in HH:MM:SS format
  * - Distance with one decimal place (km or miles based on settings)
- * - Current speed (from latest GPS reading)
  * - Average speed (distance / moving time)
  * - Max speed (peak value)
  *
- * **Layout**:
+ * **Layout** (Safety-Focused):
  * - Material 3 Card with elevation
- * - Grid layout: 2 columns x 3 rows
- * - Large primary metric (duration)
- * - Secondary metrics in grid
+ * - Hero metric: Current speed (displayLarge) - PRIMARY
+ * - Secondary row: Duration + Distance (headlineMedium)
+ * - Supporting metrics: Average + Max speed (titleLarge)
+ *
+ * **Design Rationale**:
+ * - Current speed is most prominent (safety-critical for red light warnings)
+ * - Duration/distance are informational (secondary importance)
+ * - Aligns UI priority with app safety mission
  *
  * **Units Support**:
  * - Metric: km, km/h
@@ -74,24 +79,69 @@ fun RideStatistics(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Duration (primary metric)
+            // Current speed (hero metric - safety critical)
+            val convertedSpeed = RideRecordingViewModel.convertSpeed(currentSpeed, unitsSystem)
+            val speedUnit = RideRecordingViewModel.getSpeedUnit(unitsSystem)
+
             Text(
-                text = formatDuration(currentDuration),
+                text = String.format("%.1f", convertedSpeed),
                 style = MaterialTheme.typography.displayLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Distance (converted based on units system)
-            val distance = RideRecordingViewModel.convertDistance(ride.distanceMeters, unitsSystem)
-            val distanceUnit = RideRecordingViewModel.getDistanceUnit(unitsSystem)
             Text(
-                text = String.format("%.1f %s", distance, distanceUnit),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Medium
+                text = speedUnit,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Duration and Distance (secondary metrics)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                // Duration
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Duration",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = formatDuration(currentDuration),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                // Distance
+                val distance = RideRecordingViewModel.convertDistance(ride.distanceMeters, unitsSystem)
+                val distanceUnit = RideRecordingViewModel.getDistanceUnit(unitsSystem)
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Distance",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = String.format("%.1f %s", distance, distanceUnit),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -100,14 +150,6 @@ fun RideStatistics(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                // Current speed
-                SpeedMetric(
-                    label = "Current",
-                    speed = currentSpeed,
-                    unitsSystem = unitsSystem,
-                    modifier = Modifier.weight(1f)
-                )
-
                 // Average speed
                 SpeedMetric(
                     label = "Average",
@@ -115,14 +157,7 @@ fun RideStatistics(
                     unitsSystem = unitsSystem,
                     modifier = Modifier.weight(1f)
                 )
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
                 // Max speed
                 SpeedMetric(
                     label = "Max",
@@ -130,27 +165,8 @@ fun RideStatistics(
                     unitsSystem = unitsSystem,
                     modifier = Modifier.weight(1f)
                 )
-
-                // Current time of day
-                val currentTime = SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date())
-                Column(
-                    modifier = Modifier.weight(1f),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Time",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = currentTime,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center
-                    )
-                }
             }
+
         }
     }
 }
