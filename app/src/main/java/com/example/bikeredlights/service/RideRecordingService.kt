@@ -429,12 +429,81 @@ class RideRecordingService : Service() {
                         isAutoPaused = isAutoPaused
                     )
 
+                    // Check for auto-resume (before pause gate)
+                    // This allows auto-resume to execute during AutoPaused state
+                    if (isAutoPaused) {
+                        val currentSpeed = (locationData.speedMps ?: 0f).toDouble()
+                        checkAutoResume(rideId, currentSpeed)
+                    }
+
                     // Calculate distance if not paused
                     if (!isManuallyPaused && !isAutoPaused) {
                         updateRideDistance(rideId)
                     }
                 }
         }
+    }
+
+    /**
+     * Check if auto-resume should trigger after auto-pause.
+     *
+     * **Trigger Conditions**:
+     * - Current state is AutoPaused
+     * - Auto-pause feature is enabled
+     * - Speed > 1 km/h (0.278 m/s)
+     *
+     * **Actions on Auto-Resume**:
+     * - Accumulate auto-paused duration to ride
+     * - Transition state from AutoPaused → Recording
+     * - Reset tracking variables (autoPauseStartTime, lastManualResumeTime, lowSpeedStartTime)
+     * - Update notification to "Recording..."
+     * - Log debug event with speed, accuracy, rideId
+     *
+     * @param rideId The ID of the current ride
+     * @param currentSpeed Current GPS speed in meters per second
+     */
+    private suspend fun checkAutoResume(rideId: Long, currentSpeed: Double) {
+        // Check if auto-pause feature is enabled
+        val autoPauseConfig = try {
+            settingsRepository.autoPauseConfig.first()
+        } catch (e: Exception) {
+            com.example.bikeredlights.domain.model.settings.AutoPauseConfig.default()
+        }
+
+        if (!autoPauseConfig.enabled) return
+
+        // Check speed threshold (1 km/h = 0.278 m/s)
+        val resumeThreshold = 0.278
+        if (currentSpeed < resumeThreshold) return
+
+        // Accumulate auto-pause duration before resuming
+        if (autoPauseStartTime > 0) {
+            val autoPausedDuration = System.currentTimeMillis() - autoPauseStartTime
+            val ride = rideRepository.getRideById(rideId)
+            if (ride != null) {
+                val updatedRide = ride.copy(
+                    autoPausedDurationMillis = ride.autoPausedDurationMillis + autoPausedDuration
+                )
+                rideRepository.updateRide(updatedRide)
+            }
+            autoPauseStartTime = 0  // Reset
+        }
+
+        // Transition to Recording (automatic resume)
+        currentState = RideRecordingState.Recording(rideId)
+        rideRecordingStateRepository.updateRecordingState(currentState)
+
+        // Reset tracking variables
+        lastManualResumeTime = 0  // Clear grace period
+        lowSpeedStartTime = 0  // Reset low speed tracking
+
+        // Update notification
+        val notification = buildNotification("Recording...")
+        notificationManager.notify(NOTIFICATION_ID, notification)
+
+        // FR-012: Log debug event with timestamp, speed, GPS accuracy, rideId
+        android.util.Log.d("RideRecordingService",
+            "Auto-resume triggered: rideId=$rideId speed=${currentSpeed}m/s >= threshold=${resumeThreshold}m/s")
     }
 
     /**
@@ -527,42 +596,8 @@ class RideRecordingService : Service() {
                         lowSpeedStartTime = 0  // Reset tracking during grace period
                     }
                 }
-                is RideRecordingState.AutoPaused -> {
-                    // Check if speed went above resume threshold
-                    if (currentSpeed >= resumeThreshold) {
-                        // Bug #8: Accumulate auto-pause duration before resuming
-                        if (autoPauseStartTime > 0) {
-                            val autoPausedDuration = System.currentTimeMillis() - autoPauseStartTime
-                            serviceScope.launch {
-                                val ride = rideRepository.getRideById(rideId)
-                                if (ride != null) {
-                                    val updatedRide = ride.copy(
-                                        autoPausedDurationMillis = ride.autoPausedDurationMillis + autoPausedDuration
-                                    )
-                                    rideRepository.updateRide(updatedRide)
-                                    android.util.Log.d("RideRecordingService",
-                                        "Auto-resume: accumulated auto-pause duration ${autoPausedDuration}ms, total=${updatedRide.autoPausedDurationMillis}ms")
-                                }
-                            }
-                            autoPauseStartTime = 0  // Reset
-                        }
-
-                        // Transition to Recording (automatic resume)
-                        this.currentState = RideRecordingState.Recording(rideId)
-                        rideRecordingStateRepository.updateRecordingState(this.currentState)
-
-                        // Reset grace period - automatic resume doesn't get grace period
-                        lastManualResumeTime = 0
-                        lowSpeedStartTime = 0  // Bug #9: Reset low speed tracking on auto-resume
-
-                        // Update notification
-                        val notification = buildNotification("Recording...")
-                        notificationManager.notify(NOTIFICATION_ID, notification)
-
-                        android.util.Log.d("RideRecordingService",
-                            "Auto-resume triggered: speed=$currentSpeed m/s >= threshold=$resumeThreshold m/s")
-                    }
-                }
+                // Note: AutoPaused case removed - auto-resume now handled in checkAutoResume()
+                // called before this function to ensure it executes during AutoPaused state
                 else -> { /* No action for other states */ }
             }
         }

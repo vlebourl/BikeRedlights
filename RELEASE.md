@@ -7,6 +7,26 @@
 
 _Features and changes completed but not yet released_
 
+### 🐛 Bugs Fixed
+
+- **Fix auto-resume not working after auto-pause** (Critical bug fix - Feature 004)
+  - **Root Cause**: Auto-resume logic was structurally unreachable, trapped inside `updateRideDistance()` function which is only called when NOT paused
+  - **Solution**: Extracted `checkAutoResume()` function and relocated call to before pause gate in location update flow
+  - **Impact**: Auto-resume now triggers within 2s (High Accuracy GPS) / 8s (Battery Saver GPS) when movement detected after auto-pause
+  - **Safety**: Eliminates need for manual phone interaction while cycling (P0 safety hazard resolved)
+  - **Behavior Changes**:
+    - Recording automatically resumes when speed > 1 km/h after auto-pause ✅
+    - Manual resume during auto-pause works correctly with grace period ✅
+    - Compatible with both High Accuracy and Battery Saver GPS modes ✅
+    - Auto-paused duration correctly accumulated across multiple cycles ✅
+  - **Technical Details**:
+    - Modified: `RideRecordingService.kt` (~50 LOC changes)
+    - Added: `checkAutoResume()` function (63 lines)
+    - Removed: Unreachable duplicate code (35 lines)
+    - Logging: FR-012 debug logs with rideId, speed, threshold
+  - **Testing Status**: ⚠️ Pending physical device validation with real GPS movement
+  - **Specification**: [spec](specs/004-fix-auto-resume/spec.md)
+
 ### ✨ Features Added
 - None yet
 

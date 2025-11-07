@@ -900,6 +900,8 @@ When working on this project:
 - Room database (SQLite), local device only, no cloud sync in v0.3.0 (002-core-ride-recording)
 - Kotlin 2.0.21, Java 17 (OpenJDK) (003-ride-history-list)
 - Room database (existing rides/track_points tables from v0.3.0) + DataStore Preferences (sort/filter settings) (003-ride-history-list)
+- Kotlin 2.0.21 + Java 17 (OpenJDK 17) + Jetpack Compose BOM 2024.11.00, Room 2.6.1, Hilt 2.51.1, Coroutines 1.9.0, Play Services Location 21.3.0 (004-fix-auto-resume)
+- Room database (SQLite) - Ride + TrackPoint entities with pause state flags (no schema changes required) (004-fix-auto-resume)
 
 ## Recent Changes
 - 001-speed-tracking: Added Kotlin 2.0.21 with Jetpack Compose + Play Services Location 21.3.0, Jetpack Compose (BOM 2024.11.00), Material 3
