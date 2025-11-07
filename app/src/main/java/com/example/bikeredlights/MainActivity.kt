@@ -47,7 +47,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // Removed enableEdgeToEdge() to fix top spacing issues with nested Scaffolds
+        // This provides better default behavior for Material 3 components
 
         setContent {
             BikeRedlightsTheme {
@@ -87,7 +88,8 @@ class MainActivity : ComponentActivity() {
                                             )
                                         }
                                     },
-                                    label = { Text(destination.label) }
+                                    label = { Text(destination.label) },
+                                    alwaysShowLabel = true  // Material 3 recommendation for 3 items
                                 )
                             }
                         }

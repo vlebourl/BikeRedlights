@@ -81,7 +81,8 @@ fun RideReviewScreen(
                             contentDescription = "Back"
                         )
                     }
-                }
+                },
+                windowInsets = WindowInsets(0, 0, 0, 0)  // Remove status bar padding
             )
         },
         modifier = modifier
