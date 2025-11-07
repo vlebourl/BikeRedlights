@@ -62,14 +62,16 @@ As a cyclist using Battery Saver GPS mode (4-second updates), I want auto-resume
 ### Edge Cases
 
 - **Rapid movement fluctuations**: What happens if speed oscillates around 1 km/h threshold (0.9, 1.1, 0.8, 1.2)?
-  - Use hysteresis: Auto-pause requires speed < 1 km/h for full threshold duration (e.g., 5 seconds)
-  - Auto-resume requires speed > 1 km/h for at least 2 consecutive GPS readings to prevent false triggers
+  - Use asymmetric hysteresis:
+    - **Auto-pause** requires speed < 1 km/h sustained for full threshold duration (5-60 seconds configurable)
+    - **Auto-resume** requires speed > 1 km/h on first GPS reading (immediate trigger, no time delay)
+  - Rationale: Starting movement is intentional (low false positive risk); stopping movement needs confirmation (high false positive risk from GPS noise)
   - This prevents "flapping" between paused and recording states
 
 - **GPS drift while stationary**: What happens if stationary phone reports 0.5-2 km/h due to GPS noise?
-  - Use speed threshold with buffer: Auto-resume requires speed > 1.5 km/h to provide hysteresis margin
-  - Alternatively: Require movement distance > 10 meters over 2 GPS readings to confirm actual movement
-  - Prevents false auto-resume from GPS drift
+  - Use consecutive reading validation: Auto-resume requires speed > 1.0 km/h for 2 consecutive GPS readings to prevent false triggers from GPS drift
+  - Implementation uses 2 consecutive GPS readings above 1.0 km/h threshold (see contracts/service-interface.md for details)
+  - Prevents false auto-resume from GPS drift while maintaining quick response time
 
 - **User manually resumes during auto-pause**: What happens if user taps Resume button while auto-paused?
   - Manual resume takes precedence immediately (don't wait for auto-resume)
@@ -101,6 +103,8 @@ As a cyclist using Battery Saver GPS mode (4-second updates), I want auto-resume
 - **FR-004**: Auto-resume MUST update notification text from "Auto-Paused" to "Recording..." when resuming
 - **FR-005**: Auto-resume MUST update Live tab UI to remove "Auto-Paused" indicator and resume real-time stats updates
 - **FR-006**: System MUST use hysteresis to prevent rapid auto-pause/auto-resume cycles due to GPS noise or speed oscillation around 1 km/h threshold
+  - **Implementation**: Auto-pause requires sustained low speed for threshold duration (5-60s); auto-resume triggers immediately on speed > 1 km/h (no time delay)
+  - **Rationale**: Asymmetric hysteresis balances responsiveness (quick resume) with stability (slow pause)
 - **FR-007**: Auto-resume MUST NOT trigger on GPS drift while stationary (require actual movement confirmation via consecutive GPS readings or distance threshold)
 - **FR-008**: Manual resume button MUST take precedence over auto-resume (if user manually resumes, bypass auto-resume logic for that event)
 - **FR-009**: Grace period (30 seconds after manual resume) MUST NOT prevent auto-resume from working if auto-pause occurs during grace period
