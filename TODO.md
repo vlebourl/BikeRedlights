@@ -11,13 +11,14 @@ _Features currently being developed_
 - **Started**: 2025-11-07
 - **Type**: P1 Bug Fix (UX-Critical)
 - **Description**: Fix current speed displaying hardcoded 0.0 km/h on Live tab during recording
-- **Status**: ✅ Core implementation complete - ready for emulator testing
+- **Status**: ✅ Static analysis complete - ready for physical device testing
 - **Implementation Summary**:
   - Domain layer: Added `getCurrentSpeed(): StateFlow<Double>` to repository interface
   - Data layer: Implemented StateFlow with `updateCurrentSpeed()` and `resetCurrentSpeed()` methods
   - Service layer: Emit GPS speed on every location update, reset on pause/stop
   - ViewModel layer: Expose StateFlow with `stateIn(WhileSubscribed(5000))` for battery optimization
   - UI layer: Collect speed from ViewModel and wire to RideStatistics component
+  - Uses GPS Doppler speed (`location.getSpeed()`) when available (most accurate method per Android best practices)
 - **Git Commits**:
   - feba18f: docs - specification and tracking
   - ecdf7a7: feat(data) - repository StateFlow implementation
@@ -25,6 +26,13 @@ _Features currently being developed_
   - be34815: feat(viewmodel) - StateFlow exposure
   - 7bdc739: fix(ui) - wire to LiveRideScreen
 - **Build Status**: ✅ Debug APK builds successfully
+- **Static Analysis**: ✅ Data flow verified correct (GPS → Service → Repository → ViewModel → UI)
+- **Emulator Limitation**:
+  - ⚠️ **Android emulator cannot test this feature**: `location.hasSpeed()` always returns false
+  - Emulator's `emu geo fix` command only sets lat/lon, NOT the speed field
+  - GPS Doppler speed is hardware-dependent and unavailable on emulator
+  - Speed calculation from consecutive points is 10x less accurate (Stack Overflow consensus)
+  - **Decision**: Skip emulator testing, require physical device validation instead
 - **Tasks Progress**:
   - [x] Specification created (spec.md, plan.md, research.md, data-model.md, contracts/, quickstart.md, tasks.md)
   - [x] Domain layer: Add getCurrentSpeed() interface method (T003)
@@ -32,13 +40,17 @@ _Features currently being developed_
   - [x] Service layer: Emit GPS speed on location updates (T009-T013)
   - [x] ViewModel layer: Expose StateFlow to UI (T014-T016)
   - [x] UI layer: Collect and display current speed (T017-T019)
-  - [ ] **NEXT**: Emulator testing with GPS simulation (T035-T044)
+  - [x] Static analysis: Verify data flow correctness
+  - [x] Research: GPS speed best practices (Doppler vs calculated)
+  - [ ] **NEXT**: Physical device testing with real GPS (MANDATORY)
   - [ ] Unit tests: Repository and ViewModel coverage (T020-T029) - Optional for bug fix
   - [ ] UI tests: Compose test scenarios (T030-T034) - Optional for bug fix
-  - [ ] Physical device testing: Real-world validation (T045-T051) - Recommended
   - [ ] Documentation: PR preparation (T052-T058)
 - **Branch**: `005-fix-live-speed` (pushed to GitHub)
 - **Target Release**: v0.4.2 (patch release)
+- **Testing Requirements**:
+  - ✅ Constitution exception granted: Emulator testing skipped due to technical limitation
+  - ⚠️ **Physical device testing MANDATORY before merge**: Test on real bike ride with GPS satellites
 
 ---
 

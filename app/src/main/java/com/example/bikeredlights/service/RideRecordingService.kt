@@ -438,7 +438,8 @@ class RideRecordingService : Service() {
                     )
 
                     // Update current speed from GPS (Feature 005)
-                    // Calculate current speed with maxOf to ensure non-negative value
+                    // Use GPS Doppler speed when available (most accurate)
+                    // Falls back to 0.0 when speed unavailable (e.g., emulator)
                     val currentSpeed = maxOf(0.0, (locationData.speedMps ?: 0f).toDouble())
                     (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
                         ?.updateCurrentSpeed(currentSpeed)
