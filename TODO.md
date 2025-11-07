@@ -13,6 +13,8 @@ _Features currently being developed_
 - **Description**:
   1. Fix current speed displaying hardcoded 0.0 km/h on Live tab during recording
   2. Prioritize current speed as hero metric (displayLarge) for safety-first design
+  3. Add paused time display (manual + auto-pause combined)
+  4. Add immobile time placeholder for future tracking
 - **Status**: 📝 Draft PR created - awaiting physical device testing
 - **Implementation Summary**:
   - **Bug Fix (Speed Data Flow)**:
@@ -26,6 +28,8 @@ _Features currently being developed_
     - Current speed now PRIMARY display (displayLarge: 57sp) - hero metric
     - Duration/distance moved to SECONDARY row (headlineMedium: 28sp)
     - Average/max speed in supporting grid (titleLarge: 22sp)
+    - Paused time in informational row (manual + auto-pause combined)
+    - Immobile time placeholder (future feature for stopped-at-lights tracking)
     - Removed time-of-day display (low value, cluttered UI)
     - Aligns UI priority with safety mission (speed awareness > fitness tracking)
 - **Git Commits**:
@@ -37,6 +41,8 @@ _Features currently being developed_
   - 24bd901: docs - emulator limitation and testing requirements
   - c240657: docs - update TODO.md with draft PR #6 link
   - 16df838: feat(ui) - prioritize current speed as hero metric
+  - 117a052: feat(ui) - add paused time display to ride statistics
+  - 8092ee6: feat(ui) - add immobile time placeholder to ride statistics
 - **Build Status**: ✅ Debug APK builds successfully
 - **Static Analysis**: ✅ Data flow verified correct (GPS → Service → Repository → ViewModel → UI)
 - **Emulator Limitation**:
