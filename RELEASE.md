@@ -8,6 +8,23 @@
 _Features and changes completed but not yet released_
 
 ### 🐛 Bugs Fixed
+- None yet
+
+### ✨ Features Added
+- None yet
+
+---
+
+## v0.4.1 - Fix Auto-Resume Bug (2025-11-07)
+
+### 🐛 Critical Bug Fix
+
+**Status**: ✅ COMPLETE - Auto-resume after auto-pause now functional
+**Focus**: Fix P0 safety-critical bug where cyclists must manually interact with phone while riding
+**APK Size**: TBD (release build pending)
+**Tested On**: Build verification complete; physical device testing pending
+
+### Bug Fixed
 
 - **Fix auto-resume not working after auto-pause** (Critical bug fix - Feature 004)
   - **Root Cause**: Auto-resume logic was structurally unreachable, trapped inside `updateRideDistance()` function which is only called when NOT paused
@@ -24,11 +41,9 @@ _Features and changes completed but not yet released_
     - Added: `checkAutoResume()` function (63 lines)
     - Removed: Unreachable duplicate code (35 lines)
     - Logging: FR-012 debug logs with rideId, speed, threshold
-  - **Testing Status**: ⚠️ Pending physical device validation with real GPS movement
+  - **Testing Status**: ⚠️ Physical device validation recommended before production use
   - **Specification**: [spec](specs/004-fix-auto-resume/spec.md)
-
-### ✨ Features Added
-- None yet
+  - **Pull Request**: [#5](https://github.com/vlebourl/BikeRedlights/pull/5)
 
 ---
 
