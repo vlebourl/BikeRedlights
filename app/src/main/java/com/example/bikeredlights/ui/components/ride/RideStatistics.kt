@@ -41,7 +41,7 @@ import kotlinx.coroutines.isActive
  * - Row 1: Current speed (displayLarge) - HERO METRIC
  * - Row 2: Duration + Distance (headlineMedium) - SECONDARY
  * - Row 3: Average + Max speed (titleLarge) - SUPPORTING
- * - Row 4: Paused time (titleLarge) - INFORMATIONAL
+ * - Row 4: Paused + Immobile time (titleLarge) - INFORMATIONAL
  *
  * **Design Rationale**:
  * - Current speed is most prominent (safety-critical for red light warnings)
@@ -172,25 +172,51 @@ fun RideStatistics(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Paused time (manual + auto-pause combined)
-            val totalPausedDuration = ride.manualPausedDurationMillis + ride.autoPausedDurationMillis
-            Column(
+            // Paused and Immobile time (2 columns)
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Text(
-                    text = "Paused",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = formatDuration(totalPausedDuration),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Medium,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                // Paused time (manual + auto-pause combined)
+                val totalPausedDuration = ride.manualPausedDurationMillis + ride.autoPausedDurationMillis
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Paused",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = formatDuration(totalPausedDuration),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Immobile time (placeholder - not yet tracked)
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Immobile",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "00:00:00", // TODO: Track immobile time (stopped at lights while recording)
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) // De-emphasized
+                    )
+                }
             }
 
         }
