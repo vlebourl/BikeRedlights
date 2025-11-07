@@ -30,20 +30,23 @@ import kotlinx.coroutines.isActive
  *
  * **Features**:
  * - Current speed (hero metric - safety critical)
- * - Duration in HH:MM:SS format
+ * - Duration in HH:MM:SS format (moving time)
  * - Distance with one decimal place (km or miles based on settings)
  * - Average speed (distance / moving time)
  * - Max speed (peak value)
+ * - Paused time (manual + auto-pause combined)
  *
  * **Layout** (Safety-Focused):
  * - Material 3 Card with elevation
- * - Hero metric: Current speed (displayLarge) - PRIMARY
- * - Secondary row: Duration + Distance (headlineMedium)
- * - Supporting metrics: Average + Max speed (titleLarge)
+ * - Row 1: Current speed (displayLarge) - HERO METRIC
+ * - Row 2: Duration + Distance (headlineMedium) - SECONDARY
+ * - Row 3: Average + Max speed (titleLarge) - SUPPORTING
+ * - Row 4: Paused time (titleLarge) - INFORMATIONAL
  *
  * **Design Rationale**:
  * - Current speed is most prominent (safety-critical for red light warnings)
- * - Duration/distance are informational (secondary importance)
+ * - Duration shows active riding time (excludes pauses)
+ * - Paused time shows total pause duration (useful for understanding ride patterns)
  * - Aligns UI priority with app safety mission
  *
  * **Units Support**:
@@ -164,6 +167,29 @@ fun RideStatistics(
                     speed = ride.maxSpeedMetersPerSec,
                     unitsSystem = unitsSystem,
                     modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Paused time (manual + auto-pause combined)
+            val totalPausedDuration = ride.manualPausedDurationMillis + ride.autoPausedDurationMillis
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Paused",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = formatDuration(totalPausedDuration),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
