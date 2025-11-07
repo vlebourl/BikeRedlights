@@ -9,7 +9,7 @@
 
 ## Task Overview
 
-**Total Estimated Effort**: 6.5-9.5 hours (including 5 real bike rides for validation)
+**Total Estimated Effort**: 6.5-9.5 hours active development + 3-7 days for physical testing (5 real bike rides)
 
 **User Stories**:
 - **US1 (P1)**: Automatic Resume After Stop - Core auto-resume functionality
@@ -50,7 +50,8 @@
     - Transition state from `AutoPaused` → `Recording`
     - Reset tracking variables (`autoPauseStartTime`, `lastManualResumeTime`, `lowSpeedStartTime`)
     - Update notification to "Recording..."
-    - Log debug event
+    - **Log debug event (FR-012)**: Include timestamp, speed (m/s), GPS accuracy (m), rideId in log message
+      - Example: `Log.d("RideRecordingService", "Auto-resume triggered: rideId=$rideId speed=${currentSpeed}m/s accuracy=${locationData.accuracy}m")`
   - Reference: `specs/004-fix-auto-resume/quickstart.md` lines 78-125
 
 - [ ] T005 [US1] Integrate: Call `checkAutoResume()` before pause gate in `startLocationTracking()`
@@ -413,4 +414,4 @@ Feature is **DONE** when:
 - ✅ Pull request approved and merged
 - ✅ Release v0.4.1 published to GitHub with signed APK
 
-**Estimated Completion**: 6.5-9.5 hours (excluding PR review wait time)
+**Estimated Completion**: 6.5-9.5 hours active development + 3-7 days physical testing (excluding PR review wait time)

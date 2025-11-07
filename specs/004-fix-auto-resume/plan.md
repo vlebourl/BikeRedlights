@@ -13,7 +13,7 @@
 
 **Technical Approach**: Extract auto-resume detection logic into new `checkAutoResume()` function and execute it BEFORE the pause gate in the location update flow. This ensures auto-resume logic runs during AutoPaused state while preserving existing distance calculation behavior.
 
-**Estimated Effort**: 6.5-9.5 hours (including 5 real bike rides for physical device validation)
+**Estimated Effort**: 6.5-9.5 hours active development (excluding multi-day physical testing: 5 bike rides over 3-7 days)
 
 ## Technical Context
 
