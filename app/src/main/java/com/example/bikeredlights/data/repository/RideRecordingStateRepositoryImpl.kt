@@ -14,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -58,6 +59,17 @@ class RideRecordingStateRepositoryImpl @Inject constructor(
      * In-memory state for immediate access.
      */
     private val _recordingState = MutableStateFlow<RideRecordingState>(RideRecordingState.Idle)
+
+    /**
+     * In-memory current speed for real-time GPS updates.
+     *
+     * **Design Rationale**:
+     * - Ephemeral state (not persisted to DataStore)
+     * - Resets to 0.0 on pause/stop
+     * - Real-time updates from Service GPS location callbacks
+     * - Thread-safe StateFlow for concurrent access
+     */
+    private val _currentSpeed = MutableStateFlow(0.0)
 
     /**
      * DataStore preference keys.
@@ -129,6 +141,49 @@ class RideRecordingStateRepositoryImpl @Inject constructor(
 
     override suspend fun getCurrentState(): RideRecordingState {
         return _recordingState.value
+    }
+
+    override fun getCurrentSpeed(): StateFlow<Double> {
+        return _currentSpeed.asStateFlow()
+    }
+
+    /**
+     * Update current speed from GPS location updates.
+     *
+     * **Internal Method**: Called by RideRecordingService on each GPS update.
+     *
+     * **Preconditions**:
+     * - speedMps must be >= 0.0 (negative speeds are invalid)
+     *
+     * **Side Effects**:
+     * - Updates _currentSpeed StateFlow
+     * - Emits new speed value to all collectors
+     *
+     * @param speedMps Current speed in meters per second
+     * @throws IllegalArgumentException if speedMps < 0.0
+     */
+    internal suspend fun updateCurrentSpeed(speedMps: Double) {
+        require(speedMps >= 0.0) { "Speed must be non-negative, got: $speedMps m/s" }
+        _currentSpeed.value = speedMps
+    }
+
+    /**
+     * Reset current speed to 0.0.
+     *
+     * **Internal Method**: Called by RideRecordingService on pause/stop.
+     *
+     * **Use Cases**:
+     * - Manual pause: Speed should show 0.0 during pause
+     * - Auto-pause: Speed should show 0.0 during pause
+     * - Stop ride: Speed should reset to 0.0
+     * - Discard ride: Speed should reset to 0.0
+     *
+     * **Side Effects**:
+     * - Updates _currentSpeed StateFlow to 0.0
+     * - Emits 0.0 to all collectors
+     */
+    internal suspend fun resetCurrentSpeed() {
+        _currentSpeed.value = 0.0
     }
 
     /**
