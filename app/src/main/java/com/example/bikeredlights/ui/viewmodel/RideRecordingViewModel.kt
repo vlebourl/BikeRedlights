@@ -64,6 +64,30 @@ class RideRecordingViewModel @Inject constructor(
         settingsRepository.unitsSystem
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), com.example.bikeredlights.domain.model.settings.UnitsSystem.METRIC)
 
+    /**
+     * Current speed in meters per second (Feature 005).
+     *
+     * **Lifecycle**:
+     * - 0.0 when no ride is recording
+     * - Real-time GPS speed during active recording
+     * - 0.0 when ride is paused (manual or auto-pause)
+     * - 0.0 when ride is stopped
+     *
+     * **State Sharing**:
+     * - WhileSubscribed(5000): Stops collecting 5 seconds after last subscriber
+     * - Battery optimization: No background updates when UI not visible
+     * - Initial value: 0.0 m/s
+     *
+     * **Usage in UI**:
+     * ```kotlin
+     * val currentSpeed by viewModel.currentSpeed.collectAsStateWithLifecycle()
+     * val speedKmh = convertSpeed(currentSpeed, unitsSystem)
+     * ```
+     */
+    val currentSpeed: StateFlow<Double> =
+        rideRecordingStateRepository.getCurrentSpeed()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
     init {
         // Observe recording state from repository
         viewModelScope.launch {
