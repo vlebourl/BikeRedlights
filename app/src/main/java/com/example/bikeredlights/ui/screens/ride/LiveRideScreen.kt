@@ -65,6 +65,7 @@ fun LiveRideScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val unitsSystem by viewModel.unitsSystem.collectAsStateWithLifecycle()
+    val currentSpeed by viewModel.currentSpeed.collectAsStateWithLifecycle()
 
     // Handle navigation events (one-time events via Channel)
     LaunchedEffect(Unit) {
@@ -167,6 +168,7 @@ fun LiveRideScreen(
                 val ride = (uiState as RideRecordingUiState.Recording).ride
                 RecordingContent(
                     ride = ride,
+                    currentSpeed = currentSpeed,
                     unitsSystem = unitsSystem,
                     onPauseRide = { viewModel.pauseRide() },
                     onStopRide = { viewModel.stopRide() }
@@ -176,6 +178,7 @@ fun LiveRideScreen(
                 val ride = (uiState as RideRecordingUiState.Paused).ride
                 PausedContent(
                     ride = ride,
+                    currentSpeed = currentSpeed,
                     unitsSystem = unitsSystem,
                     onResumeRide = { viewModel.resumeRide() },
                     onStopRide = { viewModel.stopRide() }
@@ -185,6 +188,7 @@ fun LiveRideScreen(
                 val ride = (uiState as RideRecordingUiState.AutoPaused).ride
                 AutoPausedContent(
                     ride = ride,
+                    currentSpeed = currentSpeed,
                     unitsSystem = unitsSystem,
                     onResumeRide = { viewModel.resumeRide() },
                     onStopRide = { viewModel.stopRide() }
@@ -195,6 +199,7 @@ fun LiveRideScreen(
                 val ride = (uiState as RideRecordingUiState.ShowingSaveDialog).ride
                 RecordingContent(
                     ride = ride,
+                    currentSpeed = currentSpeed,
                     unitsSystem = unitsSystem,
                     onPauseRide = { }, // No action while dialog is shown
                     onStopRide = { } // No action while dialog is shown
@@ -322,6 +327,7 @@ private fun hasLocationPermissions(context: Context): Boolean {
 @Composable
 private fun RecordingContent(
     ride: com.example.bikeredlights.domain.model.Ride,
+    currentSpeed: Double,
     unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     onPauseRide: () -> Unit,
     onStopRide: () -> Unit,
@@ -347,7 +353,7 @@ private fun RecordingContent(
         // Ride statistics (duration, distance, speeds)
         RideStatistics(
             ride = ride,
-            currentSpeed = 0.0, // TODO: Expose current speed from service
+            currentSpeed = currentSpeed, // Real-time GPS speed (Feature 005)
             unitsSystem = unitsSystem,
             modifier = Modifier.fillMaxWidth()
         )
@@ -371,6 +377,7 @@ private fun RecordingContent(
 @Composable
 private fun PausedContent(
     ride: com.example.bikeredlights.domain.model.Ride,
+    currentSpeed: Double,
     unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     onResumeRide: () -> Unit,
     onStopRide: () -> Unit,
@@ -396,7 +403,7 @@ private fun PausedContent(
         // Ride statistics (frozen at pause time)
         RideStatistics(
             ride = ride,
-            currentSpeed = 0.0, // Zero when paused
+            currentSpeed = currentSpeed, // 0.0 when paused (reset by service)
             unitsSystem = unitsSystem,
             modifier = Modifier.fillMaxWidth()
         )
@@ -420,6 +427,7 @@ private fun PausedContent(
 @Composable
 private fun AutoPausedContent(
     ride: com.example.bikeredlights.domain.model.Ride,
+    currentSpeed: Double,
     unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     onResumeRide: () -> Unit,
     onStopRide: () -> Unit,
@@ -446,7 +454,7 @@ private fun AutoPausedContent(
         // Ride statistics (frozen at auto-pause)
         RideStatistics(
             ride = ride,
-            currentSpeed = 0.0, // Zero when auto-paused
+            currentSpeed = currentSpeed, // Real-time (may trigger auto-resume if > 1 km/h)
             unitsSystem = unitsSystem,
             modifier = Modifier.fillMaxWidth()
         )

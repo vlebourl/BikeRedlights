@@ -1,13 +1,75 @@
 # BikeRedlights - Project TODO
 
-> **Last Updated**: 2025-11-07 (Feature 004: Auto-Resume bug fix implementation complete)
+> **Last Updated**: 2025-11-07 (Feature 005: Live Current Speed bug fix in progress)
 > **Purpose**: Unified progress tracking for all features, tasks, and pending work
 
 ## 📋 In Progress
 
 _Features currently being developed_
 
-_(No features currently in development - Feature 004 ready for testing)_
+### Feature 005: Fix Live Current Speed Display Bug + UI Prioritization
+- **Started**: 2025-11-07
+- **Type**: P1 Bug Fix + P2 UX Enhancement (combined in single PR)
+- **Description**:
+  1. Fix current speed displaying hardcoded 0.0 km/h on Live tab during recording
+  2. Prioritize current speed as hero metric (displayLarge) for safety-first design
+  3. Add paused time display (manual + auto-pause combined)
+  4. Add immobile time placeholder for future tracking
+- **Status**: 📝 Draft PR created - awaiting physical device testing
+- **Implementation Summary**:
+  - **Bug Fix (Speed Data Flow)**:
+    - Domain layer: Added `getCurrentSpeed(): StateFlow<Double>` to repository interface
+    - Data layer: Implemented StateFlow with `updateCurrentSpeed()` and `resetCurrentSpeed()` methods
+    - Service layer: Emit GPS speed on every location update, reset on pause/stop
+    - ViewModel layer: Expose StateFlow with `stateIn(WhileSubscribed(5000))` for battery optimization
+    - UI layer: Collect speed from ViewModel and wire to RideStatistics component
+    - Uses GPS Doppler speed (`location.getSpeed()`) when available (most accurate method per Android best practices)
+  - **UI Enhancement (Safety-First Layout)**:
+    - Current speed now PRIMARY display (displayLarge: 57sp) - hero metric
+    - Duration/distance moved to SECONDARY row (headlineMedium: 28sp)
+    - Average/max speed in supporting grid (titleLarge: 22sp)
+    - Paused time in informational row (manual + auto-pause combined)
+    - Immobile time placeholder (future feature for stopped-at-lights tracking)
+    - Removed time-of-day display (low value, cluttered UI)
+    - Aligns UI priority with safety mission (speed awareness > fitness tracking)
+- **Git Commits**:
+  - feba18f: docs - specification and tracking
+  - ecdf7a7: feat(data) - repository StateFlow implementation
+  - ccc7c08: feat(service) - GPS speed emission
+  - be34815: feat(viewmodel) - StateFlow exposure
+  - 7bdc739: fix(ui) - wire to LiveRideScreen
+  - 24bd901: docs - emulator limitation and testing requirements
+  - c240657: docs - update TODO.md with draft PR #6 link
+  - 16df838: feat(ui) - prioritize current speed as hero metric
+  - 117a052: feat(ui) - add paused time display to ride statistics
+  - 8092ee6: feat(ui) - add immobile time placeholder to ride statistics
+- **Build Status**: ✅ Debug APK builds successfully
+- **Static Analysis**: ✅ Data flow verified correct (GPS → Service → Repository → ViewModel → UI)
+- **Emulator Limitation**:
+  - ⚠️ **Android emulator cannot test this feature**: `location.hasSpeed()` always returns false
+  - Emulator's `emu geo fix` command only sets lat/lon, NOT the speed field
+  - GPS Doppler speed is hardware-dependent and unavailable on emulator
+  - Speed calculation from consecutive points is 10x less accurate (Stack Overflow consensus)
+  - **Decision**: Skip emulator testing, require physical device validation instead
+- **Tasks Progress**:
+  - [x] Specification created (spec.md, plan.md, research.md, data-model.md, contracts/, quickstart.md, tasks.md)
+  - [x] Domain layer: Add getCurrentSpeed() interface method (T003)
+  - [x] Data layer: Implement StateFlow with update/reset methods (T004-T008)
+  - [x] Service layer: Emit GPS speed on location updates (T009-T013)
+  - [x] ViewModel layer: Expose StateFlow to UI (T014-T016)
+  - [x] UI layer: Collect and display current speed (T017-T019)
+  - [x] Static analysis: Verify data flow correctness
+  - [x] Research: GPS speed best practices (Doppler vs calculated)
+  - [x] Draft PR created (PR #6)
+  - [ ] **NEXT**: Physical device testing with real GPS (MANDATORY)
+  - [ ] Unit tests: Repository and ViewModel coverage (T020-T029) - Optional for bug fix
+  - [ ] UI tests: Compose test scenarios (T030-T034) - Optional for bug fix
+- **Branch**: `005-fix-live-speed` (pushed to GitHub)
+- **Pull Request**: #6 (Draft) - https://github.com/vlebourl/BikeRedlights/pull/6
+- **Target Release**: v0.4.2 (patch release)
+- **Testing Requirements**:
+  - ✅ Constitution exception granted: Emulator testing skipped due to technical limitation
+  - ⚠️ **Physical device testing MANDATORY before merge**: Test on real bike ride with GPS satellites
 
 ---
 
@@ -15,54 +77,7 @@ _(No features currently in development - Feature 004 ready for testing)_
 
 _Features planned for upcoming development_
 
-### Bug: Live Current Speed Stuck at 0.0
-- **Priority**: P1 - High (UX-Critical)
-- **Type**: Bug Fix
-- **Discovered In**: v0.4.0 real-world ride test (2025-11-07)
-- **Description**: Current speed always displays 0.0 km/h on Live tab during recording, even though max speed and average speed update correctly with real values
-- **Current Behavior**: Hardcoded 0.0 value in UI, speed metric is non-functional
-- **Expected Behavior**: Display real-time GPS speed from latest track point
-- **Impact**: Defeats purpose of live tracking, prevents speed awareness during ride
-- **Root Cause**: Hardcoded value in `LiveRideScreen.kt:347-452` with existing TODO comment
-- **Solution Architecture** (Clean Architecture pattern):
-  1. **Service Layer**: Add `currentSpeedMetersPerSec` to ride state broadcasts
-  2. **Repository Layer**: Store current speed in `RideRecordingStateRepository` (StateFlow or DataStore)
-  3. **ViewModel Layer**: Expose `currentSpeed: StateFlow<Double>` in `RideRecordingViewModel`
-  4. **UI Layer**: Collect StateFlow in `LiveRideScreen` and pass to `RideStatistics` component
-- **Related Files**:
-  - `app/src/main/java/com/example/bikeredlights/service/RideRecordingService.kt` (broadcast logic)
-  - `app/src/main/java/com/example/bikeredlights/data/repository/RideRecordingStateRepositoryImpl.kt` (state storage)
-  - `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt` (expose StateFlow)
-  - `app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt` (UI integration, lines 347-452)
-  - `app/src/main/java/com/example/bikeredlights/ui/components/ride/RideStatistics.kt` (component ready, just needs data)
-- **Testing Required**: Emulator testing with GPS simulation + physical device testing
-- **Estimated Effort**: 2-3 hours
-- **Target Release**: v0.4.1 (patch release)
-
-### Enhancement: Prioritize Current Speed Over Elapsed Time in UI
-- **Priority**: P2 - Medium (UX Improvement)
-- **Type**: Enhancement
-- **Discovered In**: v0.4.0 real-world ride test (2025-11-07)
-- **Description**: Make current speed the PRIMARY display element (largest/most prominent) and elapsed time SECONDARY
-- **Current Layout**: Elapsed time = displayLarge typography (most prominent), current speed = headlineMedium in 2x2 grid with other metrics
-- **Proposed Layout**: Current speed = displayLarge (hero metric), elapsed time = headlineMedium (supporting metric)
-- **Rationale**:
-  - Speed is critical for core safety mission (red light warnings depend on speed awareness)
-  - Timer is informational, not safety-critical
-  - Aligns UI priority with app purpose (safety > fitness tracking)
-- **Dependencies**:
-  - **BLOCKED**: Must fix "Live Current Speed Stuck at 0.0" bug first (P1)
-  - No point making 0.0 the primary display
-- **Related Files**:
-  - `app/src/main/java/com/example/bikeredlights/ui/components/ride/RideStatistics.kt` (lines 77-133, layout refactoring)
-- **Design Considerations**:
-  - Material 3 typography scale adjustments
-  - Maintain accessibility (minimum touch targets, contrast)
-  - Ensure dark mode compatibility
-  - Consider tablet/landscape layouts
-- **Testing Required**: Visual regression testing on multiple screen sizes and orientations
-- **Estimated Effort**: 1-2 hours (UI refactoring only, no logic changes)
-- **Target Release**: v0.5.0 (minor feature release after P0/P1 bugs fixed)
+_(No planned features currently - all identified enhancements have been implemented)_
 
 ---
 
