@@ -1,13 +1,60 @@
 # BikeRedlights - Project TODO
 
-> **Last Updated**: 2025-11-08 (Feature 005: Live Current Speed - Released v0.4.2)
+> **Last Updated**: 2025-11-08 (Feature 006: Maps Integration - Planning Complete)
 > **Purpose**: Unified progress tracking for all features, tasks, and pending work
 
 ## 📋 In Progress
 
 _Features currently being developed_
 
-_(No features in progress - ready for new work)_
+### Feature 006: Maps Integration (v0.5.0)
+- **Started**: 2025-11-08
+- **Type**: P2 UX Enhancement (Phase 2 - Maps Enhancement)
+- **Description**: Add Google Maps visualization to Live tab and Review screens for visual route context
+- **Status**: 📝 Planning complete, ready for implementation
+- **Specification**: Complete (specs/006-maps-integration/)
+  - spec.md: User stories and acceptance criteria
+  - plan.md: 5-phase implementation plan (3-4 days)
+  - tasks.md: 15 detailed tasks (T001-T015)
+  - data-model.md: Data structures and transformations
+  - research.md: Technical decisions and benchmarks
+  - quickstart.md: Quick reference guide
+  - checklists/requirements.md: 84 requirements
+- **Tasks**:
+  - [ ] Phase 1: Setup & Configuration (T001-T003)
+    - [ ] T001: Google Cloud Console setup (interactive guidance)
+    - [ ] T002: Project configuration (dependencies, API key)
+    - [ ] T003: ProGuard rules
+  - [ ] Phase 2: Core Map Components (T004-T005)
+    - [ ] T004: Create BikeMap composable
+    - [ ] T005: Create MapUtils helpers
+  - [ ] Phase 3: Live Tab Integration (T008-T011)
+    - [ ] T008: Modify RideRecordingViewModel
+    - [ ] T009: Modify LiveRideScreen layout
+    - [ ] T010: Implement map following and gestures
+    - [ ] T011: Test Live map on emulator
+  - [ ] Phase 4: Review Screen Integration (T012-T014)
+    - [ ] T012: Modify RideReviewViewModel
+    - [ ] T013: Replace MapPlaceholder
+    - [ ] T014: Test Review map on emulator
+  - [ ] Phase 5: Testing & Documentation (T015)
+    - [ ] T015: Physical device testing + documentation
+- **User Stories**:
+  - US1 (P1): View map on Live tab during recording
+  - US2 (P2): View complete route on Review screen
+  - US3 (P3): Understand map status and errors
+- **Key Features**:
+  - Live tab: Real-time map (55% height) + polyline + camera following
+  - Review screen: Complete route + start/end markers + auto-zoom
+  - Material 3 theme integration (light/dark mode)
+  - Gesture locking during recording (safety)
+  - Re-center FAB for navigation
+- **Dependencies**:
+  - ✅ Feature 1A (Core Recording) - Complete
+  - ⚠️ Google Maps API key - **Required user action**
+- **Target Release**: v0.5.0
+- **Estimated Effort**: 3-4 days
+- **Next Steps**: Begin T001 (Google Cloud setup with user)
 
 ---
 

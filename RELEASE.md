@@ -5,13 +5,26 @@
 
 ## Unreleased
 
-_Features and changes completed but not yet released_
+_Features and changes in progress for next release_
 
-### 🐛 Bugs Fixed
-- None yet
+### ✨ Features In Development
 
-### ✨ Features Added
-- None yet
+- **Feature 006: Maps Integration (v0.5.0)** - In Planning
+  - **Status**: Specification complete, implementation starting
+  - **Description**: Google Maps visualization on Live tab and Review screens
+  - **Capabilities**:
+    - Live tab: Real-time map showing current location and route polyline (55% of screen height)
+    - Review screen: Complete route with start (green pin) and end (red flag) markers
+    - Camera auto-follows user location during recording
+    - Map gestures locked during active recording for safety
+    - Re-center FloatingActionButton for quick navigation
+    - Material 3 theme integration with light/dark mode map styles
+    - City block zoom level (15f) appropriate for cycling
+  - **Architecture**: Reusable BikeMap composable, ViewModels expose track points StateFlow
+  - **Dependencies**: Google Maps SDK for Android v19.0.0, Maps Compose v6.2.0
+  - **User Action Required**: Google Maps API key setup (interactive guidance provided)
+  - **Estimated Effort**: 3-4 days (5 phases, 15 tasks)
+  - **Specification**: specs/006-maps-integration/
 
 ---
 
