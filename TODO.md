@@ -1,21 +1,37 @@
 # BikeRedlights - Project TODO
 
-> **Last Updated**: 2025-11-07 (Feature 005: Live Current Speed bug fix in progress)
+> **Last Updated**: 2025-11-08 (Feature 005: Live Current Speed - Released v0.4.2)
 > **Purpose**: Unified progress tracking for all features, tasks, and pending work
 
 ## 📋 In Progress
 
 _Features currently being developed_
 
+_(No features in progress - ready for new work)_
+
+---
+
+## 🎯 Planned
+
+_Features planned for upcoming development_
+
+_(No planned features currently - all identified enhancements have been implemented)_
+
+---
+
+## ✅ Completed
+
+_Features completed and merged_
+
 ### Feature 005: Fix Live Current Speed Display Bug + UI Prioritization
-- **Started**: 2025-11-07
+- **Completed**: 2025-11-08
 - **Type**: P1 Bug Fix + P2 UX Enhancement (combined in single PR)
 - **Description**:
   1. Fix current speed displaying hardcoded 0.0 km/h on Live tab during recording
   2. Prioritize current speed as hero metric (displayLarge) for safety-first design
   3. Add paused time display (manual + auto-pause combined)
   4. Add immobile time placeholder for future tracking
-- **Status**: 📝 Draft PR created - awaiting physical device testing
+- **Status**: ✅ COMPLETE - Released v0.4.2
 - **Implementation Summary**:
   - **Bug Fix (Speed Data Flow)**:
     - Domain layer: Added `getCurrentSpeed(): StateFlow<Double>` to repository interface
@@ -43,47 +59,13 @@ _Features currently being developed_
   - 16df838: feat(ui) - prioritize current speed as hero metric
   - 117a052: feat(ui) - add paused time display to ride statistics
   - 8092ee6: feat(ui) - add immobile time placeholder to ride statistics
-- **Build Status**: ✅ Debug APK builds successfully
-- **Static Analysis**: ✅ Data flow verified correct (GPS → Service → Repository → ViewModel → UI)
-- **Emulator Limitation**:
-  - ⚠️ **Android emulator cannot test this feature**: `location.hasSpeed()` always returns false
-  - Emulator's `emu geo fix` command only sets lat/lon, NOT the speed field
-  - GPS Doppler speed is hardware-dependent and unavailable on emulator
-  - Speed calculation from consecutive points is 10x less accurate (Stack Overflow consensus)
-  - **Decision**: Skip emulator testing, require physical device validation instead
-- **Tasks Progress**:
-  - [x] Specification created (spec.md, plan.md, research.md, data-model.md, contracts/, quickstart.md, tasks.md)
-  - [x] Domain layer: Add getCurrentSpeed() interface method (T003)
-  - [x] Data layer: Implement StateFlow with update/reset methods (T004-T008)
-  - [x] Service layer: Emit GPS speed on location updates (T009-T013)
-  - [x] ViewModel layer: Expose StateFlow to UI (T014-T016)
-  - [x] UI layer: Collect and display current speed (T017-T019)
-  - [x] Static analysis: Verify data flow correctness
-  - [x] Research: GPS speed best practices (Doppler vs calculated)
-  - [x] Draft PR created (PR #6)
-  - [ ] **NEXT**: Physical device testing with real GPS (MANDATORY)
-  - [ ] Unit tests: Repository and ViewModel coverage (T020-T029) - Optional for bug fix
-  - [ ] UI tests: Compose test scenarios (T030-T034) - Optional for bug fix
-- **Branch**: `005-fix-live-speed` (pushed to GitHub)
-- **Pull Request**: #6 (Draft) - https://github.com/vlebourl/BikeRedlights/pull/6
-- **Target Release**: v0.4.2 (patch release)
-- **Testing Requirements**:
-  - ✅ Constitution exception granted: Emulator testing skipped due to technical limitation
-  - ⚠️ **Physical device testing MANDATORY before merge**: Test on real bike ride with GPS satellites
-
----
-
-## 🎯 Planned
-
-_Features planned for upcoming development_
-
-_(No planned features currently - all identified enhancements have been implemented)_
-
----
-
-## ✅ Completed
-
-_Features completed and merged_
+  - b42cf77: docs - update TODO.md with paused and immobile time features
+  - 86b992d: chore - bump version to v0.4.2
+- **Build Status**: ✅ Release APK built successfully (22MB)
+- **Testing**: ✅ Physical device testing completed on real bike ride with GPS
+- **Pull Request**: #6 (Merged) - https://github.com/vlebourl/BikeRedlights/pull/6
+- **Release**: v0.4.2 - https://github.com/vlebourl/BikeRedlights/releases/tag/v0.4.2
+- **Specification**: specs/005-fix-live-speed/spec.md
 
 ### Feature 004: Fix Auto-Resume After Auto-Pause
 - **Completed**: 2025-11-07
