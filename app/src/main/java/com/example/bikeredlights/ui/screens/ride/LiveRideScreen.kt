@@ -77,9 +77,10 @@ fun LiveRideScreen(
     val polylineData by viewModel.polylineData.collectAsStateWithLifecycle()
 
     // Camera position state for map (zoom level 17f = city block level, 50-200m radius)
+    // Default to Annemasse, France (6.2347°E, 46.1942°N) when no user location
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
-            userLocation ?: com.google.android.gms.maps.model.LatLng(37.422, -122.084),
+            userLocation ?: com.google.android.gms.maps.model.LatLng(46.1942, 6.2347),
             17f
         )
     }
