@@ -8,10 +8,51 @@
 _Features and changes completed but not yet released_
 
 ### 🐛 Bugs Fixed
-- None yet
+
+- **Fix Live Current Speed Display Bug** (Feature 005 - P1 UX-Critical)
+  - **Problem**: Current speed displays hardcoded 0.0 km/h on Live tab during recording, even though max speed and average speed update correctly
+  - **Root Cause**: Missing StateFlow plumbing through Service → Repository → ViewModel → UI layers
+  - **Solution**: Wire GPS speed through all architecture layers using reactive StateFlow pattern
+  - **Implementation Details**:
+    - Domain layer: Added `getCurrentSpeed(): StateFlow<Double>` to RideRecordingStateRepository interface
+    - Data layer: Implemented StateFlow with `updateCurrentSpeed()` and `resetCurrentSpeed()` methods in repository
+    - Service layer: Emit current speed from GPS location updates to repository
+    - ViewModel layer: Expose StateFlow to UI using `stateIn()` with WhileSubscribed(5000) for battery optimization
+    - UI layer: Collect StateFlow in LiveRideScreen and pass real-time value to RideStatistics component
+  - **Behavior Changes**:
+    - Current speed now displays real-time GPS values (updates every 1-4s based on GPS accuracy setting)
+    - Speed resets to 0.0 correctly when ride is paused or stopped
+    - Speed persists across configuration changes (screen rotation)
+    - Speed displays in user's preferred units (km/h or mph)
+  - **Testing**: ✅ PASSED - Physical device validation (2025-11-08 bike ride)
+    - Real-time speed updated correctly and coherent with bike computer
+    - Speed accuracy sufficient for safety monitoring
+    - Current speed display easy to read while riding
+    - No crashes or stability issues during ride
+  - **Files Modified**:
+    - `app/src/main/java/com/example/bikeredlights/domain/repository/RideRecordingStateRepository.kt`
+    - `app/src/main/java/com/example/bikeredlights/data/repository/RideRecordingStateRepositoryImpl.kt`
+    - `app/src/main/java/com/example/bikeredlights/service/RideRecordingService.kt`
+    - `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt`
+    - `app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt`
+  - **Specification**: [spec](specs/005-fix-live-speed/spec.md)
+  - **Pull Request**: [#6](https://github.com/vlebourl/BikeRedlights/pull/6)
+  - **Target Release**: v0.4.2
 
 ### ✨ Features Added
-- None yet
+
+- **Live Ride UI Enhancement: Hero Metric Prioritization** (Feature 005 - P2 UX Enhancement)
+  - **Goal**: Make current speed the most prominent metric on Live tab for safety-first design
+  - **Changes**:
+    - Current speed now PRIMARY display (displayLarge: 57sp, bold) - hero metric
+    - Duration/distance moved to SECONDARY row (headlineMedium: 28sp)
+    - Average/max speed in supporting grid (titleLarge: 22sp)
+    - Paused time display (manual + auto-pause combined) - informational row
+    - Immobile time placeholder (de-emphasized, 50% alpha) - future feature
+    - Removed time-of-day display (low value, cluttered UI)
+  - **Impact**: Aligns UI priority with safety mission (speed awareness > fitness tracking)
+  - **Testing**: ✅ PASSED - Physical device validation confirmed easy readability while riding
+  - **Specification**: [spec](specs/005-fix-live-speed/spec.md)
 
 ---
 
