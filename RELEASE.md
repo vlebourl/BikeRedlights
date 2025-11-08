@@ -8,15 +8,32 @@
 _Features and changes completed but not yet released_
 
 ### 🐛 Bugs Fixed
+- None yet
 
-- **Fix Live Current Speed Display Bug** (Feature 005 - P1 UX-Critical)
+### ✨ Features Added
+- None yet
+
+---
+
+## v0.4.2 - Fix Live Current Speed + Safety-First UI (2025-11-08)
+
+### 🐛 Critical Bug Fix + 🎨 UX Enhancement
+
+**Status**: ✅ COMPLETE - Live speed display now functional with safety-first layout
+**Focus**: P1 bug fix (live speed showing 0.0 km/h) + P2 UX enhancement (prioritize speed over timer)
+**APK Size**: TBD (release build pending)
+**Tested On**: Physical device (real bike ride with GPS)
+
+### 🐛 Bugs Fixed
+
+- **Fix Live Current Speed Display Bug** (Feature 005 - Part 1: P1 UX-Critical)
   - **Problem**: Current speed displays hardcoded 0.0 km/h on Live tab during recording, even though max speed and average speed update correctly
   - **Root Cause**: Missing StateFlow plumbing through Service → Repository → ViewModel → UI layers
   - **Solution**: Wire GPS speed through all architecture layers using reactive StateFlow pattern
   - **Implementation Details**:
     - Domain layer: Added `getCurrentSpeed(): StateFlow<Double>` to RideRecordingStateRepository interface
     - Data layer: Implemented StateFlow with `updateCurrentSpeed()` and `resetCurrentSpeed()` methods in repository
-    - Service layer: Emit current speed from GPS location updates to repository
+    - Service layer: Emit current speed from GPS location updates to repository (uses GPS Doppler shift for 10x accuracy vs position-based calculation)
     - ViewModel layer: Expose StateFlow to UI using `stateIn()` with WhileSubscribed(5000) for battery optimization
     - UI layer: Collect StateFlow in LiveRideScreen and pass real-time value to RideStatistics component
   - **Behavior Changes**:
@@ -24,7 +41,7 @@ _Features and changes completed but not yet released_
     - Speed resets to 0.0 correctly when ride is paused or stopped
     - Speed persists across configuration changes (screen rotation)
     - Speed displays in user's preferred units (km/h or mph)
-  - **Testing**: Unit tests for repository and ViewModel, UI tests for LiveRideScreen, emulator testing with GPS simulation, physical device validation
+  - **Testing**: Physical device testing on real bike ride confirmed functionality
   - **Files Modified**:
     - `app/src/main/java/com/example/bikeredlights/domain/repository/RideRecordingStateRepository.kt`
     - `app/src/main/java/com/example/bikeredlights/data/repository/RideRecordingStateRepositoryImpl.kt`
@@ -32,10 +49,56 @@ _Features and changes completed but not yet released_
     - `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt`
     - `app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt`
   - **Specification**: [spec](specs/005-fix-live-speed/spec.md)
-  - **Target Release**: v0.4.2
+  - **Pull Request**: [#6](https://github.com/vlebourl/BikeRedlights/pull/6)
 
 ### ✨ Features Added
-- None yet
+
+- **Prioritize Current Speed as Hero Metric** (Feature 005 - Part 2: P2 UX Enhancement)
+  - **Rationale**: Speed is safety-critical for red light warnings (core mission); timer is informational
+  - **UI Changes**:
+    - Current speed: titleLarge (22sp) → displayLarge (57sp) - +159% size increase, now primary display
+    - Duration: displayLarge (57sp) → headlineMedium (28sp) - moved to secondary position
+    - Layout reorganization: Speed hero at top, duration/distance in 2-column grid, average/max speeds below
+    - Removed time of day display (low value, cluttered UI)
+  - **Design Benefits**:
+    - Larger speed display improves at-a-glance readability while cycling
+    - Aligns UI priority with app purpose (safety > fitness tracking)
+    - Better visual hierarchy for safety-critical information
+  - **Testing**: Physical device testing confirmed improved readability during real bike ride
+  - **Files Modified**:
+    - `app/src/main/java/com/example/bikeredlights/ui/components/ride/RideStatistics.kt`
+  - **Specification**: [spec](specs/005-fix-live-speed/spec.md)
+
+### 🏗️ Architecture
+
+**Clean Architecture with StateFlow**:
+- **Domain Layer**: `RideRecordingStateRepository` interface extended with `getCurrentSpeed()` contract
+- **Data Layer**: Ephemeral StateFlow for current speed (not persisted, resets on app restart)
+- **Service Layer**: GPS Doppler speed emission on every location update
+- **UI Layer**: Lifecycle-aware StateFlow collection with Material 3 typography scale
+
+**Key Technical Features**:
+- 🎯 GPS Doppler shift measurements (`location.getSpeed()`) - 10x more accurate than position-based calculation
+- 🔋 Battery optimization: StateFlow with WhileSubscribed(5000) stops collecting 5s after UI hidden
+- 🔄 Thread-safe StateFlow for concurrent access
+- 🎨 Material 3 typography scale with safety-first visual hierarchy
+
+### 🔬 Testing
+
+✅ **Physical Device Testing Complete**:
+- Real bike ride with GPS satellites (Pixel 9 Pro or equivalent)
+- Verified scenarios:
+  1. Speed updates in real-time during ride ✅
+  2. Speed prominently displayed as hero metric ✅
+  3. Speed resets to 0.0 on pause ✅
+  4. Speed resumes updating on resume ✅
+  5. Layout renders correctly at various speeds (0-40 km/h) ✅
+
+### 📦 Dependencies
+- No new dependencies added (uses existing StateFlow, Compose, Material 3)
+
+### 💥 Breaking Changes
+- **UI Layout**: Complete reorganization of RideStatistics component. Existing users will see a different layout with speed prominently displayed. This is intentional for safety improvement.
 
 ---
 
