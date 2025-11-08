@@ -5,18 +5,26 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bikeredlights.domain.model.Ride
 import com.example.bikeredlights.domain.model.RideRecordingState
+import androidx.compose.ui.graphics.Color
+import com.example.bikeredlights.domain.model.PolylineData
 import com.example.bikeredlights.domain.repository.RideRecordingStateRepository
 import com.example.bikeredlights.domain.repository.RideRepository
+import com.example.bikeredlights.domain.repository.TrackPointRepository
 import com.example.bikeredlights.domain.usecase.FinishRideResult
 import com.example.bikeredlights.domain.usecase.FinishRideUseCase
+import com.example.bikeredlights.domain.usecase.GetRoutePolylineUseCase
 import com.example.bikeredlights.service.RideRecordingService
+import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -41,12 +49,15 @@ import javax.inject.Inject
  * - Hilt dependency injection
  * - Unidirectional data flow (events down, state up)
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class RideRecordingViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val rideRecordingStateRepository: RideRecordingStateRepository,
     private val rideRepository: RideRepository,
+    private val trackPointRepository: TrackPointRepository,
     private val finishRideUseCase: FinishRideUseCase,
+    private val getRoutePolylineUseCase: GetRoutePolylineUseCase,
     private val settingsRepository: com.example.bikeredlights.data.repository.SettingsRepository
 ) : ViewModel() {
 
@@ -87,6 +98,97 @@ class RideRecordingViewModel @Inject constructor(
     val currentSpeed: StateFlow<Double> =
         rideRecordingStateRepository.getCurrentSpeed()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    /**
+     * Current location (last GPS point) for map marker (Feature 006).
+     *
+     * **Lifecycle**:
+     * - null when no ride is recording
+     * - Latest GPS coordinates during active recording
+     * - Frozen at last position when ride is paused
+     * - null when ride is stopped
+     *
+     * **Usage in UI**:
+     * ```kotlin
+     * val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
+     * LocationMarker(location = userLocation)
+     * ```
+     */
+    val userLocation: StateFlow<LatLng?> =
+        rideRecordingStateRepository.getRecordingState()
+            .map { state ->
+                when (state) {
+                    is RideRecordingState.Recording -> {
+                        // Get latest track point for this ride
+                        trackPointRepository.getLastTrackPoint(state.rideId)?.let { point ->
+                            LatLng(point.latitude, point.longitude)
+                        }
+                    }
+                    is RideRecordingState.ManuallyPaused -> {
+                        // Keep showing last position when paused
+                        trackPointRepository.getLastTrackPoint(state.rideId)?.let { point ->
+                            LatLng(point.latitude, point.longitude)
+                        }
+                    }
+                    is RideRecordingState.AutoPaused -> {
+                        // Keep showing last position when auto-paused
+                        trackPointRepository.getLastTrackPoint(state.rideId)?.let { point ->
+                            LatLng(point.latitude, point.longitude)
+                        }
+                    }
+                    else -> null // Idle or stopped
+                }
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    /**
+     * Route polyline data for real-time map visualization (Feature 006).
+     *
+     * **Lifecycle**:
+     * - null when no ride is recording
+     * - Updates in real-time as track points are added during recording
+     * - Frozen polyline when ride is paused
+     * - null when ride is stopped
+     *
+     * **Performance**:
+     * - Applies Douglas-Peucker simplification automatically (90% reduction for long routes)
+     * - Only simplifies routes with 100+ points
+     * - Red color for live route visualization
+     *
+     * **Usage in UI**:
+     * ```kotlin
+     * val polylineData by viewModel.polylineData.collectAsStateWithLifecycle()
+     * RoutePolyline(polylineData = polylineData)
+     * ```
+     */
+    val polylineData: StateFlow<PolylineData?> =
+        rideRecordingStateRepository.getRecordingState()
+            .flatMapLatest { state ->
+                when (state) {
+                    is RideRecordingState.Recording,
+                    is RideRecordingState.ManuallyPaused,
+                    is RideRecordingState.AutoPaused -> {
+                        // Get current ride ID
+                        val rideId = when (state) {
+                            is RideRecordingState.Recording -> state.rideId
+                            is RideRecordingState.ManuallyPaused -> state.rideId
+                            is RideRecordingState.AutoPaused -> state.rideId
+                            else -> return@flatMapLatest kotlinx.coroutines.flow.flowOf(null)
+                        }
+                        // Observe track points and convert to polyline
+                        trackPointRepository.getTrackPointsForRideFlow(rideId)
+                            .map { trackPoints ->
+                                getRoutePolylineUseCase(
+                                    trackPoints = trackPoints,
+                                    color = Color.Red, // Live route color
+                                    width = 10f
+                                )
+                            }
+                    }
+                    else -> kotlinx.coroutines.flow.flowOf(null) // Idle or stopped
+                }
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     init {
         // Observe recording state from repository
