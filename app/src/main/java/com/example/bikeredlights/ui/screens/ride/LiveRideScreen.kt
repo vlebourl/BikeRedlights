@@ -25,6 +25,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.bikeredlights.ui.components.map.BikeMap
+import com.example.bikeredlights.ui.components.map.LocationMarker
+import com.example.bikeredlights.ui.components.map.RoutePolyline
 import com.example.bikeredlights.ui.components.ride.KeepScreenOn
 import com.example.bikeredlights.ui.components.ride.RideControls
 import com.example.bikeredlights.ui.components.ride.RideStatistics
@@ -32,6 +35,8 @@ import com.example.bikeredlights.ui.components.ride.SaveRideDialog
 import com.example.bikeredlights.ui.viewmodel.NavigationEvent
 import com.example.bikeredlights.ui.viewmodel.RideRecordingUiState
 import com.example.bikeredlights.ui.viewmodel.RideRecordingViewModel
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -66,6 +71,28 @@ fun LiveRideScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val unitsSystem by viewModel.unitsSystem.collectAsStateWithLifecycle()
     val currentSpeed by viewModel.currentSpeed.collectAsStateWithLifecycle()
+
+    // Map state (Feature 006)
+    val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
+    val polylineData by viewModel.polylineData.collectAsStateWithLifecycle()
+
+    // Camera position state for map (zoom level 17f = city block level, 50-200m radius)
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(
+            userLocation ?: com.google.android.gms.maps.model.LatLng(37.422, -122.084),
+            17f
+        )
+    }
+
+    // Camera following: Animate to user location when it changes (Feature 006: FR-002)
+    LaunchedEffect(userLocation) {
+        userLocation?.let { location ->
+            cameraPositionState.animate(
+                update = com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(location, 17f),
+                durationMs = 500 // Smooth 500ms animation (meets FR-002: <500ms requirement)
+            )
+        }
+    }
 
     // Handle navigation events (one-time events via Channel)
     LaunchedEffect(Unit) {
@@ -147,11 +174,30 @@ fun LiveRideScreen(
                 .padding(top = 16.dp, end = 16.dp)
         )
 
-        // Main content (centered)
+        // Main content with map background (Feature 006)
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
+            // Map layer (background) - only show when recording or paused
+            if (uiState is RideRecordingUiState.Recording ||
+                uiState is RideRecordingUiState.Paused ||
+                uiState is RideRecordingUiState.AutoPaused ||
+                uiState is RideRecordingUiState.ShowingSaveDialog
+            ) {
+                BikeMap(
+                    cameraPositionState = cameraPositionState,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // Current location marker (blue)
+                    LocationMarker(location = userLocation)
+
+                    // Route polyline (red, growing in real-time)
+                    RoutePolyline(polylineData = polylineData)
+                }
+            }
+
+            // UI overlay layer (foreground) - stats and controls
             when (uiState) {
             is RideRecordingUiState.Idle -> {
                 IdleContent(
