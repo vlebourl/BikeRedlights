@@ -17,6 +17,7 @@ import com.example.bikeredlights.ui.screens.ride.RideReviewScreen
 import com.example.bikeredlights.ui.screens.settings.RideTrackingSettingsScreen
 import com.example.bikeredlights.ui.screens.settings.SettingsHomeScreen
 import com.example.bikeredlights.ui.screens.settings.SettingsViewModel
+import com.example.bikeredlights.ui.screens.MapTestScreen
 import com.example.bikeredlights.ui.viewmodel.RideRecordingViewModel
 
 /**
@@ -132,6 +133,12 @@ fun AppNavigation(
                     navController.popBackStack()
                 }
             )
+        }
+
+        // TEMPORARY: Map SDK Integration Test Screen (Phase 3 - US3)
+        // This route will be removed after testing is complete
+        composable("map_test") {
+            MapTestScreen()
         }
     }
 }

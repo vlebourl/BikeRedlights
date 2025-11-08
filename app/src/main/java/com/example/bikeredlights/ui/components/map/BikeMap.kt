@@ -71,20 +71,13 @@ fun BikeMap(
     val isDarkMode = isSystemInDarkTheme()
 
     // Map properties for Material 3 theming
+    // Note: For full dark mode support, create res/raw/dark_map_style.json
+    // and use: MapStyleOptions.loadRawResourceStyle(LocalContext.current, R.raw.dark_map_style)
     val mapProperties = remember(isDarkMode, mapType) {
         MapProperties(
             mapType = mapType,
-            isMyLocationEnabled = false, // We'll handle location markers manually for better control
-            mapStyleOptions = if (isDarkMode) {
-                // Use Google Maps dark mode JSON style
-                MapStyleOptions.loadRawResourceStyle(
-                    // Note: This requires a dark_map_style.json resource file
-                    // For now, we'll use null and rely on system dark mode
-                    null
-                )
-            } else {
-                null // Use default light mode
-            }
+            isMyLocationEnabled = false // We'll handle location markers manually for better control
+            // mapStyleOptions can be added later for custom dark mode styling
         )
     }
 
