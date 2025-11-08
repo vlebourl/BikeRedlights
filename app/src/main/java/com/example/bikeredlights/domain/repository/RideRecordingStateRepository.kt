@@ -2,6 +2,7 @@ package com.example.bikeredlights.domain.repository
 
 import com.example.bikeredlights.domain.model.RideRecordingState
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Repository interface for managing ride recording state.
@@ -65,4 +66,23 @@ interface RideRecordingStateRepository {
      * @return Current RideRecordingState
      */
     suspend fun getCurrentState(): RideRecordingState
+
+    /**
+     * Get current speed in meters per second as a StateFlow.
+     *
+     * **Flow Behavior**:
+     * - Hot Flow (StateFlow)
+     * - Always has a value (defaults to 0.0)
+     * - Emits on speed updates from GPS
+     * - Resets to 0.0 on pause/stop
+     *
+     * **Lifecycle**:
+     * - 0.0 when no ride is recording
+     * - Real-time GPS speed during active recording
+     * - 0.0 when ride is paused (manual or auto-pause)
+     * - 0.0 when ride is stopped
+     *
+     * @return StateFlow emitting current speed in m/s (0.0 when not recording)
+     */
+    fun getCurrentSpeed(): StateFlow<Double>
 }

@@ -221,6 +221,10 @@ class RideRecordingService : Service() {
             // Record pause start time (Bug #2 fix)
             pauseStartTime = System.currentTimeMillis()
 
+            // Reset current speed to 0.0 on pause (Feature 005)
+            (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
+                ?.resetCurrentSpeed()
+
             currentState = RideRecordingState.ManuallyPaused(rideId)
             rideRecordingStateRepository.updateRecordingState(currentState)
 
@@ -343,6 +347,10 @@ class RideRecordingService : Service() {
             // Stop GPS accuracy observer (T082)
             gpsAccuracyObserverJob?.cancel()
 
+            // Reset current speed to 0.0 on stop (Feature 005)
+            (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
+                ?.resetCurrentSpeed()
+
             // Update state to Stopped
             currentState = RideRecordingState.Stopped(rideId)
             rideRecordingStateRepository.updateRecordingState(currentState)
@@ -429,10 +437,16 @@ class RideRecordingService : Service() {
                         isAutoPaused = isAutoPaused
                     )
 
+                    // Update current speed from GPS (Feature 005)
+                    // Use GPS Doppler speed when available (most accurate)
+                    // Falls back to 0.0 when speed unavailable (e.g., emulator)
+                    val currentSpeed = maxOf(0.0, (locationData.speedMps ?: 0f).toDouble())
+                    (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
+                        ?.updateCurrentSpeed(currentSpeed)
+
                     // Check for auto-resume (before pause gate)
                     // This allows auto-resume to execute during AutoPaused state
                     if (isAutoPaused) {
-                        val currentSpeed = (locationData.speedMps ?: 0f).toDouble()
                         checkAutoResume(rideId, currentSpeed)
                     }
 
