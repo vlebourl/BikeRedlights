@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.secrets.gradle.plugin)
     jacoco
 }
 
@@ -128,6 +129,11 @@ dependencies {
 
     // Location Services
     implementation(libs.play.services.location)
+
+    // Google Maps
+    implementation(libs.maps.compose)
+    implementation(libs.play.services.maps)
+    implementation(libs.maps.utils)
 
     // Lifecycle
     implementation(libs.androidx.lifecycle.runtime.ktx)
