@@ -174,36 +174,21 @@ fun LiveRideScreen(
                 .padding(top = 16.dp, end = 16.dp)
         )
 
-        // Main content with map background (Feature 006)
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            // Map layer (background) - only show when recording or paused
-            if (uiState is RideRecordingUiState.Recording ||
-                uiState is RideRecordingUiState.Paused ||
-                uiState is RideRecordingUiState.AutoPaused ||
-                uiState is RideRecordingUiState.ShowingSaveDialog
-            ) {
-                BikeMap(
-                    cameraPositionState = cameraPositionState,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    // Current location marker (blue)
-                    LocationMarker(location = userLocation)
-
-                    // Route polyline (red, growing in real-time)
-                    RoutePolyline(polylineData = polylineData)
-                }
-            }
-
-            // UI overlay layer (foreground) - stats and controls
-            when (uiState) {
+        // Main content with split-screen layout (Feature 006)
+        // Map on top, stats/controls on bottom - Material 3 design
+        when (uiState) {
             is RideRecordingUiState.Idle -> {
-                IdleContent(
-                    onStartRide = { viewModel.startRide() },
-                    modifier = Modifier.fillMaxSize()
-                )
+                // Show map even in Idle state with "Ready to ride?" message
+                SplitScreenMapContent(
+                    cameraPositionState = cameraPositionState,
+                    userLocation = userLocation,
+                    polylineData = null // No route when idle
+                ) {
+                    IdleContent(
+                        onStartRide = { viewModel.startRide() },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
             is RideRecordingUiState.WaitingForGps -> {
                 WaitingForGpsContent(
@@ -212,46 +197,73 @@ fun LiveRideScreen(
             }
             is RideRecordingUiState.Recording -> {
                 val ride = (uiState as RideRecordingUiState.Recording).ride
-                RecordingContent(
-                    ride = ride,
-                    currentSpeed = currentSpeed,
-                    unitsSystem = unitsSystem,
-                    onPauseRide = { viewModel.pauseRide() },
-                    onStopRide = { viewModel.stopRide() }
-                )
+                SplitScreenMapContent(
+                    cameraPositionState = cameraPositionState,
+                    userLocation = userLocation,
+                    polylineData = polylineData
+                ) {
+                    RecordingContent(
+                        ride = ride,
+                        currentSpeed = currentSpeed,
+                        unitsSystem = unitsSystem,
+                        onPauseRide = { viewModel.pauseRide() },
+                        onStopRide = { viewModel.stopRide() },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
             is RideRecordingUiState.Paused -> {
                 val ride = (uiState as RideRecordingUiState.Paused).ride
-                PausedContent(
-                    ride = ride,
-                    currentSpeed = currentSpeed,
-                    unitsSystem = unitsSystem,
-                    onResumeRide = { viewModel.resumeRide() },
-                    onStopRide = { viewModel.stopRide() }
-                )
+                SplitScreenMapContent(
+                    cameraPositionState = cameraPositionState,
+                    userLocation = userLocation,
+                    polylineData = polylineData
+                ) {
+                    PausedContent(
+                        ride = ride,
+                        currentSpeed = currentSpeed,
+                        unitsSystem = unitsSystem,
+                        onResumeRide = { viewModel.resumeRide() },
+                        onStopRide = { viewModel.stopRide() },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
             is RideRecordingUiState.AutoPaused -> {
                 val ride = (uiState as RideRecordingUiState.AutoPaused).ride
-                AutoPausedContent(
-                    ride = ride,
-                    currentSpeed = currentSpeed,
-                    unitsSystem = unitsSystem,
-                    onResumeRide = { viewModel.resumeRide() },
-                    onStopRide = { viewModel.stopRide() }
-                )
+                SplitScreenMapContent(
+                    cameraPositionState = cameraPositionState,
+                    userLocation = userLocation,
+                    polylineData = polylineData
+                ) {
+                    AutoPausedContent(
+                        ride = ride,
+                        currentSpeed = currentSpeed,
+                        unitsSystem = unitsSystem,
+                        onResumeRide = { viewModel.resumeRide() },
+                        onStopRide = { viewModel.stopRide() },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
             is RideRecordingUiState.ShowingSaveDialog -> {
-                // Dialog is shown above, show recording content underneath
+                // Dialog is shown above, show split-screen underneath
                 val ride = (uiState as RideRecordingUiState.ShowingSaveDialog).ride
-                RecordingContent(
-                    ride = ride,
-                    currentSpeed = currentSpeed,
-                    unitsSystem = unitsSystem,
-                    onPauseRide = { }, // No action while dialog is shown
-                    onStopRide = { } // No action while dialog is shown
-                )
+                SplitScreenMapContent(
+                    cameraPositionState = cameraPositionState,
+                    userLocation = userLocation,
+                    polylineData = polylineData
+                ) {
+                    RecordingContent(
+                        ride = ride,
+                        currentSpeed = currentSpeed,
+                        unitsSystem = unitsSystem,
+                        onPauseRide = { }, // No action while dialog is shown
+                        onStopRide = { }, // No action while dialog is shown
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
-        }
         }
     }
 }
@@ -365,6 +377,57 @@ private fun hasLocationPermissions(context: Context): Boolean {
     ) == PackageManager.PERMISSION_GRANTED
 
     return fineLocationGranted || coarseLocationGranted
+}
+
+/**
+ * Split-screen layout with map on top and content on bottom.
+ * Material 3 design with proper spacing and elevation.
+ *
+ * @param cameraPositionState Camera state for map
+ * @param userLocation Current GPS location for marker
+ * @param polylineData Route polyline data
+ * @param content Bottom half content (stats and controls)
+ */
+@Composable
+private fun SplitScreenMapContent(
+    cameraPositionState: com.google.maps.android.compose.CameraPositionState,
+    userLocation: com.google.android.gms.maps.model.LatLng?,
+    polylineData: com.example.bikeredlights.domain.model.PolylineData?,
+    content: @Composable () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // Map section (top 50% of screen)
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            tonalElevation = 0.dp
+        ) {
+            BikeMap(
+                cameraPositionState = cameraPositionState,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Current location marker (blue)
+                LocationMarker(location = userLocation)
+
+                // Route polyline (red, growing in real-time)
+                RoutePolyline(polylineData = polylineData)
+            }
+        }
+
+        // Stats and controls section (bottom 50% of screen)
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            tonalElevation = 2.dp,
+            shadowElevation = 4.dp
+        ) {
+            content()
+        }
+    }
 }
 
 /**
