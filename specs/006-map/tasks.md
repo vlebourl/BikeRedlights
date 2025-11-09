@@ -127,14 +127,14 @@
 
 **Integration Testing for User Story 1**
 
-- [ ] T053 [US1] Build and install: `./gradlew assembleDebug && ./gradlew installDebug`
-- [ ] T054 [US1] Start emulator GPS simulation: Open Extended Controls (...) → Location → Set single point (37.422, -122.084)
-- [ ] T055 [US1] Open app to Live tab, verify blue marker displays at simulated location within 3 seconds
-- [ ] T056 [US1] Start ride recording, move GPS location to new point (37.423, -122.085), verify marker updates and polyline starts growing
-- [ ] T057 [US1] Continue moving GPS location through 5-10 points, verify polyline grows smoothly, camera follows without jumps
-- [ ] T058 [US1] Verify zoom level stays at city block level (~17f) during movement
-- [ ] T059 [US1] Stop recording, verify polyline clears on next GPS update (no recording = no polyline)
-- [ ] T060 [US1] Test performance: Move through 100+ simulated points, verify 60fps panning (no jank, <2s delay for polyline update)
+- [X] T053 [US1] Build and install: `./gradlew assembleDebug && ./gradlew installDebug`
+- [X] T054 [US1] Start emulator GPS simulation: Open Extended Controls (...) → Location → Set single point (37.422, -122.084)
+- [X] T055 [US1] Open app to Live tab, verify blue marker displays at simulated location within 3 seconds
+- [X] T056 [US1] Start ride recording, move GPS location to new point (37.423, -122.085), verify marker updates and polyline starts growing
+- [X] T057 [US1] Continue moving GPS location through 5-10 points, verify polyline grows smoothly, camera follows without jumps
+- [X] T058 [US1] Verify zoom level stays at city block level (~17f) during movement
+- [X] T059 [US1] Stop recording, verify polyline clears on next GPS update (no recording = no polyline)
+- [X] T060 [US1] Test performance: Move through 100+ simulated points, verify 60fps panning (no jank, <2s delay for polyline update)
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently. Live tab shows real-time location + route polyline.
 
