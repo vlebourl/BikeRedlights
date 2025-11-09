@@ -92,7 +92,7 @@
 - [X] T036 [US3] Verify map displays correctly (no API key errors, map tiles load, touch gestures work)
 - [X] T037 [US3] Check logcat for errors: `adb logcat | grep -E "Maps|ERROR|Exception"`
 - [X] T038 [US3] Test dark mode: Enable dark mode on emulator and verify map uses dark style
-- [ ] T039 [US3] Test rotation: Rotate device and verify map state persists (no reset to 0,0)
+- [X] T039 [US3] Test rotation: Rotate device and verify map state persists (no reset to 0,0)
 - [ ] T040 [US3] Remove MapTestScreen and navigation route (cleanup temporary test code)
 
 **Checkpoint**: At this point, Google Maps SDK should be fully functional and verified
@@ -179,7 +179,7 @@
 - [X] T081 [US2] Verify green pin marker at start location (first track point)
 - [X] T082 [US2] Verify red flag marker at end location (last track point)
 - [ ] T083 [US2] Verify auto-zoom fits entire route in viewport with appropriate padding (no markers touching screen edges)
-- [ ] T084 [US2] Test with very short route (<100m): Verify fixed zoom or appropriate bounds
+- [X] T084 [US2] Test with very short route (<100m): Verify fixed zoom or appropriate bounds
 - [ ] T085 [US2] Test with very long route (simulate 50+ km): Verify auto-zoom handles without excessive zoom out
 - [X] T086 [US2] Test rotation: Rotate device and verify map state persists (bounds recalculated but route still fits)
 - [X] T087 [US2] Delete ride, verify no map data remains (test cleanup)
