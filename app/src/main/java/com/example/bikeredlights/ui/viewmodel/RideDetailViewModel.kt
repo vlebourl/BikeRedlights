@@ -1,19 +1,32 @@
 package com.example.bikeredlights.ui.viewmodel
 
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.bikeredlights.domain.model.display.RideDetailData
-import com.example.bikeredlights.domain.usecase.GetRideByIdUseCase
 import com.example.bikeredlights.data.repository.SettingsRepository
+import com.example.bikeredlights.domain.model.MapBounds
+import com.example.bikeredlights.domain.model.MarkerData
+import com.example.bikeredlights.domain.model.PolylineData
+import com.example.bikeredlights.domain.model.TrackPoint
+import com.example.bikeredlights.domain.model.display.RideDetailData
+import com.example.bikeredlights.domain.repository.TrackPointRepository
+import com.example.bikeredlights.domain.usecase.CalculateMapBoundsUseCase
+import com.example.bikeredlights.domain.usecase.FormatMapMarkersUseCase
+import com.example.bikeredlights.domain.usecase.GetRideByIdUseCase
+import com.example.bikeredlights.domain.usecase.GetRoutePolylineUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 /**
@@ -44,6 +57,10 @@ import javax.inject.Inject
 class RideDetailViewModel @Inject constructor(
     private val getRideByIdUseCase: GetRideByIdUseCase,
     private val settingsRepository: SettingsRepository,
+    private val trackPointRepository: TrackPointRepository,
+    private val getRoutePolylineUseCase: GetRoutePolylineUseCase,
+    private val calculateMapBoundsUseCase: CalculateMapBoundsUseCase,
+    private val formatMapMarkersUseCase: FormatMapMarkersUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -53,6 +70,56 @@ class RideDetailViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow<RideDetailUiState>(RideDetailUiState.Loading)
     val uiState: StateFlow<RideDetailUiState> = _uiState.asStateFlow()
+
+    /**
+     * Track points for the ride, used to render the route on the map.
+     */
+    val trackPoints: StateFlow<List<TrackPoint>> = flow {
+        val points = trackPointRepository.getTrackPointsForRide(rideId)
+        emit(points)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    /**
+     * Polyline data for rendering the route on the map.
+     * Derived from trackPoints with simplification applied.
+     */
+    val polylineData: StateFlow<PolylineData?> = trackPoints.map { points ->
+        getRoutePolylineUseCase(
+            trackPoints = points,
+            color = Color.Blue, // Blue for completed rides
+            width = 10f
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    /**
+     * Map bounds to auto-zoom the map to fit the entire route.
+     */
+    val mapBounds: StateFlow<MapBounds?> = trackPoints.map { points ->
+        calculateMapBoundsUseCase(points)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    /**
+     * Start and end markers for the ride route.
+     */
+    val markers: StateFlow<List<MarkerData>> = trackPoints.map { points ->
+        formatMapMarkersUseCase(points)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     init {
         observeRideDetail()

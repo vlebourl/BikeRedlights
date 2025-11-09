@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -21,6 +22,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,9 +33,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.bikeredlights.domain.model.display.RideDetailData
 import com.example.bikeredlights.ui.components.history.DetailStatCard
+import com.example.bikeredlights.ui.components.map.BikeMap
+import com.example.bikeredlights.ui.components.map.RoutePolyline
+import com.example.bikeredlights.ui.components.map.StartEndMarkers
 import com.example.bikeredlights.ui.theme.BikeRedlightsTheme
 import com.example.bikeredlights.ui.viewmodel.RideDetailUiState
 import com.example.bikeredlights.ui.viewmodel.RideDetailViewModel
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.maps.android.compose.rememberCameraPositionState
 
 /**
  * Ride Detail screen displaying comprehensive ride statistics.
@@ -67,6 +74,9 @@ fun RideDetailScreen(
     viewModel: RideDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val polylineData by viewModel.polylineData.collectAsStateWithLifecycle()
+    val mapBounds by viewModel.mapBounds.collectAsStateWithLifecycle()
+    val markers by viewModel.markers.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = modifier,
@@ -102,6 +112,9 @@ fun RideDetailScreen(
             is RideDetailUiState.Success -> {
                 RideDetailContent(
                     rideDetail = state.rideDetail,
+                    polylineData = polylineData,
+                    mapBounds = mapBounds,
+                    markers = markers,
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -173,30 +186,66 @@ private fun ErrorView(
 }
 
 /**
- * Main content showing ride statistics in grid layout.
+ * Main content showing ride statistics in grid layout with map.
  *
  * **Layout**:
- * - Ride name header
+ * - Map showing complete route (if track points available)
  * - 2-column grid of stat cards
  * - Responsive to screen width
  *
  * @param rideDetail Display-ready ride detail data
+ * @param polylineData Route polyline for map display
+ * @param mapBounds Bounds to auto-zoom map to fit route
+ * @param markers Start and end markers for map
  * @param modifier Optional modifier
  */
 @Composable
 private fun RideDetailContent(
     rideDetail: RideDetailData,
+    polylineData: com.example.bikeredlights.domain.model.PolylineData?,
+    mapBounds: com.example.bikeredlights.domain.model.MapBounds?,
+    markers: List<com.example.bikeredlights.domain.model.MarkerData>,
     modifier: Modifier = Modifier
 ) {
+    val cameraPositionState = rememberCameraPositionState()
+
+    // Auto-zoom map to fit the entire route
+    LaunchedEffect(mapBounds) {
+        mapBounds?.let { bounds ->
+            cameraPositionState.animate(
+                CameraUpdateFactory.newLatLngBounds(
+                    bounds.bounds,
+                    bounds.padding
+                ),
+                durationMs = bounds.animationDurationMs
+            )
+        }
+    }
+
     Column(
         modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {
+        // Map showing complete route
+        if (polylineData != null) {
+            BikeMap(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp),
+                cameraPositionState = cameraPositionState,
+                showMyLocationButton = false, // Not needed for review
+                showZoomControls = true
+            ) {
+                RoutePolyline(polylineData = polylineData)
+                StartEndMarkers(markers = markers)
+            }
+        }
+
         // Statistics grid
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
+            modifier = Modifier.padding(16.dp),
             contentPadding = PaddingValues(0.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -280,7 +329,10 @@ private fun RideDetailScreenSuccessPreview() {
                 maxSpeedFormatted = "32.4 km/h",
                 pausedTimeFormatted = "00:07:45",
                 hasPauses = true
-            )
+            ),
+            polylineData = null,
+            mapBounds = null,
+            markers = emptyList()
         )
     }
 }
