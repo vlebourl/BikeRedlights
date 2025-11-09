@@ -169,8 +169,35 @@ fun LiveRideScreen(
     // Show save dialog if needed
     if (uiState is RideRecordingUiState.ShowingSaveDialog) {
         val ride = (uiState as RideRecordingUiState.ShowingSaveDialog).ride
+
+        // Calculate markers from polyline data for map preview
+        val markers = remember(polylineData) {
+            polylineData?.let { data ->
+                if (data.points.isNotEmpty()) {
+                    listOf(
+                        com.example.bikeredlights.domain.model.MarkerData(
+                            position = data.points.first(),
+                            type = com.example.bikeredlights.domain.model.MarkerType.START,
+                            title = "Start",
+                            visible = true
+                        ),
+                        com.example.bikeredlights.domain.model.MarkerData(
+                            position = data.points.last(),
+                            type = com.example.bikeredlights.domain.model.MarkerType.END,
+                            title = "End",
+                            visible = true
+                        )
+                    )
+                } else {
+                    emptyList()
+                }
+            } ?: emptyList()
+        }
+
         SaveRideDialog(
             ride = ride,
+            polylineData = polylineData,
+            markers = markers,
             onSave = { viewModel.saveRide() },
             onDiscard = { viewModel.discardRide() }
         )

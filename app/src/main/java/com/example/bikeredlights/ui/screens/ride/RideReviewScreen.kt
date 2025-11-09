@@ -15,10 +15,15 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.bikeredlights.domain.model.Ride
+import com.example.bikeredlights.ui.components.map.BikeMap
+import com.example.bikeredlights.ui.components.map.RoutePolyline
+import com.example.bikeredlights.ui.components.map.StartEndMarkers
 import com.example.bikeredlights.ui.components.ride.RideStatistics
 import com.example.bikeredlights.ui.components.ride.formatDuration
 import com.example.bikeredlights.ui.viewmodel.RideReviewUiState
 import com.example.bikeredlights.ui.viewmodel.RideReviewViewModel
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.maps.android.compose.rememberCameraPositionState
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -62,6 +67,9 @@ fun RideReviewScreen(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val unitsSystem by viewModel.unitsSystem.collectAsStateWithLifecycle()
+    val polylineData by viewModel.polylineData.collectAsStateWithLifecycle()
+    val mapBounds by viewModel.mapBounds.collectAsStateWithLifecycle()
+    val markers by viewModel.markers.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -100,6 +108,9 @@ fun RideReviewScreen(
                     RideReviewContent(
                         ride = state.ride,
                         unitsSystem = unitsSystem,
+                        polylineData = polylineData,
+                        mapBounds = mapBounds,
+                        markers = markers,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -164,14 +175,31 @@ private fun ErrorContent(
 }
 
 /**
- * Main content displaying ride statistics.
+ * Main content displaying ride statistics with map.
  */
 @Composable
 private fun RideReviewContent(
     ride: Ride,
     unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
+    polylineData: com.example.bikeredlights.domain.model.PolylineData?,
+    mapBounds: com.example.bikeredlights.domain.model.MapBounds?,
+    markers: List<com.example.bikeredlights.domain.model.MarkerData>,
     modifier: Modifier = Modifier
 ) {
+    val cameraPositionState = rememberCameraPositionState()
+
+    // Auto-zoom map to fit the entire route
+    LaunchedEffect(mapBounds) {
+        mapBounds?.let { bounds ->
+            cameraPositionState.animate(
+                CameraUpdateFactory.newLatLngBounds(
+                    bounds.bounds,
+                    bounds.padding
+                ),
+                durationMs = bounds.animationDurationMs
+            )
+        }
+    }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -188,12 +216,20 @@ private fun RideReviewContent(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        // Map placeholder
-        MapPlaceholder(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-        )
+        // Map showing complete route (if GPS data available)
+        if (polylineData != null) {
+            BikeMap(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp),
+                cameraPositionState = cameraPositionState,
+                showMyLocationButton = false,
+                showZoomControls = true
+            ) {
+                RoutePolyline(polylineData = polylineData)
+                StartEndMarkers(markers = markers)
+            }
+        }
 
         // Ride statistics (reuse component from live screen)
         RideStatistics(
@@ -205,34 +241,6 @@ private fun RideReviewContent(
 
         // Summary section
         SummarySection(ride, unitsSystem)
-    }
-}
-
-/**
- * Map placeholder message.
- * Map visualization will be added in v0.4.0.
- */
-@Composable
-private fun MapPlaceholder(
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Map visualization\ncoming in v0.4.0",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
     }
 }
 
