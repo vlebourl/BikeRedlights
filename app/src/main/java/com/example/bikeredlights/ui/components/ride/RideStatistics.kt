@@ -88,15 +88,10 @@ fun RideStatistics(
             val speedUnit = RideRecordingViewModel.getSpeedUnit(unitsSystem)
 
             Text(
-                text = String.format("%.1f", convertedSpeed),
+                text = String.format("%.1f %s", convertedSpeed, speedUnit),
                 style = MaterialTheme.typography.displayLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = speedUnit,
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             // Duration and Distance (secondary metrics)
@@ -248,15 +243,10 @@ private fun SpeedMetric(
         val speedUnit = RideRecordingViewModel.getSpeedUnit(unitsSystem)
 
         Text(
-            text = String.format("%.1f", convertedSpeed),
-            style = MaterialTheme.typography.titleLarge,
+            text = String.format("%.1f %s", convertedSpeed, speedUnit),
+            style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center
-        )
-        Text(
-            text = speedUnit,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
