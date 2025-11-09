@@ -205,8 +205,8 @@
 - [ ] T098 [P] Code cleanup: Remove any debug logging, commented code, or temporary test screens
 - [ ] T099 [P] Verify all commits follow conventional commit format: `feat(domain): add GetRoutePolylineUseCase`, etc.
 - [ ] T100 Run quickstart.md validation: Follow all verification checklists in `specs/006-map/quickstart.md`
-- [ ] T101 Update TODO.md: Move feature 006 from "In Progress" to "Completed" with completion date
-- [ ] T102 Update RELEASE.md: Move "Maps Integration" from "Unreleased" section to v0.5.0 release section
+- [X] T101 Update TODO.md: Move feature 006 from "In Progress" to "Completed" with completion date
+- [X] T102 Update RELEASE.md: Move "Maps Integration" from "Unreleased" section to v0.6.0 release section
 - [ ] T103 Create pull request with detailed description, link to spec.md, emulator testing confirmation
 - [ ] T104 Request code review and address feedback
 - [ ] T105 Merge PR to main after approval
