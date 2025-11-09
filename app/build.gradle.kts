@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.secrets.gradle.plugin)
     jacoco
 }
 
@@ -88,6 +89,18 @@ android {
     }
 }
 
+// Configure Secrets Gradle Plugin to load API keys from secrets.properties
+secrets {
+    // File containing API keys (gitignored)
+    propertiesFileName = "secrets.properties"
+
+    // Fallback file with placeholder values (checked into git)
+    defaultPropertiesFileName = "local.defaults.properties"
+
+    // Ignore missing secrets file in CI/CD (not needed for our use case)
+    ignoreList.add("sdk.*")
+}
+
 dependencies {
     // AndroidX Core
     implementation(libs.androidx.core.ktx)
@@ -128,6 +141,11 @@ dependencies {
 
     // Location Services
     implementation(libs.play.services.location)
+
+    // Google Maps
+    implementation(libs.maps.compose)
+    implementation(libs.play.services.maps)
+    implementation(libs.maps.utils)
 
     // Lifecycle
     implementation(libs.androidx.lifecycle.runtime.ktx)

@@ -8,6 +8,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,6 +27,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.bikeredlights.ui.components.map.BikeMap
+import com.example.bikeredlights.ui.components.map.LocationMarker
+import com.example.bikeredlights.ui.components.map.RoutePolyline
 import com.example.bikeredlights.ui.components.ride.KeepScreenOn
 import com.example.bikeredlights.ui.components.ride.RideControls
 import com.example.bikeredlights.ui.components.ride.RideStatistics
@@ -32,11 +37,14 @@ import com.example.bikeredlights.ui.components.ride.SaveRideDialog
 import com.example.bikeredlights.ui.viewmodel.NavigationEvent
 import com.example.bikeredlights.ui.viewmodel.RideRecordingUiState
 import com.example.bikeredlights.ui.viewmodel.RideRecordingViewModel
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 /**
  * Live Ride Screen for starting and stopping ride recording.
@@ -66,6 +74,34 @@ fun LiveRideScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val unitsSystem by viewModel.unitsSystem.collectAsStateWithLifecycle()
     val currentSpeed by viewModel.currentSpeed.collectAsStateWithLifecycle()
+
+    // Map state (Feature 006)
+    val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
+    val polylineData by viewModel.polylineData.collectAsStateWithLifecycle()
+
+    // Track device's current GPS location (even when not recording)
+    var currentDeviceLocation by remember { mutableStateOf<com.google.android.gms.maps.model.LatLng?>(null) }
+
+    // Camera position state for map (zoom level 17f = city block level, 50-200m radius)
+    // Use userLocation (from recording) or currentDeviceLocation (from GPS when idle)
+    val locationForCamera = userLocation ?: currentDeviceLocation
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(
+            locationForCamera ?: com.google.android.gms.maps.model.LatLng(46.1942, 6.2347),
+            17f
+        )
+    }
+
+    // Camera following: Animate to location when it changes (Feature 006: FR-002)
+    // Tracks both recording location (userLocation) and idle device location (currentDeviceLocation)
+    LaunchedEffect(locationForCamera) {
+        locationForCamera?.let { location ->
+            cameraPositionState.animate(
+                update = com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(location, 17f),
+                durationMs = 500 // Smooth 500ms animation (meets FR-002: <500ms requirement)
+            )
+        }
+    }
 
     // Handle navigation events (one-time events via Channel)
     LaunchedEffect(Unit) {
@@ -100,6 +136,11 @@ fun LiveRideScreen(
                         cancellationTokenSource.token
                     ).addOnSuccessListener { location ->
                         if (location != null) {
+                            // Update map camera to device's current location
+                            currentDeviceLocation = com.google.android.gms.maps.model.LatLng(
+                                location.latitude,
+                                location.longitude
+                            )
                             android.util.Log.d("LiveRideScreen",
                                 "GPS pre-warmed successfully: lat=${location.latitude}, lon=${location.longitude}")
                         }
@@ -128,8 +169,35 @@ fun LiveRideScreen(
     // Show save dialog if needed
     if (uiState is RideRecordingUiState.ShowingSaveDialog) {
         val ride = (uiState as RideRecordingUiState.ShowingSaveDialog).ride
+
+        // Calculate markers from polyline data for map preview
+        val markers = remember(polylineData) {
+            polylineData?.let { data ->
+                if (data.points.isNotEmpty()) {
+                    listOf(
+                        com.example.bikeredlights.domain.model.MarkerData(
+                            position = data.points.first(),
+                            type = com.example.bikeredlights.domain.model.MarkerType.START,
+                            title = "Start",
+                            visible = true
+                        ),
+                        com.example.bikeredlights.domain.model.MarkerData(
+                            position = data.points.last(),
+                            type = com.example.bikeredlights.domain.model.MarkerType.END,
+                            title = "End",
+                            visible = true
+                        )
+                    )
+                } else {
+                    emptyList()
+                }
+            } ?: emptyList()
+        }
+
         SaveRideDialog(
             ride = ride,
+            polylineData = polylineData,
+            markers = markers,
             onSave = { viewModel.saveRide() },
             onDiscard = { viewModel.discardRide() }
         )
@@ -147,17 +215,22 @@ fun LiveRideScreen(
                 .padding(top = 16.dp, end = 16.dp)
         )
 
-        // Main content (centered)
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            when (uiState) {
+        // Main content with split-screen layout (Feature 006)
+        // Map on top, stats/controls on bottom - Material 3 design
+        when (uiState) {
             is RideRecordingUiState.Idle -> {
-                IdleContent(
-                    onStartRide = { viewModel.startRide() },
-                    modifier = Modifier.fillMaxSize()
-                )
+                // Show map even in Idle state with "Ready to ride?" message
+                // Show device's current location (not recording track points)
+                SplitScreenMapContent(
+                    cameraPositionState = cameraPositionState,
+                    userLocation = currentDeviceLocation, // Show device location when idle
+                    polylineData = null // No route when idle
+                ) {
+                    IdleContent(
+                        onStartRide = { viewModel.startRide() },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
             is RideRecordingUiState.WaitingForGps -> {
                 WaitingForGpsContent(
@@ -166,46 +239,73 @@ fun LiveRideScreen(
             }
             is RideRecordingUiState.Recording -> {
                 val ride = (uiState as RideRecordingUiState.Recording).ride
-                RecordingContent(
-                    ride = ride,
-                    currentSpeed = currentSpeed,
-                    unitsSystem = unitsSystem,
-                    onPauseRide = { viewModel.pauseRide() },
-                    onStopRide = { viewModel.stopRide() }
-                )
+                SplitScreenMapContent(
+                    cameraPositionState = cameraPositionState,
+                    userLocation = userLocation,
+                    polylineData = polylineData
+                ) {
+                    RecordingContent(
+                        ride = ride,
+                        currentSpeed = currentSpeed,
+                        unitsSystem = unitsSystem,
+                        onPauseRide = { viewModel.pauseRide() },
+                        onStopRide = { viewModel.stopRide() },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
             is RideRecordingUiState.Paused -> {
                 val ride = (uiState as RideRecordingUiState.Paused).ride
-                PausedContent(
-                    ride = ride,
-                    currentSpeed = currentSpeed,
-                    unitsSystem = unitsSystem,
-                    onResumeRide = { viewModel.resumeRide() },
-                    onStopRide = { viewModel.stopRide() }
-                )
+                SplitScreenMapContent(
+                    cameraPositionState = cameraPositionState,
+                    userLocation = userLocation,
+                    polylineData = polylineData
+                ) {
+                    PausedContent(
+                        ride = ride,
+                        currentSpeed = currentSpeed,
+                        unitsSystem = unitsSystem,
+                        onResumeRide = { viewModel.resumeRide() },
+                        onStopRide = { viewModel.stopRide() },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
             is RideRecordingUiState.AutoPaused -> {
                 val ride = (uiState as RideRecordingUiState.AutoPaused).ride
-                AutoPausedContent(
-                    ride = ride,
-                    currentSpeed = currentSpeed,
-                    unitsSystem = unitsSystem,
-                    onResumeRide = { viewModel.resumeRide() },
-                    onStopRide = { viewModel.stopRide() }
-                )
+                SplitScreenMapContent(
+                    cameraPositionState = cameraPositionState,
+                    userLocation = userLocation,
+                    polylineData = polylineData
+                ) {
+                    AutoPausedContent(
+                        ride = ride,
+                        currentSpeed = currentSpeed,
+                        unitsSystem = unitsSystem,
+                        onResumeRide = { viewModel.resumeRide() },
+                        onStopRide = { viewModel.stopRide() },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
             is RideRecordingUiState.ShowingSaveDialog -> {
-                // Dialog is shown above, show recording content underneath
+                // Dialog is shown above, show split-screen underneath
                 val ride = (uiState as RideRecordingUiState.ShowingSaveDialog).ride
-                RecordingContent(
-                    ride = ride,
-                    currentSpeed = currentSpeed,
-                    unitsSystem = unitsSystem,
-                    onPauseRide = { }, // No action while dialog is shown
-                    onStopRide = { } // No action while dialog is shown
-                )
+                SplitScreenMapContent(
+                    cameraPositionState = cameraPositionState,
+                    userLocation = userLocation,
+                    polylineData = polylineData
+                ) {
+                    RecordingContent(
+                        ride = ride,
+                        currentSpeed = currentSpeed,
+                        unitsSystem = unitsSystem,
+                        onPauseRide = { }, // No action while dialog is shown
+                        onStopRide = { }, // No action while dialog is shown
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
-        }
         }
     }
 }
@@ -322,6 +422,86 @@ private fun hasLocationPermissions(context: Context): Boolean {
 }
 
 /**
+ * Split-screen layout with map on top and content on bottom.
+ * Material 3 design with proper spacing and elevation.
+ *
+ * @param cameraPositionState Camera state for map
+ * @param userLocation Current GPS location for marker
+ * @param polylineData Route polyline data
+ * @param content Bottom half content (stats and controls)
+ */
+@Composable
+private fun SplitScreenMapContent(
+    cameraPositionState: com.google.maps.android.compose.CameraPositionState,
+    userLocation: com.google.android.gms.maps.model.LatLng?,
+    polylineData: com.example.bikeredlights.domain.model.PolylineData?,
+    content: @Composable () -> Unit
+) {
+    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
+
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // Map section (flexible, shares space equally with stats)
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            tonalElevation = 0.dp
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                BikeMap(
+                    cameraPositionState = cameraPositionState,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // Current location marker (blue)
+                    LocationMarker(location = userLocation)
+
+                    // Route polyline (red, growing in real-time)
+                    RoutePolyline(polylineData = polylineData)
+                }
+
+                // Center button (Material 3 FAB) - positioned top right to avoid zoom controls
+                FloatingActionButton(
+                    onClick = {
+                        // Recenter camera on current location
+                        userLocation?.let { location ->
+                            coroutineScope.launch {
+                                cameraPositionState.animate(
+                                    update = com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(location, 17f),
+                                    durationMs = 300
+                                )
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp),
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.MyLocation,
+                        contentDescription = "Center on current location"
+                    )
+                }
+            }
+        }
+
+        // Stats and controls section (flexible, shares space equally with map)
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            tonalElevation = 2.dp,
+            shadowElevation = 4.dp
+        ) {
+            content()
+        }
+    }
+}
+
+/**
  * Content shown when recording is active.
  */
 @Composable
@@ -336,37 +516,50 @@ private fun RecordingContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Status indicator
-        Text(
-            text = "Recording",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold
-        )
+        // Status indicator - compact icon instead of text to save space
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(top = 8.dp, bottom = 6.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .background(MaterialTheme.colorScheme.error, CircleShape)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "REC",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.error,
+                fontWeight = FontWeight.Bold
+            )
+        }
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Ride statistics (duration, distance, speeds)
+        // Ride statistics (duration, distance, speeds) - expands to fill available space
         RideStatistics(
             ride = ride,
             currentSpeed = currentSpeed, // Real-time GPS speed (Feature 005)
             unitsSystem = unitsSystem,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        // Control buttons (pause, stop)
+        // Control buttons section (fixed height at bottom, just enough for buttons)
         RideControls(
             isPaused = false,
             onPauseClick = onPauseRide,
             onResumeClick = { }, // Not used when not paused
             onStopClick = onStopRide,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
         )
     }
 }
@@ -386,37 +579,50 @@ private fun PausedContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Status indicator
-        Text(
-            text = "Paused",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.secondary,
-            fontWeight = FontWeight.Bold
-        )
+        // Status indicator - compact to save space
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(top = 8.dp, bottom = 6.dp)
+        ) {
+            Text(
+                text = "⏸",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.secondary
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = "PAUSED",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary,
+                fontWeight = FontWeight.Bold
+            )
+        }
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Ride statistics (frozen at pause time)
+        // Ride statistics (frozen at pause time) - expands to fill available space
         RideStatistics(
             ride = ride,
             currentSpeed = currentSpeed, // 0.0 when paused (reset by service)
             unitsSystem = unitsSystem,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        // Control buttons (resume, stop)
+        // Control buttons section (fixed height at bottom, just enough for buttons)
         RideControls(
             isPaused = true,
             onPauseClick = { }, // Not used when paused
             onResumeClick = onResumeRide,
             onStopClick = onStopRide,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
         )
     }
 }
@@ -437,37 +643,50 @@ private fun AutoPausedContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Status indicator
-        Text(
-            text = "Auto-paused",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.tertiary,
-            fontWeight = FontWeight.Bold
-        )
+        // Status indicator - compact to save space
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(top = 8.dp, bottom = 6.dp)
+        ) {
+            Text(
+                text = "⏸",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.tertiary
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = "AUTO-PAUSED",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.tertiary,
+                fontWeight = FontWeight.Bold
+            )
+        }
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Ride statistics (frozen at auto-pause)
+        // Ride statistics (frozen at auto-pause) - expands to fill available space
         RideStatistics(
             ride = ride,
             currentSpeed = currentSpeed, // Real-time (may trigger auto-resume if > 1 km/h)
             unitsSystem = unitsSystem,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        // Control buttons (resume, stop)
+        // Control buttons section (fixed height at bottom, just enough for buttons)
         RideControls(
             isPaused = true,
             onPauseClick = { }, // Not used when auto-paused
             onResumeClick = onResumeRide,
             onStopClick = onStopRide,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
         )
     }
 }

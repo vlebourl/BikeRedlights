@@ -28,6 +28,9 @@ keystore.properties
 .env.*
 !.env.example
 
+# Google Maps API Keys (NEVER COMMIT THESE!)
+secrets.properties
+
 # IDE
 *.swp
 *.swo
