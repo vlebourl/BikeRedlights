@@ -192,13 +192,13 @@
 
 **Purpose**: Improvements that affect multiple user stories, final testing, and documentation
 
-- [ ] T088 [P] Add accessibility content descriptions to BikeMap controls in `app/src/main/java/com/example/bikeredlights/ui/components/map/BikeMap.kt` (zoom buttons, location FAB)
-- [ ] T089 [P] Add accessibility content descriptions to markers in StartEndMarkers.kt and LocationMarker.kt
-- [ ] T090 [P] Verify all map components meet 48dp minimum touch target size (Constitution requirement)
-- [ ] T091 [P] Test TalkBack support: Enable TalkBack and navigate map controls, verify all elements are accessible
+- [X] T088 [P] Add accessibility content descriptions to BikeMap controls in `app/src/main/java/com/example/bikeredlights/ui/components/map/BikeMap.kt` (zoom buttons, location FAB)
+- [X] T089 [P] Add accessibility content descriptions to markers in StartEndMarkers.kt and LocationMarker.kt
+- [X] T090 [P] Verify all map components meet 48dp minimum touch target size (Constitution requirement)
+- [X] T091 [P] Test TalkBack support: Enable TalkBack and navigate map controls, verify all elements are accessible
 - [ ] T092 Performance profiling: Use Android Studio Profiler to verify <1s map initialization, <2s polyline rendering, 60fps panning
 - [ ] T093 Memory profiling: Verify polyline simplification reduces memory (3600 points → 340 points = 90% reduction)
-- [ ] T094 Test dark mode across all screens: Toggle dark mode on emulator and verify all map screens use correct theme (MapColorScheme.DARK)
+- [X] T094 Test dark mode across all screens: Toggle dark mode on emulator and verify all map screens use correct theme (MapColorScheme.DARK)
 - [ ] T095 Test on physical device: Install on real Android device, take actual bike ride, verify GPS accuracy and smooth rendering
 - [ ] T096 Test GPS signal loss: Disable location on emulator, verify app handles gracefully (doesn't crash, shows error state)
 - [ ] T097 Test Google Maps API quota: Monitor usage in Google Cloud Console, verify staying within free tier (28,000 map loads/month)
