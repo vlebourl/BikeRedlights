@@ -73,14 +73,15 @@ fun RideStatistics(
     val currentDuration = ride.movingDurationMillis
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxSize()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceEvenly
         ) {
             // Current speed (hero metric - safety critical)
             val convertedSpeed = RideRecordingViewModel.convertSpeed(currentSpeed, unitsSystem)
@@ -94,11 +95,9 @@ fun RideStatistics(
             )
             Text(
                 text = speedUnit,
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
 
             // Duration and Distance (secondary metrics)
             Row(
@@ -146,8 +145,6 @@ fun RideStatistics(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
             // Speed metrics grid (2 columns)
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -169,8 +166,6 @@ fun RideStatistics(
                     modifier = Modifier.weight(1f)
                 )
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
 
             // Paused and Immobile time (2 columns)
             Row(
@@ -247,7 +242,6 @@ private fun SpeedMetric(
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(modifier = Modifier.height(4.dp))
 
         // Convert m/s to km/h or mph based on units system
         val convertedSpeed = RideRecordingViewModel.convertSpeed(speed, unitsSystem)
@@ -261,7 +255,7 @@ private fun SpeedMetric(
         )
         Text(
             text = speedUnit,
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }

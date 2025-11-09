@@ -8,6 +8,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +44,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 /**
  * Live Ride Screen for starting and stopping ride recording.
@@ -76,18 +79,23 @@ fun LiveRideScreen(
     val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
     val polylineData by viewModel.polylineData.collectAsStateWithLifecycle()
 
+    // Track device's current GPS location (even when not recording)
+    var currentDeviceLocation by remember { mutableStateOf<com.google.android.gms.maps.model.LatLng?>(null) }
+
     // Camera position state for map (zoom level 17f = city block level, 50-200m radius)
-    // Default to Annemasse, France (6.2347°E, 46.1942°N) when no user location
+    // Use userLocation (from recording) or currentDeviceLocation (from GPS when idle)
+    val locationForCamera = userLocation ?: currentDeviceLocation
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
-            userLocation ?: com.google.android.gms.maps.model.LatLng(46.1942, 6.2347),
+            locationForCamera ?: com.google.android.gms.maps.model.LatLng(46.1942, 6.2347),
             17f
         )
     }
 
-    // Camera following: Animate to user location when it changes (Feature 006: FR-002)
-    LaunchedEffect(userLocation) {
-        userLocation?.let { location ->
+    // Camera following: Animate to location when it changes (Feature 006: FR-002)
+    // Tracks both recording location (userLocation) and idle device location (currentDeviceLocation)
+    LaunchedEffect(locationForCamera) {
+        locationForCamera?.let { location ->
             cameraPositionState.animate(
                 update = com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(location, 17f),
                 durationMs = 500 // Smooth 500ms animation (meets FR-002: <500ms requirement)
@@ -128,6 +136,11 @@ fun LiveRideScreen(
                         cancellationTokenSource.token
                     ).addOnSuccessListener { location ->
                         if (location != null) {
+                            // Update map camera to device's current location
+                            currentDeviceLocation = com.google.android.gms.maps.model.LatLng(
+                                location.latitude,
+                                location.longitude
+                            )
                             android.util.Log.d("LiveRideScreen",
                                 "GPS pre-warmed successfully: lat=${location.latitude}, lon=${location.longitude}")
                         }
@@ -180,9 +193,10 @@ fun LiveRideScreen(
         when (uiState) {
             is RideRecordingUiState.Idle -> {
                 // Show map even in Idle state with "Ready to ride?" message
+                // Show device's current location (not recording track points)
                 SplitScreenMapContent(
                     cameraPositionState = cameraPositionState,
-                    userLocation = userLocation,
+                    userLocation = currentDeviceLocation, // Show device location when idle
                     polylineData = null // No route when idle
                 ) {
                     IdleContent(
@@ -396,29 +410,58 @@ private fun SplitScreenMapContent(
     polylineData: com.example.bikeredlights.domain.model.PolylineData?,
     content: @Composable () -> Unit
 ) {
+    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Map section (top 50% of screen)
+        // Map section (flexible, shares space equally with stats)
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
             tonalElevation = 0.dp
         ) {
-            BikeMap(
-                cameraPositionState = cameraPositionState,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                // Current location marker (blue)
-                LocationMarker(location = userLocation)
+            Box(modifier = Modifier.fillMaxSize()) {
+                BikeMap(
+                    cameraPositionState = cameraPositionState,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // Current location marker (blue)
+                    LocationMarker(location = userLocation)
 
-                // Route polyline (red, growing in real-time)
-                RoutePolyline(polylineData = polylineData)
+                    // Route polyline (red, growing in real-time)
+                    RoutePolyline(polylineData = polylineData)
+                }
+
+                // Center button (Material 3 FAB) - positioned top right to avoid zoom controls
+                FloatingActionButton(
+                    onClick = {
+                        // Recenter camera on current location
+                        userLocation?.let { location ->
+                            coroutineScope.launch {
+                                cameraPositionState.animate(
+                                    update = com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(location, 17f),
+                                    durationMs = 300
+                                )
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp),
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.MyLocation,
+                        contentDescription = "Center on current location"
+                    )
+                }
             }
         }
 
-        // Stats and controls section (bottom 50% of screen)
+        // Stats and controls section (flexible, shares space equally with map)
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
@@ -446,37 +489,50 @@ private fun RecordingContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Status indicator
-        Text(
-            text = "Recording",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold
-        )
+        // Status indicator - compact icon instead of text to save space
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(top = 8.dp, bottom = 6.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .background(MaterialTheme.colorScheme.error, CircleShape)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "REC",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.error,
+                fontWeight = FontWeight.Bold
+            )
+        }
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Ride statistics (duration, distance, speeds)
+        // Ride statistics (duration, distance, speeds) - expands to fill available space
         RideStatistics(
             ride = ride,
             currentSpeed = currentSpeed, // Real-time GPS speed (Feature 005)
             unitsSystem = unitsSystem,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        // Control buttons (pause, stop)
+        // Control buttons section (fixed height at bottom, just enough for buttons)
         RideControls(
             isPaused = false,
             onPauseClick = onPauseRide,
             onResumeClick = { }, // Not used when not paused
             onStopClick = onStopRide,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
         )
     }
 }
@@ -496,37 +552,50 @@ private fun PausedContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Status indicator
-        Text(
-            text = "Paused",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.secondary,
-            fontWeight = FontWeight.Bold
-        )
+        // Status indicator - compact to save space
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(top = 8.dp, bottom = 6.dp)
+        ) {
+            Text(
+                text = "⏸",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.secondary
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = "PAUSED",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary,
+                fontWeight = FontWeight.Bold
+            )
+        }
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Ride statistics (frozen at pause time)
+        // Ride statistics (frozen at pause time) - expands to fill available space
         RideStatistics(
             ride = ride,
             currentSpeed = currentSpeed, // 0.0 when paused (reset by service)
             unitsSystem = unitsSystem,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        // Control buttons (resume, stop)
+        // Control buttons section (fixed height at bottom, just enough for buttons)
         RideControls(
             isPaused = true,
             onPauseClick = { }, // Not used when paused
             onResumeClick = onResumeRide,
             onStopClick = onStopRide,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
         )
     }
 }
@@ -547,37 +616,50 @@ private fun AutoPausedContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Status indicator
-        Text(
-            text = "Auto-paused",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.tertiary,
-            fontWeight = FontWeight.Bold
-        )
+        // Status indicator - compact to save space
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(top = 8.dp, bottom = 6.dp)
+        ) {
+            Text(
+                text = "⏸",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.tertiary
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = "AUTO-PAUSED",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.tertiary,
+                fontWeight = FontWeight.Bold
+            )
+        }
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Ride statistics (frozen at auto-pause)
+        // Ride statistics (frozen at auto-pause) - expands to fill available space
         RideStatistics(
             ride = ride,
             currentSpeed = currentSpeed, // Real-time (may trigger auto-resume if > 1 km/h)
             unitsSystem = unitsSystem,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        // Control buttons (resume, stop)
+        // Control buttons section (fixed height at bottom, just enough for buttons)
         RideControls(
             isPaused = true,
             onPauseClick = { }, // Not used when auto-paused
             onResumeClick = onResumeRide,
             onStopClick = onStopRide,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
         )
     }
 }
