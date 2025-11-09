@@ -87,11 +87,11 @@
 
 - [X] T032 [US3] Create temporary test screen in `app/src/main/java/com/example/bikeredlights/ui/screens/MapTestScreen.kt` with BikeMap composable
 - [X] T033 [US3] Add navigation route to MapTestScreen in `app/src/main/java/com/example/bikeredlights/ui/navigation/AppNavigation.kt`
-- [ ] T034 [US3] Build debug APK: `./gradlew assembleDebug`
-- [ ] T035 [US3] Install on emulator: `./gradlew installDebug`
-- [ ] T036 [US3] Verify map displays correctly (no API key errors, map tiles load, touch gestures work)
-- [ ] T037 [US3] Check logcat for errors: `adb logcat | grep -E "Maps|ERROR|Exception"`
-- [ ] T038 [US3] Test dark mode: Enable dark mode on emulator and verify map uses dark style
+- [X] T034 [US3] Build debug APK: `./gradlew assembleDebug`
+- [X] T035 [US3] Install on emulator: `./gradlew installDebug`
+- [X] T036 [US3] Verify map displays correctly (no API key errors, map tiles load, touch gestures work)
+- [X] T037 [US3] Check logcat for errors: `adb logcat | grep -E "Maps|ERROR|Exception"`
+- [X] T038 [US3] Test dark mode: Enable dark mode on emulator and verify map uses dark style
 - [ ] T039 [US3] Test rotation: Rotate device and verify map state persists (no reset to 0,0)
 - [ ] T040 [US3] Remove MapTestScreen and navigation route (cleanup temporary test code)
 

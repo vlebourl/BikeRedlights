@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
+import androidx.compose.ui.platform.LocalContext
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
@@ -69,15 +70,30 @@ fun BikeMap(
     content: @Composable () -> Unit = {}
 ) {
     val isDarkMode = isSystemInDarkTheme()
+    val context = LocalContext.current
 
-    // Map properties for Material 3 theming
-    // Note: For full dark mode support, create res/raw/dark_map_style.json
-    // and use: MapStyleOptions.loadRawResourceStyle(LocalContext.current, R.raw.dark_map_style)
+    // Map properties for Material 3 theming with dark mode support
+    // Using Google's predefined dark mode style JSON
     val mapProperties = remember(isDarkMode, mapType) {
         MapProperties(
             mapType = mapType,
-            isMyLocationEnabled = false // We'll handle location markers manually for better control
-            // mapStyleOptions can be added later for custom dark mode styling
+            isMyLocationEnabled = false, // We'll handle location markers manually for better control
+            mapStyleOptions = if (isDarkMode) {
+                // Simple dark mode JSON style
+                MapStyleOptions("""
+                    [
+                      {"elementType": "geometry", "stylers": [{"color": "#242f3e"}]},
+                      {"elementType": "labels.text.fill", "stylers": [{"color": "#746855"}]},
+                      {"elementType": "labels.text.stroke", "stylers": [{"color": "#242f3e"}]},
+                      {"featureType": "road", "elementType": "geometry", "stylers": [{"color": "#38414e"}]},
+                      {"featureType": "road", "elementType": "geometry.stroke", "stylers": [{"color": "#212a37"}]},
+                      {"featureType": "road", "elementType": "labels.text.fill", "stylers": [{"color": "#9ca5b3"}]},
+                      {"featureType": "water", "elementType": "geometry", "stylers": [{"color": "#17263c"}]}
+                    ]
+                """.trimIndent())
+            } else {
+                null // Use default light style
+            }
         )
     }
 
