@@ -11,7 +11,16 @@ _Features and changes completed but not yet released_
 - None yet
 
 ### ✨ Features Added
-- None yet
+- **Maps Integration (Feature 1B/006)**: Add Google Maps SDK to display real-time route tracking on Live tab and complete route visualization on Review Screen
+  - Live tab map with current location marker (blue dot)
+  - Real-time route polyline showing path traveled during recording
+  - Automatic map centering following rider's position
+  - Appropriate zoom level for cycling speed (50-200m radius, city block level)
+  - Review Screen map with complete GPS track polyline
+  - Start/end markers on Review Screen (green pin → red flag)
+  - Auto-zoom to fit entire route on Review Screen
+  - Google Maps SDK setup with API key configuration
+  - Specification: [spec](specs/006-map/spec.md)
 
 ---
 

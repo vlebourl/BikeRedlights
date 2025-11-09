@@ -7,7 +7,25 @@
 
 _Features currently being developed_
 
-_(No features in progress - ready for new work)_
+### Feature 006: Maps Integration (Feature 1B)
+- **Started**: 2025-11-08
+- **Status**: Specification complete, ready for planning
+- **Description**: Add Google Maps SDK integration to display real-time route tracking on Live tab and complete route visualization on Review Screen
+- **Tasks**:
+  - [x] Create feature specification (spec.md)
+  - [x] Validate specification quality (requirements.md checklist)
+  - [ ] Generate implementation plan (/speckit.plan)
+  - [ ] Implement Google Maps SDK setup
+  - [ ] Add map to Live tab with current location marker
+  - [ ] Add real-time route polyline to Live tab
+  - [ ] Add complete route map to Review Screen
+  - [ ] Add start/end markers to Review Screen
+  - [ ] Test on emulator with GPS simulation
+  - [ ] Test on physical device
+  - [ ] Create pull request
+  - [ ] Release v0.5.0
+- **Blockers**: None
+- **Specification**: specs/006-map/spec.md
 
 ---
 
