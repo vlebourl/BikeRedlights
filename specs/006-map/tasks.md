@@ -157,18 +157,18 @@
 
 ### Implementation for User Story 2
 
-- [ ] T065 [P] [US2] Create `app/src/main/java/com/example/bikeredlights/ui/components/map/StartEndMarkers.kt` composable to render list of MarkerData with correct icons via MarkerType.toIcon()
-- [ ] T066 [US2] Create or update `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideDetailViewModel.kt` to expose trackPoints StateFlow from RideRepository.getTrackPointsForRide(rideId)
-- [ ] T067 [US2] Add polylineData StateFlow to RideDetailViewModel by mapping trackPoints through GetRoutePolylineUseCase
-- [ ] T068 [US2] Add mapBounds StateFlow to RideDetailViewModel by mapping trackPoints through CalculateMapBoundsUseCase
-- [ ] T069 [US2] Add markers StateFlow to RideDetailViewModel by mapping trackPoints through FormatMapMarkersUseCase
-- [ ] T070 [US2] Update `app/src/main/java/com/example/bikeredlights/ui/screens/ride/RideReviewScreen.kt` (or RideDetailScreen) to add BikeMap with polylineData and markers
-- [ ] T071 [US2] Add LaunchedEffect in Review Screen to animate camera with mapBounds using CameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(bounds, padding), durationMs)
-- [ ] T072 [US2] Add StartEndMarkers composable to Review Screen map content
-- [ ] T073 [US2] Add RoutePolyline composable to Review Screen map content with Material 3 primary color
-- [ ] T074 [US2] Handle edge case: single-point route (no bounds, use fixed zoom 17f)
-- [ ] T075 [US2] Handle edge case: empty track points (show empty state or fallback message)
-- [ ] T076 [US2] Handle edge case: very long route (100+ km, auto-bounds handles correctly)
+- [X] T065 [P] [US2] Create `app/src/main/java/com/example/bikeredlights/ui/components/map/StartEndMarkers.kt` composable to render list of MarkerData with correct icons via MarkerType.toIcon()
+- [X] T066 [US2] Create or update `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideDetailViewModel.kt` to expose trackPoints StateFlow from RideRepository.getTrackPointsForRide(rideId)
+- [X] T067 [US2] Add polylineData StateFlow to RideDetailViewModel by mapping trackPoints through GetRoutePolylineUseCase
+- [X] T068 [US2] Add mapBounds StateFlow to RideDetailViewModel by mapping trackPoints through CalculateMapBoundsUseCase
+- [X] T069 [US2] Add markers StateFlow to RideDetailViewModel by mapping trackPoints through FormatMapMarkersUseCase
+- [X] T070 [US2] Update `app/src/main/java/com/example/bikeredlights/ui/screens/ride/RideReviewScreen.kt` (or RideDetailScreen) to add BikeMap with polylineData and markers
+- [X] T071 [US2] Add LaunchedEffect in Review Screen to animate camera with mapBounds using CameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(bounds, padding), durationMs)
+- [X] T072 [US2] Add StartEndMarkers composable to Review Screen map content
+- [X] T073 [US2] Add RoutePolyline composable to Review Screen map content with Material 3 primary color
+- [X] T074 [US2] Handle edge case: single-point route (no bounds, use fixed zoom 17f)
+- [X] T075 [US2] Handle edge case: empty track points (show empty state or fallback message)
+- [X] T076 [US2] Handle edge case: very long route (100+ km, auto-bounds handles correctly)
 
 **Integration Testing for User Story 2**
 
