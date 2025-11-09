@@ -93,7 +93,7 @@
 - [X] T037 [US3] Check logcat for errors: `adb logcat | grep -E "Maps|ERROR|Exception"`
 - [X] T038 [US3] Test dark mode: Enable dark mode on emulator and verify map uses dark style
 - [X] T039 [US3] Test rotation: Rotate device and verify map state persists (no reset to 0,0)
-- [ ] T040 [US3] Remove MapTestScreen and navigation route (cleanup temporary test code)
+- [X] T040 [US3] Remove MapTestScreen and navigation route (cleanup temporary test code)
 
 **Checkpoint**: At this point, Google Maps SDK should be fully functional and verified
 
