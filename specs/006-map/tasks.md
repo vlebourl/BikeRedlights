@@ -42,7 +42,7 @@
 - [X] T015 [P] Add Play Services Maps dependency to `app/build.gradle.kts`: `implementation("com.google.android.gms:play-services-maps:18.2.0")`
 - [X] T016 [P] Add Maps Utils dependency to `app/build.gradle.kts`: `implementation("com.google.maps.android:android-maps-utils:3.8.2")`
 - [X] T017 Sync Gradle and verify no errors
-- [ ] T018 Build debug APK and verify map initialization: `./gradlew assembleDebug && ./gradlew installDebug`
+- [X] T018 Build debug APK and verify map initialization: `./gradlew assembleDebug && ./gradlew installDebug`
 
 **Checkpoint**: Google Cloud setup complete, dependencies added, basic map can initialize
 
@@ -85,8 +85,8 @@
 
 ### Implementation for User Story 3
 
-- [ ] T032 [US3] Create temporary test screen in `app/src/main/java/com/example/bikeredlights/ui/screens/MapTestScreen.kt` with BikeMap composable
-- [ ] T033 [US3] Add navigation route to MapTestScreen in `app/src/main/java/com/example/bikeredlights/ui/navigation/AppNavigation.kt`
+- [X] T032 [US3] Create temporary test screen in `app/src/main/java/com/example/bikeredlights/ui/screens/MapTestScreen.kt` with BikeMap composable
+- [X] T033 [US3] Add navigation route to MapTestScreen in `app/src/main/java/com/example/bikeredlights/ui/navigation/AppNavigation.kt`
 - [ ] T034 [US3] Build debug APK: `./gradlew assembleDebug`
 - [ ] T035 [US3] Install on emulator: `./gradlew installDebug`
 - [ ] T036 [US3] Verify map displays correctly (no API key errors, map tiles load, touch gestures work)
@@ -115,15 +115,15 @@
 
 ### Implementation for User Story 1
 
-- [ ] T044 [P] [US1] Create `app/src/main/java/com/example/bikeredlights/ui/components/map/RoutePolyline.kt` composable to render Polyline with PolylineData (null-safe)
-- [ ] T045 [P] [US1] Create `app/src/main/java/com/example/bikeredlights/ui/components/map/LocationMarker.kt` composable to render blue marker at current location (null-safe)
-- [ ] T046 [US1] Update `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt` to expose currentRideTrackPoints StateFlow from TrackPointRepository
-- [ ] T047 [US1] Update `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt` to expose polylineData StateFlow by mapping currentRideTrackPoints through GetRoutePolylineUseCase
-- [ ] T048 [US1] Update `app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt` to add BikeMap with userLocation and polylineData
-- [ ] T049 [US1] Add LaunchedEffect in LiveRideScreen to animate camera following userLocation with CameraPositionState.animate() at zoom 17f, duration 500ms
-- [ ] T050 [US1] Add LocationMarker composable to LiveRideScreen map content
-- [ ] T051 [US1] Add RoutePolyline composable to LiveRideScreen map content with red color (Color.Red)
-- [ ] T052 [US1] Handle case when ride is not recording: only show location marker, no polyline (polylineData will be null)
+- [X] T044 [P] [US1] Create `app/src/main/java/com/example/bikeredlights/ui/components/map/RoutePolyline.kt` composable to render Polyline with PolylineData (null-safe)
+- [X] T045 [P] [US1] Create `app/src/main/java/com/example/bikeredlights/ui/components/map/LocationMarker.kt` composable to render blue marker at current location (null-safe)
+- [X] T046 [US1] Update `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt` to expose currentRideTrackPoints StateFlow from TrackPointRepository
+- [X] T047 [US1] Update `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt` to expose polylineData StateFlow by mapping currentRideTrackPoints through GetRoutePolylineUseCase
+- [X] T048 [US1] Update `app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt` to add BikeMap with userLocation and polylineData
+- [X] T049 [US1] Add LaunchedEffect in LiveRideScreen to animate camera following userLocation with CameraPositionState.animate() at zoom 17f, duration 500ms
+- [X] T050 [US1] Add LocationMarker composable to LiveRideScreen map content
+- [X] T051 [US1] Add RoutePolyline composable to LiveRideScreen map content with red color (Color.Red)
+- [X] T052 [US1] Handle case when ride is not recording: only show location marker, no polyline (polylineData will be null)
 
 **Integration Testing for User Story 1**
 
