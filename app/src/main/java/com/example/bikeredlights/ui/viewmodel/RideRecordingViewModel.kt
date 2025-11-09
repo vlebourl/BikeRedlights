@@ -104,9 +104,14 @@ class RideRecordingViewModel @Inject constructor(
      *
      * **Lifecycle**:
      * - null when no ride is recording
-     * - Latest GPS coordinates during active recording
+     * - Latest GPS coordinates during active recording (updates in real-time)
      * - Frozen at last position when ride is paused
      * - null when ride is stopped
+     *
+     * **Reactive Updates**:
+     * - Uses flatMapLatest to observe track points flow
+     * - Emits new location whenever GPS point is added during recording
+     * - Triggers automatic camera recentering in LiveRideScreen
      *
      * **Usage in UI**:
      * ```kotlin
@@ -116,27 +121,27 @@ class RideRecordingViewModel @Inject constructor(
      */
     val userLocation: StateFlow<LatLng?> =
         rideRecordingStateRepository.getRecordingState()
-            .map { state ->
+            .flatMapLatest { state ->
                 when (state) {
-                    is RideRecordingState.Recording -> {
-                        // Get latest track point for this ride
-                        trackPointRepository.getLastTrackPoint(state.rideId)?.let { point ->
-                            LatLng(point.latitude, point.longitude)
-                        }
-                    }
-                    is RideRecordingState.ManuallyPaused -> {
-                        // Keep showing last position when paused
-                        trackPointRepository.getLastTrackPoint(state.rideId)?.let { point ->
-                            LatLng(point.latitude, point.longitude)
-                        }
-                    }
+                    is RideRecordingState.Recording,
+                    is RideRecordingState.ManuallyPaused,
                     is RideRecordingState.AutoPaused -> {
-                        // Keep showing last position when auto-paused
-                        trackPointRepository.getLastTrackPoint(state.rideId)?.let { point ->
-                            LatLng(point.latitude, point.longitude)
+                        // Get current ride ID
+                        val rideId = when (state) {
+                            is RideRecordingState.Recording -> state.rideId
+                            is RideRecordingState.ManuallyPaused -> state.rideId
+                            is RideRecordingState.AutoPaused -> state.rideId
+                            else -> return@flatMapLatest kotlinx.coroutines.flow.flowOf(null)
                         }
+                        // Observe track points flow and emit latest location
+                        trackPointRepository.getTrackPointsForRideFlow(rideId)
+                            .map { trackPoints ->
+                                trackPoints.lastOrNull()?.let { point ->
+                                    LatLng(point.latitude, point.longitude)
+                                }
+                            }
                     }
-                    else -> null // Idle or stopped
+                    else -> kotlinx.coroutines.flow.flowOf(null) // Idle or stopped
                 }
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
