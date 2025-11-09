@@ -1,6 +1,7 @@
 package com.example.bikeredlights.ui.components.map
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import com.example.bikeredlights.domain.model.MarkerType
 import com.example.bikeredlights.domain.model.toIcon
 import com.google.android.gms.maps.model.LatLng
@@ -40,7 +41,7 @@ fun LocationMarker(
     if (location == null) return
 
     Marker(
-        state = MarkerState(position = location),
+        state = remember(location) { MarkerState(position = location) },
         title = title,
         icon = MarkerType.CURRENT.toIcon()
     )
