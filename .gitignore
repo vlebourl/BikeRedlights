@@ -15,6 +15,7 @@ local.properties
 *.jks
 *.keystore
 keystore.properties
+bikeredlights-signing-keys/
 
 # APK/AAB files (optional - can commit for releases if desired)
 *.apk
