@@ -17,6 +17,7 @@ import com.google.maps.android.compose.MarkerState
  *
  * Loads the navigation arrow icon from drawable resources and converts it to a BitmapDescriptor.
  * The arrow points upward (north) and will be rotated via the Marker's rotation parameter.
+ * Scales the icon to a reasonable size for map display (64dp).
  *
  * @param context Android context for accessing drawable resources
  * @return BitmapDescriptor of the navigation arrow icon
@@ -29,14 +30,18 @@ private fun createNavigationArrowIcon(context: android.content.Context): BitmapD
     )
 
     if (drawable != null) {
-        // Convert drawable to bitmap
+        // Target size in pixels (64dp * density for high-DPI screens)
+        val density = context.resources.displayMetrics.density
+        val targetSize = (64 * density).toInt() // 64dp in pixels
+
+        // Create bitmap at target size (scaled from original)
         val bitmap = Bitmap.createBitmap(
-            drawable.intrinsicWidth.takeIf { it > 0 } ?: 96,
-            drawable.intrinsicHeight.takeIf { it > 0 } ?: 96,
+            targetSize,
+            targetSize,
             Bitmap.Config.ARGB_8888
         )
         val canvas = Canvas(bitmap)
-        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.setBounds(0, 0, targetSize, targetSize)
         drawable.draw(canvas)
         return BitmapDescriptorFactory.fromBitmap(bitmap)
     }
