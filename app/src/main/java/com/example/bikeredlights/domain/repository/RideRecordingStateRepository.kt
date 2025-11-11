@@ -85,4 +85,31 @@ interface RideRecordingStateRepository {
      * @return StateFlow emitting current speed in m/s (0.0 when not recording)
      */
     fun getCurrentSpeed(): StateFlow<Double>
+
+    /**
+     * Get current GPS bearing (heading direction) in degrees as a StateFlow (Feature 007 - v0.6.1).
+     *
+     * **Flow Behavior**:
+     * - Hot Flow (StateFlow)
+     * - Always has a value (defaults to null)
+     * - Emits on bearing updates from GPS
+     * - Retains last known bearing on pause
+     * - Resets to null on stop
+     *
+     * **Lifecycle**:
+     * - null when no ride is recording
+     * - Real-time GPS bearing (0-360 degrees) during active recording
+     * - Retains last known bearing when ride is paused
+     * - null when ride is stopped
+     * - null if GPS bearing unavailable (stationary, poor signal)
+     *
+     * **Bearing Values**:
+     * - 0° = North
+     * - 90° = East
+     * - 180° = South
+     * - 270° = West
+     *
+     * @return StateFlow emitting current bearing in degrees (null when unavailable)
+     */
+    fun getCurrentBearing(): StateFlow<Float?>
 }

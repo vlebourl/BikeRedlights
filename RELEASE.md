@@ -7,11 +7,41 @@
 
 _Features and changes completed but not yet released_
 
-### 🐛 Bugs Fixed
-- None yet
-
 ### ✨ Features Added
-- None yet
+
+**Feature 007: Map UX Improvements (v0.6.1 Patch)** ([spec](specs/007-map-ux-improvements/spec.md) | [plan](specs/007-map-ux-improvements/plan.md) | [tasks](specs/007-map-ux-improvements/tasks.md))
+
+- **User Story 1 (P1): Directional Map Orientation** ✅
+  - Map rotates to follow rider's heading direction for intuitive navigation
+  - Smooth 300ms animation with 5-degree debouncing prevents jitter from GPS fluctuations
+  - Automatic north-up fallback when bearing unavailable (stationary or no GPS heading)
+  - Implemented using CameraPosition animation in BikeMap composable
+
+- **User Story 2 (P1): Directional Location Marker** ✅
+  - Location marker rotates to show heading direction using Google Maps Marker rotation
+  - Displays heading degrees in marker title when moving (e.g., "Current Location (heading 45°)")
+  - Standard blue pin marker when stationary (bearing = null)
+  - Completed ride screens (RideDetail/RideReview) continue showing static start/end markers
+
+- **User Story 3 (P2): Real-Time Pause Counter** ✅
+  - Pause duration updates every second while paused (MM:SS format)
+  - Uses Flow.flatMapLatest pattern with 1-second emission intervals
+  - Shows real-time counter plus accumulated pauses from database
+  - Survives screen lock with lifecycle-aware WhileSubscribed(5000)
+  - Integrated in RideStatistics composable on Live tab
+
+- **User Story 4 (P2): Granular Auto-Pause Settings** ✅
+  - 6 granular timing options: 1s, 2s, 5s, 10s, 15s, 30s (previously: 5-60s in 5s increments)
+  - Default threshold improved from 30s → 5s for urban cycling scenarios
+  - Quick traffic light stops (1-2s), general purpose (5s), rest breaks (30s)
+  - Updated AutoPauseConfig.VALID_THRESHOLDS validation
+  - Existing Settings UI automatically displays new options
+
+### 🏗️ Architecture Improvements
+- Added bearing extraction pipeline: Service → Repository → ViewModel → UI
+- Exposed `currentBearing: StateFlow<Float?>` in RideRecordingViewModel
+- Bearing retained during pause (reset only on stop per design)
+- Wired pause counter to RideStatistics for all states (Recording/Paused/AutoPaused)
 
 ---
 

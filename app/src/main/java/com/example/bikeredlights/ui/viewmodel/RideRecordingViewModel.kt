@@ -70,6 +70,63 @@ class RideRecordingViewModel @Inject constructor(
     // Track current ride observation job for cancellation
     private var rideObservationJob: kotlinx.coroutines.Job? = null
 
+    /**
+     * Pause start timestamp for real-time pause counter (Feature 007 - v0.6.1, US3).
+     *
+     * **Lifecycle**:
+     * - null when not paused
+     * - Set to Instant.now() when pause begins (manual or auto-pause)
+     * - Reset to null when ride resumes
+     * - Reset to null when ride stops
+     *
+     * **Usage**: Drives pausedDuration Flow for real-time UI updates
+     */
+    private val _pauseStartTime = MutableStateFlow<java.time.Instant?>(null)
+
+    /**
+     * Real-time elapsed pause duration (Feature 007 - v0.6.1, US3).
+     *
+     * **Flow Behavior**:
+     * - Emits Duration.ZERO when not paused
+     * - Emits updated duration every ~1 second while paused
+     * - Uses flatMapLatest to switch between idle and counting flows
+     *
+     * **Lifecycle**:
+     * - Duration.ZERO when not paused
+     * - Increments from 0s → 1s → 2s → ... while paused
+     * - Resets to ZERO when ride resumes
+     * - Continues counting in background (wall-clock time)
+     *
+     * **Performance**:
+     * - WhileSubscribed(5000): Stops updates when UI not visible
+     * - delay(1000): Non-blocking coroutine suspension
+     * - Lifecycle-aware via collectAsStateWithLifecycle in UI
+     *
+     * **Usage in UI**:
+     * ```kotlin
+     * val pausedDuration by viewModel.pausedDuration.collectAsStateWithLifecycle()
+     * if (isPaused) {
+     *     val minutes = pausedDuration.toMinutes()
+     *     val seconds = pausedDuration.seconds % 60
+     *     Text("Paused: $minutes:${"%02d".format(seconds)}")
+     * }
+     * ```
+     */
+    val pausedDuration: StateFlow<java.time.Duration> = _pauseStartTime
+        .flatMapLatest { startTime ->
+            if (startTime == null) {
+                kotlinx.coroutines.flow.flowOf(java.time.Duration.ZERO)
+            } else {
+                kotlinx.coroutines.flow.flow {
+                    while (true) {
+                        emit(java.time.Duration.between(startTime, java.time.Instant.now()))
+                        kotlinx.coroutines.delay(1000) // Update every second
+                    }
+                }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), java.time.Duration.ZERO)
+
     // Expose settings for UI (T076)
     val unitsSystem: StateFlow<com.example.bikeredlights.domain.model.settings.UnitsSystem> =
         settingsRepository.unitsSystem
@@ -98,6 +155,38 @@ class RideRecordingViewModel @Inject constructor(
     val currentSpeed: StateFlow<Double> =
         rideRecordingStateRepository.getCurrentSpeed()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    /**
+     * Current GPS bearing (heading direction) in degrees (Feature 007 - v0.6.1).
+     *
+     * **Lifecycle**:
+     * - null when no ride is recording
+     * - Real-time GPS bearing (0-360 degrees) during active recording
+     * - Retains last known bearing when paused
+     * - null when ride is stopped
+     * - null if GPS bearing unavailable (stationary, poor signal)
+     *
+     * **Bearing Values**:
+     * - 0° = North
+     * - 90° = East
+     * - 180° = South
+     * - 270° = West
+     *
+     * **State Sharing**:
+     * - WhileSubscribed(5000): Stops collecting 5 seconds after last subscriber
+     * - Battery optimization: No background updates when UI not visible
+     * - Initial value: null (no bearing available)
+     *
+     * **Usage in UI**:
+     * ```kotlin
+     * val currentBearing by viewModel.currentBearing.collectAsStateWithLifecycle()
+     * BikeMap(bearing = currentBearing)
+     * LocationMarker(bearing = currentBearing, isMoving = currentBearing != null)
+     * ```
+     */
+    val currentBearing: StateFlow<Float?> =
+        rideRecordingStateRepository.getCurrentBearing()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     /**
      * Current location (last GPS point) for map marker (Feature 006).
@@ -430,9 +519,14 @@ class RideRecordingViewModel @Inject constructor(
             is RideRecordingState.Idle -> {
                 android.util.Log.d("RideRecordingViewModel",
                     "Service is idle, setting UI state to Idle")
+                // Reset pause counter (Feature 007 - v0.6.1, US3)
+                _pauseStartTime.value = null
                 _uiState.value = RideRecordingUiState.Idle
             }
             is RideRecordingState.Recording -> {
+                // Reset pause counter when resuming (Feature 007 - v0.6.1, US3)
+                _pauseStartTime.value = null
+
                 // Observe ride continuously for real-time updates
                 rideObservationJob = viewModelScope.launch {
                     rideRepository.getRideByIdFlow(recordingState.rideId).collect { ride ->
@@ -454,6 +548,9 @@ class RideRecordingViewModel @Inject constructor(
                 }
             }
             is RideRecordingState.ManuallyPaused -> {
+                // Start pause counter (Feature 007 - v0.6.1, US3)
+                _pauseStartTime.value = java.time.Instant.now()
+
                 // Observe ride continuously for real-time updates
                 rideObservationJob = viewModelScope.launch {
                     rideRepository.getRideByIdFlow(recordingState.rideId).collect { ride ->
@@ -466,6 +563,9 @@ class RideRecordingViewModel @Inject constructor(
                 }
             }
             is RideRecordingState.AutoPaused -> {
+                // Start pause counter (Feature 007 - v0.6.1, US3)
+                _pauseStartTime.value = java.time.Instant.now()
+
                 // Observe ride continuously for real-time updates
                 rideObservationJob = viewModelScope.launch {
                     rideRepository.getRideByIdFlow(recordingState.rideId).collect { ride ->
@@ -478,6 +578,9 @@ class RideRecordingViewModel @Inject constructor(
                 }
             }
             is RideRecordingState.Stopped -> {
+                // Reset pause counter (Feature 007 - v0.6.1, US3)
+                _pauseStartTime.value = null
+
                 // State will transition to ShowingSaveDialog via stopRide()
                 // or Idle if auto-discarded
             }

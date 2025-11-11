@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import android.content.res.Configuration
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.*
@@ -19,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -74,6 +76,12 @@ fun LiveRideScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val unitsSystem by viewModel.unitsSystem.collectAsStateWithLifecycle()
     val currentSpeed by viewModel.currentSpeed.collectAsStateWithLifecycle()
+
+    // Real-time pause counter (Feature 007 - v0.6.1)
+    val pausedDuration by viewModel.pausedDuration.collectAsStateWithLifecycle()
+
+    // Map bearing for directional orientation (Feature 007 - v0.6.1)
+    val mapBearing by viewModel.currentBearing.collectAsStateWithLifecycle()
 
     // Map state (Feature 006)
     val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
@@ -224,7 +232,8 @@ fun LiveRideScreen(
                 SplitScreenMapContent(
                     cameraPositionState = cameraPositionState,
                     userLocation = currentDeviceLocation, // Show device location when idle
-                    polylineData = null // No route when idle
+                    polylineData = null, // No route when idle
+                    mapBearing = null // No bearing when idle
                 ) {
                     IdleContent(
                         onStartRide = { viewModel.startRide() },
@@ -242,11 +251,13 @@ fun LiveRideScreen(
                 SplitScreenMapContent(
                     cameraPositionState = cameraPositionState,
                     userLocation = userLocation,
-                    polylineData = polylineData
+                    polylineData = polylineData,
+                    mapBearing = mapBearing
                 ) {
                     RecordingContent(
                         ride = ride,
                         currentSpeed = currentSpeed,
+                        pausedDuration = pausedDuration,
                         unitsSystem = unitsSystem,
                         onPauseRide = { viewModel.pauseRide() },
                         onStopRide = { viewModel.stopRide() },
@@ -259,11 +270,13 @@ fun LiveRideScreen(
                 SplitScreenMapContent(
                     cameraPositionState = cameraPositionState,
                     userLocation = userLocation,
-                    polylineData = polylineData
+                    polylineData = polylineData,
+                    mapBearing = mapBearing
                 ) {
                     PausedContent(
                         ride = ride,
                         currentSpeed = currentSpeed,
+                        pausedDuration = pausedDuration,
                         unitsSystem = unitsSystem,
                         onResumeRide = { viewModel.resumeRide() },
                         onStopRide = { viewModel.stopRide() },
@@ -276,11 +289,13 @@ fun LiveRideScreen(
                 SplitScreenMapContent(
                     cameraPositionState = cameraPositionState,
                     userLocation = userLocation,
-                    polylineData = polylineData
+                    polylineData = polylineData,
+                    mapBearing = mapBearing
                 ) {
                     AutoPausedContent(
                         ride = ride,
                         currentSpeed = currentSpeed,
+                        pausedDuration = pausedDuration,
                         unitsSystem = unitsSystem,
                         onResumeRide = { viewModel.resumeRide() },
                         onStopRide = { viewModel.stopRide() },
@@ -294,11 +309,13 @@ fun LiveRideScreen(
                 SplitScreenMapContent(
                     cameraPositionState = cameraPositionState,
                     userLocation = userLocation,
-                    polylineData = polylineData
+                    polylineData = polylineData,
+                    mapBearing = mapBearing
                 ) {
                     RecordingContent(
                         ride = ride,
                         currentSpeed = currentSpeed,
+                        pausedDuration = pausedDuration,
                         unitsSystem = unitsSystem,
                         onPauseRide = { }, // No action while dialog is shown
                         onStopRide = { }, // No action while dialog is shown
@@ -428,6 +445,7 @@ private fun hasLocationPermissions(context: Context): Boolean {
  * @param cameraPositionState Camera state for map
  * @param userLocation Current GPS location for marker
  * @param polylineData Route polyline data
+ * @param mapBearing GPS bearing for map/marker rotation (Feature 007)
  * @param content Bottom half content (stats and controls)
  */
 @Composable
@@ -435,68 +453,144 @@ private fun SplitScreenMapContent(
     cameraPositionState: com.google.maps.android.compose.CameraPositionState,
     userLocation: com.google.android.gms.maps.model.LatLng?,
     polylineData: com.example.bikeredlights.domain.model.PolylineData?,
+    mapBearing: Float? = null,
     content: @Composable () -> Unit
 ) {
     val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Map section (flexible, shares space equally with stats)
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            tonalElevation = 0.dp
+    // Use Row for landscape (side-by-side), Column for portrait (vertical split)
+    if (isLandscape) {
+        Row(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                BikeMap(
-                    cameraPositionState = cameraPositionState,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    // Current location marker (blue)
-                    LocationMarker(location = userLocation)
+            // Map section on left (50% width in landscape)
+            Surface(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(1f),
+                tonalElevation = 0.dp
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    BikeMap(
+                        cameraPositionState = cameraPositionState,
+                        currentBearing = mapBearing, // Directional map orientation (Feature 007)
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        // Current location marker with directional arrow (Feature 007)
+                        LocationMarker(
+                            location = userLocation,
+                            bearing = mapBearing // Rotates marker to show heading direction
+                        )
 
-                    // Route polyline (red, growing in real-time)
-                    RoutePolyline(polylineData = polylineData)
-                }
+                        // Route polyline (red, growing in real-time)
+                        RoutePolyline(polylineData = polylineData)
+                    }
 
-                // Center button (Material 3 FAB) - positioned top right to avoid zoom controls
-                FloatingActionButton(
-                    onClick = {
-                        // Recenter camera on current location
-                        userLocation?.let { location ->
-                            coroutineScope.launch {
-                                cameraPositionState.animate(
-                                    update = com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(location, 17f),
-                                    durationMs = 300
-                                )
+                    // Center button (Material 3 FAB) - positioned top right to avoid zoom controls
+                    FloatingActionButton(
+                        onClick = {
+                            // Recenter camera on current location
+                            userLocation?.let { location ->
+                                coroutineScope.launch {
+                                    cameraPositionState.animate(
+                                        update = com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(location, 17f),
+                                        durationMs = 300
+                                    )
+                                }
                             }
-                        }
-                    },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(16.dp),
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.MyLocation,
-                        contentDescription = "Center on current location"
-                    )
+                        },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(16.dp),
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.MyLocation,
+                            contentDescription = "Center on current location"
+                        )
+                    }
                 }
             }
-        }
 
-        // Stats and controls section (flexible, shares space equally with map)
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            tonalElevation = 2.dp,
-            shadowElevation = 4.dp
+            // Stats and controls section on right (50% width in landscape)
+            Surface(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(1f),
+                tonalElevation = 2.dp,
+                shadowElevation = 4.dp
+            ) {
+                content()
+            }
+        }
+    } else {
+        // Portrait mode - existing vertical split layout
+        Column(
+            modifier = Modifier.fillMaxSize()
         ) {
-            content()
+            // Map section (flexible, shares space equally with stats)
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                tonalElevation = 0.dp
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    BikeMap(
+                        cameraPositionState = cameraPositionState,
+                        currentBearing = mapBearing, // Directional map orientation (Feature 007)
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        // Current location marker with directional arrow (Feature 007)
+                        LocationMarker(
+                            location = userLocation,
+                            bearing = mapBearing // Rotates marker to show heading direction
+                        )
+
+                        // Route polyline (red, growing in real-time)
+                        RoutePolyline(polylineData = polylineData)
+                    }
+
+                    // Center button (Material 3 FAB) - positioned top right to avoid zoom controls
+                    FloatingActionButton(
+                        onClick = {
+                            // Recenter camera on current location
+                            userLocation?.let { location ->
+                                coroutineScope.launch {
+                                    cameraPositionState.animate(
+                                        update = com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(location, 17f),
+                                        durationMs = 300
+                                    )
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(16.dp),
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.MyLocation,
+                            contentDescription = "Center on current location"
+                        )
+                    }
+                }
+            }
+
+            // Stats and controls section (flexible, shares space equally with map)
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                tonalElevation = 2.dp,
+                shadowElevation = 4.dp
+            ) {
+                content()
+            }
         }
     }
 }
@@ -508,6 +602,7 @@ private fun SplitScreenMapContent(
 private fun RecordingContent(
     ride: com.example.bikeredlights.domain.model.Ride,
     currentSpeed: Double,
+    pausedDuration: java.time.Duration,
     unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     onPauseRide: () -> Unit,
     onStopRide: () -> Unit,
@@ -543,6 +638,7 @@ private fun RecordingContent(
         RideStatistics(
             ride = ride,
             currentSpeed = currentSpeed, // Real-time GPS speed (Feature 005)
+            pausedDuration = pausedDuration, // Real-time pause counter (Feature 007)
             unitsSystem = unitsSystem,
             modifier = Modifier
                 .weight(1f)
@@ -571,6 +667,7 @@ private fun RecordingContent(
 private fun PausedContent(
     ride: com.example.bikeredlights.domain.model.Ride,
     currentSpeed: Double,
+    pausedDuration: java.time.Duration,
     unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     onResumeRide: () -> Unit,
     onStopRide: () -> Unit,
@@ -606,6 +703,7 @@ private fun PausedContent(
         RideStatistics(
             ride = ride,
             currentSpeed = currentSpeed, // 0.0 when paused (reset by service)
+            pausedDuration = pausedDuration, // Real-time pause counter (Feature 007)
             unitsSystem = unitsSystem,
             modifier = Modifier
                 .weight(1f)
@@ -634,6 +732,7 @@ private fun PausedContent(
 private fun AutoPausedContent(
     ride: com.example.bikeredlights.domain.model.Ride,
     currentSpeed: Double,
+    pausedDuration: java.time.Duration,
     unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     onResumeRide: () -> Unit,
     onStopRide: () -> Unit,
@@ -670,6 +769,7 @@ private fun AutoPausedContent(
         RideStatistics(
             ride = ride,
             currentSpeed = currentSpeed, // Real-time (may trigger auto-resume if > 1 km/h)
+            pausedDuration = pausedDuration, // Real-time pause counter (Feature 007)
             unitsSystem = unitsSystem,
             modifier = Modifier
                 .weight(1f)

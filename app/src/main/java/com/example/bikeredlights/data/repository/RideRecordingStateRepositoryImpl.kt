@@ -72,6 +72,18 @@ class RideRecordingStateRepositoryImpl @Inject constructor(
     private val _currentSpeed = MutableStateFlow(0.0)
 
     /**
+     * In-memory current bearing (heading direction) for real-time GPS updates (Feature 007 - v0.6.1).
+     *
+     * **Design Rationale**:
+     * - Ephemeral state (not persisted to DataStore)
+     * - Retains last known bearing on pause (doesn't reset like speed)
+     * - Resets to null on stop
+     * - Real-time updates from Service GPS location callbacks
+     * - Thread-safe StateFlow for concurrent access
+     */
+    private val _currentBearing = MutableStateFlow<Float?>(null)
+
+    /**
      * DataStore preference keys.
      */
     private companion object {
@@ -147,6 +159,10 @@ class RideRecordingStateRepositoryImpl @Inject constructor(
         return _currentSpeed.asStateFlow()
     }
 
+    override fun getCurrentBearing(): StateFlow<Float?> {
+        return _currentBearing.asStateFlow()
+    }
+
     /**
      * Update current speed from GPS location updates.
      *
@@ -184,6 +200,53 @@ class RideRecordingStateRepositoryImpl @Inject constructor(
      */
     internal suspend fun resetCurrentSpeed() {
         _currentSpeed.value = 0.0
+    }
+
+    /**
+     * Update current bearing from GPS location updates (Feature 007 - v0.6.1).
+     *
+     * **Internal Method**: Called by RideRecordingService on each GPS update.
+     *
+     * **Preconditions**:
+     * - bearingDegrees must be in range 0.0-360.0 or null
+     * - null indicates bearing is unavailable (stationary, poor GPS signal)
+     *
+     * **Side Effects**:
+     * - Updates _currentBearing StateFlow
+     * - Emits new bearing value to all collectors
+     *
+     * **Note**: Unlike speed, bearing is retained during pause (not reset).
+     * This allows map to maintain orientation when rider is temporarily stopped.
+     *
+     * @param bearingDegrees Current GPS bearing in degrees (0-360 or null)
+     * @throws IllegalArgumentException if bearingDegrees is not in valid range
+     */
+    internal suspend fun updateCurrentBearing(bearingDegrees: Float?) {
+        if (bearingDegrees != null) {
+            require(bearingDegrees in 0.0f..360.0f) {
+                "Bearing must be in range 0-360 degrees, got: $bearingDegrees"
+            }
+        }
+        _currentBearing.value = bearingDegrees
+    }
+
+    /**
+     * Reset current bearing to null (Feature 007 - v0.6.1).
+     *
+     * **Internal Method**: Called by RideRecordingService on stop.
+     *
+     * **Use Cases**:
+     * - Stop ride: Bearing should reset to null (north-up fallback)
+     * - Discard ride: Bearing should reset to null
+     *
+     * **Note**: NOT called on pause - bearing is retained during pause.
+     *
+     * **Side Effects**:
+     * - Updates _currentBearing StateFlow to null
+     * - Emits null to all collectors
+     */
+    internal suspend fun resetCurrentBearing() {
+        _currentBearing.value = null
     }
 
     /**

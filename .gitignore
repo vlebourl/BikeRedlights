@@ -40,3 +40,4 @@ secrets.properties
 bin/
 out/
 *.class
+bikeredlights-signing-keys/

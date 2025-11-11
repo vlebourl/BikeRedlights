@@ -351,6 +351,11 @@ class RideRecordingService : Service() {
             (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
                 ?.resetCurrentSpeed()
 
+            // Reset current bearing to null on stop (Feature 007 - v0.6.1)
+            // Note: Bearing is retained during pause, only reset on stop
+            (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
+                ?.resetCurrentBearing()
+
             // Update state to Stopped
             currentState = RideRecordingState.Stopped(rideId)
             rideRecordingStateRepository.updateRecordingState(currentState)
@@ -443,6 +448,13 @@ class RideRecordingService : Service() {
                     val currentSpeed = maxOf(0.0, (locationData.speedMps ?: 0f).toDouble())
                     (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
                         ?.updateCurrentSpeed(currentSpeed)
+
+                    // Update current bearing from GPS (Feature 007 - v0.6.1)
+                    // Bearing represents heading direction in degrees (0-360)
+                    // null when stationary or GPS doesn't provide bearing data
+                    val currentBearing = locationData.bearing
+                    (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
+                        ?.updateCurrentBearing(currentBearing)
 
                     // Check for auto-resume (before pause gate)
                     // This allows auto-resume to execute during AutoPaused state
