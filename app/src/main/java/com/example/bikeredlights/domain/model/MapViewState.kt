@@ -14,6 +14,9 @@ import com.google.android.gms.maps.model.LatLng
  * @property isFollowingUser Whether the camera should automatically follow the user's current location
  * @property mapType The type of map tiles to display (NORMAL, SATELLITE, HYBRID, TERRAIN)
  * @property isDarkMode Whether to use dark mode styling for the map
+ * @property bearing Map rotation angle in degrees (0-360), null = north-up orientation.
+ *                  Used to rotate the map to follow rider's heading direction.
+ *                  0 = north, 90 = east, 180 = south, 270 = west
  *
  * @see CameraPosition for camera positioning details
  */
@@ -24,5 +27,6 @@ data class MapViewState(
     ),
     val isFollowingUser: Boolean = true,
     val mapType: Int = com.google.android.gms.maps.GoogleMap.MAP_TYPE_NORMAL,
-    val isDarkMode: Boolean = false
+    val isDarkMode: Boolean = false,
+    val bearing: Float? = null // Map rotation (0-360 degrees or null for north-up)
 )
