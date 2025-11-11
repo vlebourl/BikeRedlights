@@ -49,9 +49,9 @@ private fun createNavigationArrowIcon(context: android.content.Context): BitmapD
  * Composable that renders a location marker on a Google Map with directional arrow support (Feature 007 - v0.6.1).
  *
  * This component displays a marker representing the user's current location:
- * - **When moving (bearing available)**: Directional arrow icon rotated to show heading
- * - **When stationary (bearing null)**: Standard blue pin icon
- * - **For completed rides**: Always show pin (not directional arrow)
+ * - **Always shows navigation arrow icon** (even when stationary)
+ * - **When moving (bearing available)**: Arrow rotates to show heading direction
+ * - **When stationary (bearing null)**: Arrow points north (0°)
  *
  * **Null Safety**:
  * If location is null, nothing is rendered. This handles the case when GPS
@@ -61,7 +61,7 @@ private fun createNavigationArrowIcon(context: android.content.Context): BitmapD
  * The marker has a content description for screen readers via the title parameter.
  *
  * @param location The GPS coordinates for the marker. Null if location unavailable.
- * @param bearing GPS bearing in degrees (0-360) for directional arrow rotation. Null shows pin icon.
+ * @param bearing GPS bearing in degrees (0-360) for directional arrow rotation. Null defaults to 0° (north).
  * @param title Optional title text displayed when marker is tapped (default: "Current Location")
  *
  * Example usage:
@@ -86,21 +86,18 @@ fun LocationMarker(
 
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    // Feature 007 (v0.6.1): Show directional arrow when bearing available, pin when stationary
-    val isMoving = bearing != null
-
     // Create navigation arrow icon (cached via remember)
     val navigationArrow = remember { createNavigationArrowIcon(context) }
 
     Marker(
         state = remember(location) { MarkerState(position = location) },
-        title = if (isMoving && bearing != null) {
+        title = if (bearing != null) {
             "$title (heading ${bearing.toInt()}°)"
         } else {
             title
         },
-        icon = if (isMoving) navigationArrow else MarkerType.CURRENT.toIcon(),
-        rotation = bearing ?: 0f, // Rotates the marker icon to match heading
+        icon = navigationArrow, // Always use navigation arrow
+        rotation = bearing ?: 0f, // Rotate to bearing, or point north (0°) when stationary
         flat = true // Makes marker stick to map plane (important for rotation visibility)
     )
 }
