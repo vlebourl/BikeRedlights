@@ -79,7 +79,7 @@ fun LiveRideScreen(
     val pausedDuration by viewModel.pausedDuration.collectAsStateWithLifecycle()
 
     // Map bearing for directional orientation (Feature 007 - v0.6.1)
-    val currentBearing by viewModel.currentBearing.collectAsStateWithLifecycle()
+    val mapBearing by viewModel.currentBearing.collectAsStateWithLifecycle()
 
     // Map state (Feature 006)
     val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
@@ -230,7 +230,8 @@ fun LiveRideScreen(
                 SplitScreenMapContent(
                     cameraPositionState = cameraPositionState,
                     userLocation = currentDeviceLocation, // Show device location when idle
-                    polylineData = null // No route when idle
+                    polylineData = null, // No route when idle
+                    mapBearing = null // No bearing when idle
                 ) {
                     IdleContent(
                         onStartRide = { viewModel.startRide() },
@@ -248,7 +249,8 @@ fun LiveRideScreen(
                 SplitScreenMapContent(
                     cameraPositionState = cameraPositionState,
                     userLocation = userLocation,
-                    polylineData = polylineData
+                    polylineData = polylineData,
+                    mapBearing = mapBearing
                 ) {
                     RecordingContent(
                         ride = ride,
@@ -266,7 +268,8 @@ fun LiveRideScreen(
                 SplitScreenMapContent(
                     cameraPositionState = cameraPositionState,
                     userLocation = userLocation,
-                    polylineData = polylineData
+                    polylineData = polylineData,
+                    mapBearing = mapBearing
                 ) {
                     PausedContent(
                         ride = ride,
@@ -284,7 +287,8 @@ fun LiveRideScreen(
                 SplitScreenMapContent(
                     cameraPositionState = cameraPositionState,
                     userLocation = userLocation,
-                    polylineData = polylineData
+                    polylineData = polylineData,
+                    mapBearing = mapBearing
                 ) {
                     AutoPausedContent(
                         ride = ride,
@@ -303,7 +307,8 @@ fun LiveRideScreen(
                 SplitScreenMapContent(
                     cameraPositionState = cameraPositionState,
                     userLocation = userLocation,
-                    polylineData = polylineData
+                    polylineData = polylineData,
+                    mapBearing = mapBearing
                 ) {
                     RecordingContent(
                         ride = ride,
@@ -438,6 +443,7 @@ private fun hasLocationPermissions(context: Context): Boolean {
  * @param cameraPositionState Camera state for map
  * @param userLocation Current GPS location for marker
  * @param polylineData Route polyline data
+ * @param mapBearing GPS bearing for map/marker rotation (Feature 007)
  * @param content Bottom half content (stats and controls)
  */
 @Composable
@@ -445,6 +451,7 @@ private fun SplitScreenMapContent(
     cameraPositionState: com.google.maps.android.compose.CameraPositionState,
     userLocation: com.google.android.gms.maps.model.LatLng?,
     polylineData: com.example.bikeredlights.domain.model.PolylineData?,
+    mapBearing: Float? = null,
     content: @Composable () -> Unit
 ) {
     val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
@@ -462,13 +469,13 @@ private fun SplitScreenMapContent(
             Box(modifier = Modifier.fillMaxSize()) {
                 BikeMap(
                     cameraPositionState = cameraPositionState,
-                    currentBearing = currentBearing, // Directional map orientation (Feature 007)
+                    currentBearing = mapBearing, // Directional map orientation (Feature 007)
                     modifier = Modifier.fillMaxSize()
                 ) {
                     // Current location marker with directional arrow (Feature 007)
                     LocationMarker(
                         location = userLocation,
-                        bearing = currentBearing // Rotates marker to show heading direction
+                        bearing = mapBearing // Rotates marker to show heading direction
                     )
 
                     // Route polyline (red, growing in real-time)
