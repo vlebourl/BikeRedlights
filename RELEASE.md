@@ -7,9 +7,20 @@
 
 _Features and changes completed but not yet released_
 
+---
+
+## v0.7.0 - Map UX Improvements (2025-11-11)
+
+### 🧭 Enhanced Navigation & Auto-Pause UX
+
+**Status**: ✅ COMPLETE - Directional navigation, map orientation, and improved auto-pause feedback
+**Focus**: Navigation arrow with GPS bearing, map orientation following heading, pause counter, landscape support
+**APK Size**: TBD (release build pending)
+**Tested On**: Pixel 6 API 34 emulator with GPS simulation
+
 ### ✨ Features Added
 
-**Feature 007: Map UX Improvements (v0.6.1 Patch)** ([spec](specs/007-map-ux-improvements/spec.md) | [plan](specs/007-map-ux-improvements/plan.md) | [tasks](specs/007-map-ux-improvements/tasks.md))
+**Feature 007: Map UX Improvements** ([spec](specs/007-map-ux-improvements/spec.md) | [plan](specs/007-map-ux-improvements/plan.md) | [tasks](specs/007-map-ux-improvements/tasks.md))
 
 - **User Story 1 (P1): Directional Map Orientation** ✅
   - Map rotates to follow rider's heading direction for intuitive navigation
@@ -18,10 +29,12 @@ _Features and changes completed but not yet released_
   - Implemented using CameraPosition animation in BikeMap composable
 
 - **User Story 2 (P1): Directional Location Marker** ✅
-  - Location marker rotates to show heading direction using Google Maps Marker rotation
-  - Displays heading degrees in marker title when moving (e.g., "Current Location (heading 45°)")
-  - Standard blue pin marker when stationary (bearing = null)
-  - Completed ride screens (RideDetail/RideReview) continue showing static start/end markers
+  - Custom PNG navigation arrow (36dp) with optimized visibility
+  - Arrow rotates in real-time to show GPS heading direction
+  - Color-darkened blue pixels (30% reduction) for better visibility on light map backgrounds
+  - Visible on idle screen before ride starts for immediate orientation feedback
+  - Smooth rotation animation using Compose's `animateFloatAsState`
+  - North-up fallback when stationary or no bearing available
 
 - **User Story 3 (P2): Real-Time Pause Counter** ✅
   - Pause duration updates every second while paused (MM:SS format)
@@ -31,17 +44,65 @@ _Features and changes completed but not yet released_
   - Integrated in RideStatistics composable on Live tab
 
 - **User Story 4 (P2): Granular Auto-Pause Settings** ✅
-  - 6 granular timing options: 1s, 2s, 5s, 10s, 15s, 30s (previously: 5-60s in 5s increments)
+  - 6 granular timing options: 1s, 2s, 5s, 10s, 15s, 30s (previously: 3s removed for cleaner UX)
   - Default threshold improved from 30s → 5s for urban cycling scenarios
   - Quick traffic light stops (1-2s), general purpose (5s), rest breaks (30s)
   - Updated AutoPauseConfig.VALID_THRESHOLDS validation
   - Existing Settings UI automatically displays new options
+
+- **Landscape Orientation Support** ✅
+  - Full landscape mode for LiveRideScreen
+  - Adaptive layout with side-by-side map and statistics
+  - Maintains all functionality (pause, resume, end ride) in landscape
+  - Responsive design for phones/tablets/foldables
 
 ### 🏗️ Architecture Improvements
 - Added bearing extraction pipeline: Service → Repository → ViewModel → UI
 - Exposed `currentBearing: StateFlow<Float?>` in RideRecordingViewModel
 - Bearing retained during pause (reset only on stop per design)
 - Wired pause counter to RideStatistics for all states (Recording/Paused/AutoPaused)
+- Added `RideRecordingStateRepository.getPauseState()` for pause counter tracking
+- Custom navigation arrow with pixel-level color processing (cached on initialization)
+
+### 🎨 UI/UX Enhancements
+- Navigation arrow visible before ride starts (idle screen)
+- Map orientation follows movement direction for intuitive navigation
+- Real-time pause feedback with MM:SS counter display
+- Landscape mode support for better map viewing
+- Optimized arrow size (36dp) for minimal map obstruction
+
+### 🔬 Testing
+**Emulator Testing Complete** (Pixel 6 API 34):
+- ✅ Navigation arrow visible on idle screen (pre-ride)
+- ✅ Arrow rotates correctly with GPS bearing during ride
+- ✅ Map orientation follows heading when moving
+- ✅ Map returns to north-up when stationary
+- ✅ Pause counter displays and increments during auto-pause
+- ✅ Landscape mode renders correctly with functional UI
+- ✅ Dark mode compatibility verified
+- ✅ No crashes, ANR events, or memory leaks
+
+**Full test report**: `specs/007-map-ux-improvements/EMULATOR_TEST_REPORT.md`
+
+### 📦 Files Changed
+- **27 files changed**: 3,931 insertions, 81 deletions
+- **Domain layer**: MapViewState (added bearing field), AutoPauseConfig (updated thresholds), RideRecordingStateRepository (added pause state methods)
+- **Data layer**: RideRecordingStateRepositoryImpl (pause counter tracking)
+- **Service layer**: RideRecordingService (bearing extraction and emission)
+- **UI layer**: BikeMap (map orientation), LocationMarker (navigation arrow with rotation and color darkening), LiveRideScreen (landscape support, pause counter)
+- **ViewModel layer**: RideRecordingViewModel (bearing and pause counter StateFlows)
+- **Resources**: ic_navigation_arrow.png (custom 36dp PNG arrow)
+
+### 💥 Breaking Changes
+None - all changes are backward compatible with v0.6.0.
+
+### 📚 Documentation
+- **Feature Specification**: `specs/007-map-ux-improvements/spec.md`
+- **Implementation Plan**: `specs/007-map-ux-improvements/plan.md`
+- **Task Breakdown**: `specs/007-map-ux-improvements/tasks.md` (36 tasks, all completed)
+- **Emulator Test Report**: `specs/007-map-ux-improvements/EMULATOR_TEST_REPORT.md`
+- **Component Contracts**: `specs/007-map-ux-improvements/contracts/component-contracts.md`
+- **ViewModel Contracts**: `specs/007-map-ux-improvements/contracts/viewmodel-contracts.md`
 
 ---
 
