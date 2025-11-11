@@ -465,8 +465,11 @@ private fun SplitScreenMapContent(
                     currentBearing = currentBearing, // Directional map orientation (Feature 007)
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // Current location marker (blue)
-                    LocationMarker(location = userLocation)
+                    // Current location marker with directional arrow (Feature 007)
+                    LocationMarker(
+                        location = userLocation,
+                        bearing = currentBearing // Rotates marker to show heading direction
+                    )
 
                     // Route polyline (red, growing in real-time)
                     RoutePolyline(polylineData = polylineData)

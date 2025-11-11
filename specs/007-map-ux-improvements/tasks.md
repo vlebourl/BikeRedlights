@@ -115,13 +115,13 @@
 
 ### Implementation for User Story 2
 
-- [ ] T023 [P] [US2] Create LocationMarker composable with bearing and isMoving parameters in `app/src/main/java/com/example/bikeredlights/ui/components/map/LocationMarker.kt`
-- [ ] T024 [P] [US2] Implement directional arrow drawing using Canvas API in LocationMarker in `app/src/main/java/com/example/bikeredlights/ui/components/map/LocationMarker.kt`
-- [ ] T025 [P] [US2] Apply graphicsLayer rotation transformation based on bearing in LocationMarker in `app/src/main/java/com/example/bikeredlights/ui/components/map/LocationMarker.kt`
-- [ ] T026 [P] [US2] Implement pin icon fallback when isMoving is false in LocationMarker in `app/src/main/java/com/example/bikeredlights/ui/components/map/LocationMarker.kt`
-- [ ] T027 [US2] Integrate LocationMarker into BikeMap using MarkerInfoWindowContent or overlay in `app/src/main/java/com/example/bikeredlights/ui/components/map/BikeMap.kt`
-- [ ] T028 [US2] Update BikeMap to pass currentBearing and isMoving (bearing != null) to LocationMarker in `app/src/main/java/com/example/bikeredlights/ui/components/map/BikeMap.kt`
-- [ ] T029 [US2] Verify RideDetailScreen and RideReviewScreen still display pin markers (not directional arrows) for completed rides in `app/src/main/java/com/example/bikeredlights/ui/screens/history/RideDetailScreen.kt` and `app/src/main/java/com/example/bikeredlights/ui/screens/ride/RideReviewScreen.kt`
+- [X] T023 [P] [US2] Create LocationMarker composable with bearing and isMoving parameters in `app/src/main/java/com/example/bikeredlights/ui/components/map/LocationMarker.kt`
+- [X] T024 [P] [US2] Implement directional arrow drawing using Canvas API in LocationMarker in `app/src/main/java/com/example/bikeredlights/ui/components/map/LocationMarker.kt`
+- [X] T025 [P] [US2] Apply graphicsLayer rotation transformation based on bearing in LocationMarker in `app/src/main/java/com/example/bikeredlights/ui/components/map/LocationMarker.kt`
+- [X] T026 [P] [US2] Implement pin icon fallback when isMoving is false in LocationMarker in `app/src/main/java/com/example/bikeredlights/ui/components/map/LocationMarker.kt`
+- [X] T027 [US2] Integrate LocationMarker into BikeMap using MarkerInfoWindowContent or overlay in `app/src/main/java/com/example/bikeredlights/ui/components/map/BikeMap.kt`
+- [X] T028 [US2] Update BikeMap to pass currentBearing and isMoving (bearing != null) to LocationMarker in `app/src/main/java/com/example/bikeredlights/ui/components/map/BikeMap.kt`
+- [X] T029 [US2] Verify RideDetailScreen and RideReviewScreen still display pin markers (not directional arrows) for completed rides in `app/src/main/java/com/example/bikeredlights/ui/screens/history/RideDetailScreen.kt` and `app/src/main/java/com/example/bikeredlights/ui/screens/ride/RideReviewScreen.kt`
 
 **Checkpoint**: User Story 2 complete and independently testable. Directional marker rotates with heading, falls back to pin when stationary, completed ride maps still show pins.
 
