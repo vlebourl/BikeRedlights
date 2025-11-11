@@ -131,13 +131,13 @@
 
 **Purpose**: Documentation, validation, and final integration testing across all user stories
 
-- [ ] T030 [P] Update TODO.md with v0.6.1 feature status in `/Users/vlb/AndroidStudioProjects/BikeRedlights/TODO.md`
-- [ ] T031 [P] Update RELEASE.md with v0.6.1 patch notes and all 4 feature additions in `/Users/vlb/AndroidStudioProjects/BikeRedlights/RELEASE.md`
-- [ ] T032 [P] Update CLAUDE.md Active Technologies section with v0.6.1 additions in `/Users/vlb/AndroidStudioProjects/BikeRedlights/CLAUDE.md`
-- [ ] T033 Run emulator integration test: Settings → Pause Counter → Map Bearing → Marker Rotation as described in quickstart.md
-- [ ] T034 Verify all 4 user stories work together harmoniously (no conflicts or performance issues)
-- [ ] T035 Run lint checks and address any warnings introduced by changes
-- [ ] T036 Verify app builds successfully with `./gradlew assembleRelease`
+- [X] T030 [P] Update TODO.md with v0.6.1 feature status in `/Users/vlb/AndroidStudioProjects/BikeRedlights/TODO.md`
+- [X] T031 [P] Update RELEASE.md with v0.6.1 patch notes and all 4 feature additions in `/Users/vlb/AndroidStudioProjects/BikeRedlights/RELEASE.md`
+- [X] T032 [P] Update CLAUDE.md Active Technologies section with v0.6.1 additions in `/Users/vlb/AndroidStudioProjects/BikeRedlights/CLAUDE.md`
+- [X] T033 Run emulator integration test: Settings → Pause Counter → Map Bearing → Marker Rotation as described in quickstart.md
+- [X] T034 Verify all 4 user stories work together harmoniously (no conflicts or performance issues)
+- [X] T035 Run lint checks and address any warnings introduced by changes
+- [X] T036 Verify app builds successfully with `./gradlew assembleRelease`
 
 **Checkpoint**: All polish tasks complete. Ready for pull request creation and release tagging.
 
