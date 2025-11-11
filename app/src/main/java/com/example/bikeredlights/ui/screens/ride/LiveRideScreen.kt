@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import android.content.res.Configuration
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.*
@@ -19,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -455,69 +457,140 @@ private fun SplitScreenMapContent(
     content: @Composable () -> Unit
 ) {
     val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Map section (flexible, shares space equally with stats)
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            tonalElevation = 0.dp
+    // Use Row for landscape (side-by-side), Column for portrait (vertical split)
+    if (isLandscape) {
+        Row(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                BikeMap(
-                    cameraPositionState = cameraPositionState,
-                    currentBearing = mapBearing, // Directional map orientation (Feature 007)
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    // Current location marker with directional arrow (Feature 007)
-                    LocationMarker(
-                        location = userLocation,
-                        bearing = mapBearing // Rotates marker to show heading direction
-                    )
+            // Map section on left (50% width in landscape)
+            Surface(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(1f),
+                tonalElevation = 0.dp
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    BikeMap(
+                        cameraPositionState = cameraPositionState,
+                        currentBearing = mapBearing, // Directional map orientation (Feature 007)
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        // Current location marker with directional arrow (Feature 007)
+                        LocationMarker(
+                            location = userLocation,
+                            bearing = mapBearing // Rotates marker to show heading direction
+                        )
 
-                    // Route polyline (red, growing in real-time)
-                    RoutePolyline(polylineData = polylineData)
-                }
+                        // Route polyline (red, growing in real-time)
+                        RoutePolyline(polylineData = polylineData)
+                    }
 
-                // Center button (Material 3 FAB) - positioned top right to avoid zoom controls
-                FloatingActionButton(
-                    onClick = {
-                        // Recenter camera on current location
-                        userLocation?.let { location ->
-                            coroutineScope.launch {
-                                cameraPositionState.animate(
-                                    update = com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(location, 17f),
-                                    durationMs = 300
-                                )
+                    // Center button (Material 3 FAB) - positioned top right to avoid zoom controls
+                    FloatingActionButton(
+                        onClick = {
+                            // Recenter camera on current location
+                            userLocation?.let { location ->
+                                coroutineScope.launch {
+                                    cameraPositionState.animate(
+                                        update = com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(location, 17f),
+                                        durationMs = 300
+                                    )
+                                }
                             }
-                        }
-                    },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(16.dp),
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.MyLocation,
-                        contentDescription = "Center on current location"
-                    )
+                        },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(16.dp),
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.MyLocation,
+                            contentDescription = "Center on current location"
+                        )
+                    }
                 }
             }
-        }
 
-        // Stats and controls section (flexible, shares space equally with map)
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            tonalElevation = 2.dp,
-            shadowElevation = 4.dp
+            // Stats and controls section on right (50% width in landscape)
+            Surface(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(1f),
+                tonalElevation = 2.dp,
+                shadowElevation = 4.dp
+            ) {
+                content()
+            }
+        }
+    } else {
+        // Portrait mode - existing vertical split layout
+        Column(
+            modifier = Modifier.fillMaxSize()
         ) {
-            content()
+            // Map section (flexible, shares space equally with stats)
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                tonalElevation = 0.dp
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    BikeMap(
+                        cameraPositionState = cameraPositionState,
+                        currentBearing = mapBearing, // Directional map orientation (Feature 007)
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        // Current location marker with directional arrow (Feature 007)
+                        LocationMarker(
+                            location = userLocation,
+                            bearing = mapBearing // Rotates marker to show heading direction
+                        )
+
+                        // Route polyline (red, growing in real-time)
+                        RoutePolyline(polylineData = polylineData)
+                    }
+
+                    // Center button (Material 3 FAB) - positioned top right to avoid zoom controls
+                    FloatingActionButton(
+                        onClick = {
+                            // Recenter camera on current location
+                            userLocation?.let { location ->
+                                coroutineScope.launch {
+                                    cameraPositionState.animate(
+                                        update = com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(location, 17f),
+                                        durationMs = 300
+                                    )
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(16.dp),
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.MyLocation,
+                            contentDescription = "Center on current location"
+                        )
+                    }
+                }
+            }
+
+            // Stats and controls section (flexible, shares space equally with map)
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                tonalElevation = 2.dp,
+                shadowElevation = 4.dp
+            ) {
+                content()
+            }
         }
     }
 }
