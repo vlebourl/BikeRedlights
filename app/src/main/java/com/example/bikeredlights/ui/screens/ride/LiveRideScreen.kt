@@ -78,6 +78,9 @@ fun LiveRideScreen(
     // Real-time pause counter (Feature 007 - v0.6.1)
     val pausedDuration by viewModel.pausedDuration.collectAsStateWithLifecycle()
 
+    // Map bearing for directional orientation (Feature 007 - v0.6.1)
+    val currentBearing by viewModel.currentBearing.collectAsStateWithLifecycle()
+
     // Map state (Feature 006)
     val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
     val polylineData by viewModel.polylineData.collectAsStateWithLifecycle()
@@ -459,6 +462,7 @@ private fun SplitScreenMapContent(
             Box(modifier = Modifier.fillMaxSize()) {
                 BikeMap(
                     cameraPositionState = cameraPositionState,
+                    currentBearing = currentBearing, // Directional map orientation (Feature 007)
                     modifier = Modifier.fillMaxSize()
                 ) {
                     // Current location marker (blue)

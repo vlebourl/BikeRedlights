@@ -3,8 +3,14 @@ package com.example.bikeredlights.ui.components.map
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.launch
+import kotlin.math.abs
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
@@ -23,6 +29,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
  * - Material 3 dark mode support (automatically switches based on system theme)
  * - Optimized UI controls for cycling use case
  * - Custom camera position management
+ * - Directional map orientation (rotates to follow rider's heading) (Feature 007 - v0.6.1)
  * - Slot pattern for flexible content injection (markers, polylines, etc.)
  *
  * **Material 3 Integration**:
@@ -35,6 +42,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
  *
  * @param modifier Modifier for the map container
  * @param cameraPositionState State holder for camera position (use rememberCameraPositionState())
+ * @param currentBearing GPS bearing in degrees (0-360) or null for north-up (Feature 007 - v0.6.1)
  * @param mapType Type of map tiles (NORMAL, SATELLITE, HYBRID, TERRAIN)
  * @param showMyLocationButton Whether to show the "My Location" FAB (default true)
  * @param showZoomControls Whether to show zoom +/- buttons (default true)
@@ -45,8 +53,10 @@ import com.google.maps.android.compose.rememberCameraPositionState
  * val cameraPosition = rememberCameraPositionState {
  *     position = CameraPosition.fromLatLngZoom(LatLng(37.422, -122.084), 17f)
  * }
+ * val currentBearing by viewModel.currentBearing.collectAsStateWithLifecycle()
  * BikeMap(
  *     cameraPositionState = cameraPosition,
+ *     currentBearing = currentBearing,
  *     modifier = Modifier.fillMaxSize()
  * ) {
  *     // Map content (markers, polylines)
@@ -64,6 +74,7 @@ fun BikeMap(
             17f // City block level zoom (50-200m radius)
         )
     },
+    currentBearing: Float? = null,
     mapType: MapType = MapType.NORMAL,
     showMyLocationButton: Boolean = true,
     showZoomControls: Boolean = true,
@@ -71,6 +82,49 @@ fun BikeMap(
 ) {
     val isDarkMode = isSystemInDarkTheme()
     val context = LocalContext.current
+
+    // Track last animated bearing for debouncing (Feature 007 - v0.6.1)
+    var lastAnimatedBearing by remember { mutableFloatStateOf(0f) }
+
+    // Animate camera bearing changes with debouncing (Feature 007 - v0.6.1)
+    // Only animate if bearing changes by more than 5 degrees to prevent jitter
+    // Uses 300ms smooth animation for natural map rotation
+    LaunchedEffect(currentBearing) {
+        if (currentBearing != null) {
+            val bearingDelta = abs(currentBearing - lastAnimatedBearing)
+
+            // Debouncing: Only animate if change > 5 degrees
+            // This prevents jittery map rotation from minor GPS fluctuations
+            if (bearingDelta > 5f) {
+                launch {
+                    cameraPositionState.animate(
+                        update = com.google.android.gms.maps.CameraUpdateFactory.newCameraPosition(
+                            CameraPosition.Builder(cameraPositionState.position)
+                                .bearing(currentBearing)
+                                .build()
+                        ),
+                        durationMs = 300 // Smooth 300ms animation
+                    )
+                    lastAnimatedBearing = currentBearing
+                }
+            }
+        } else {
+            // No bearing available: reset to north-up (bearing = 0)
+            if (lastAnimatedBearing != 0f) {
+                launch {
+                    cameraPositionState.animate(
+                        update = com.google.android.gms.maps.CameraUpdateFactory.newCameraPosition(
+                            CameraPosition.Builder(cameraPositionState.position)
+                                .bearing(0f)
+                                .build()
+                        ),
+                        durationMs = 300
+                    )
+                    lastAnimatedBearing = 0f
+                }
+            }
+        }
+    }
 
     // Map properties for Material 3 theming with dark mode support
     // Using Google's predefined dark mode style JSON

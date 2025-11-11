@@ -94,12 +94,12 @@
 
 ### Implementation for User Story 1
 
-- [ ] T017 [US1] Update RideRecordingViewModel to sync MapViewState.bearing with currentBearing in `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt`
-- [ ] T018 [US1] Add currentBearing parameter to BikeMap composable signature in `app/src/main/java/com/example/bikeredlights/ui/components/map/BikeMap.kt`
-- [ ] T019 [US1] Update CameraPositionState initialization to use mapViewState.bearing in BikeMap in `app/src/main/java/com/example/bikeredlights/ui/components/map/BikeMap.kt`
-- [ ] T020 [US1] Add LaunchedEffect to animate CameraPositionState bearing changes with 300ms duration in `app/src/main/java/com/example/bikeredlights/ui/components/map/BikeMap.kt`
-- [ ] T021 [US1] Add bearing debouncing logic (only animate if delta > 5 degrees) in `app/src/main/java/com/example/bikeredlights/ui/components/map/BikeMap.kt`
-- [ ] T022 [US1] Update LiveRideScreen to collect currentBearing and pass to BikeMap in `app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt`
+- [X] T017 [US1] Update RideRecordingViewModel to sync MapViewState.bearing with currentBearing in `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt`
+- [X] T018 [US1] Add currentBearing parameter to BikeMap composable signature in `app/src/main/java/com/example/bikeredlights/ui/components/map/BikeMap.kt`
+- [X] T019 [US1] Update CameraPositionState initialization to use mapViewState.bearing in BikeMap in `app/src/main/java/com/example/bikeredlights/ui/components/map/BikeMap.kt`
+- [X] T020 [US1] Add LaunchedEffect to animate CameraPositionState bearing changes with 300ms duration in `app/src/main/java/com/example/bikeredlights/ui/components/map/BikeMap.kt`
+- [X] T021 [US1] Add bearing debouncing logic (only animate if delta > 5 degrees) in `app/src/main/java/com/example/bikeredlights/ui/components/map/BikeMap.kt`
+- [X] T022 [US1] Update LiveRideScreen to collect currentBearing and pass to BikeMap in `app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt`
 
 **Checkpoint**: User Story 1 complete and independently testable. Map rotates smoothly to follow heading, debouncing prevents jitter, fallback to north-up when bearing unavailable.
 
