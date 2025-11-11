@@ -30,9 +30,9 @@ private fun createNavigationArrowIcon(context: android.content.Context): BitmapD
     )
 
     if (drawable != null) {
-        // Target size in pixels (64dp * density for high-DPI screens)
+        // Target size in pixels (48dp * density for high-DPI screens)
         val density = context.resources.displayMetrics.density
-        val targetSize = (64 * density).toInt() // 64dp in pixels
+        val targetSize = (48 * density).toInt() // 48dp in pixels
 
         // Create bitmap at target size (scaled from original)
         val bitmap = Bitmap.createBitmap(
