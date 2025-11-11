@@ -1,13 +1,49 @@
 package com.example.bikeredlights.ui.components.map
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.graphicsLayer
 import com.example.bikeredlights.domain.model.MarkerType
 import com.example.bikeredlights.domain.model.toIcon
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
+
+/**
+ * Helper function to create a navigation arrow bitmap from drawable resource.
+ *
+ * Loads the navigation arrow icon from drawable resources and converts it to a BitmapDescriptor.
+ * The arrow points upward (north) and will be rotated via the Marker's rotation parameter.
+ *
+ * @param context Android context for accessing drawable resources
+ * @return BitmapDescriptor of the navigation arrow icon
+ */
+private fun createNavigationArrowIcon(context: android.content.Context): BitmapDescriptor {
+    // Load the navigation arrow drawable
+    val drawable = androidx.core.content.ContextCompat.getDrawable(
+        context,
+        com.example.bikeredlights.R.drawable.ic_navigation_arrow
+    )
+
+    if (drawable != null) {
+        // Convert drawable to bitmap
+        val bitmap = Bitmap.createBitmap(
+            drawable.intrinsicWidth.takeIf { it > 0 } ?: 96,
+            drawable.intrinsicHeight.takeIf { it > 0 } ?: 96,
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.draw(canvas)
+        return BitmapDescriptorFactory.fromBitmap(bitmap)
+    }
+
+    // Fallback to default blue marker if drawable not found
+    return MarkerType.CURRENT.toIcon()
+}
 
 /**
  * Composable that renders a location marker on a Google Map with directional arrow support (Feature 007 - v0.6.1).
@@ -48,14 +84,14 @@ fun LocationMarker(
     // Don't render if no location available
     if (location == null) return
 
-    // Feature 007 (v0.6.1): Determine if we should show directional arrow or pin
-    // - Show directional arrow when bearing is available (rider is moving)
-    // - Show pin when bearing is null (stationary or no GPS heading data)
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    // Feature 007 (v0.6.1): Show directional arrow when bearing available, pin when stationary
     val isMoving = bearing != null
 
-    // Note: Google Maps Marker doesn't support rotation transformation
-    // For v0.6.1, we use standard pin icon with bearing info in title
-    // Future enhancement: Use MarkerComposable with custom arrow graphic + graphicsLayer rotation
+    // Create navigation arrow icon (cached via remember)
+    val navigationArrow = remember { createNavigationArrowIcon(context) }
+
     Marker(
         state = remember(location) { MarkerState(position = location) },
         title = if (isMoving && bearing != null) {
@@ -63,10 +99,8 @@ fun LocationMarker(
         } else {
             title
         },
-        icon = MarkerType.CURRENT.toIcon(),
-        // TODO Feature 007 (v0.6.1): Implement custom directional arrow with rotation
-        // Current limitation: Google Maps Compose Marker doesn't support graphicsLayer
-        // Next iteration: Use MarkerComposable or overlay for custom rotatable arrow graphic
-        rotation = bearing ?: 0f // This sets flat marker rotation, not icon rotation
+        icon = if (isMoving) navigationArrow else MarkerType.CURRENT.toIcon(),
+        rotation = bearing ?: 0f, // Rotates the marker icon to match heading
+        flat = true // Makes marker stick to map plane (important for rotation visibility)
     )
 }
