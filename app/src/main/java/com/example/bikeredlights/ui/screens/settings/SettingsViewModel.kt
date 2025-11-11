@@ -83,10 +83,13 @@ class SettingsViewModel @Inject constructor(
     }
 
     /**
-     * Update user's auto-pause threshold.
+     * Update user's auto-pause threshold (Feature 007 - v0.6.1).
      *
-     * Bug #10: Changed from minutes to seconds (5-60s range).
-     * @param thresholdSeconds Threshold in seconds (must be valid: 5, 10, 15, 20, 30, 45, 60)
+     * Bug #10: Changed from minutes to seconds.
+     * v0.6.1: Updated to 6 granular timing options per user request.
+     *
+     * @param thresholdSeconds Threshold in seconds (must be valid: 1, 2, 5, 10, 15, 30)
+     * @throws IllegalArgumentException if thresholdSeconds is not in AutoPauseConfig.VALID_THRESHOLDS
      */
     fun setAutoPauseThreshold(thresholdSeconds: Int) {
         viewModelScope.launch {

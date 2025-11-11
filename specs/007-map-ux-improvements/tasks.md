@@ -53,9 +53,9 @@
 
 ### Implementation for User Story 4
 
-- [ ] T004 [P] [US4] Add AUTO_PAUSE_THRESHOLD_KEY and accessor methods to SettingsRepository in `app/src/main/java/com/example/bikeredlights/data/repository/SettingsRepository.kt`
-- [ ] T005 [P] [US4] Add autoPauseThreshold StateFlow to SettingsViewModel in `app/src/main/java/com/example/bikeredlights/ui/viewmodel/SettingsViewModel.kt`
-- [ ] T006 [P] [US4] Add setAutoPauseThreshold method to SettingsViewModel with validation in `app/src/main/java/com/example/bikeredlights/ui/viewmodel/SettingsViewModel.kt`
+- [X] T004 [P] [US4] Add AUTO_PAUSE_THRESHOLD_KEY and accessor methods to SettingsRepository in `app/src/main/java/com/example/bikeredlights/data/repository/SettingsRepository.kt`
+- [X] T005 [P] [US4] Add autoPauseThreshold StateFlow to SettingsViewModel in `app/src/main/java/com/example/bikeredlights/ui/viewmodel/SettingsViewModel.kt`
+- [X] T006 [P] [US4] Add setAutoPauseThreshold method to SettingsViewModel with validation in `app/src/main/java/com/example/bikeredlights/ui/viewmodel/SettingsViewModel.kt`
 - [ ] T007 [US4] Create AutoPauseSettingsScreen composable with 6 radio button options in `app/src/main/java/com/example/bikeredlights/ui/screens/settings/AutoPauseSettingsScreen.kt`
 - [ ] T008 [US4] Add navigation route for AutoPauseSettingsScreen in navigation graph (location depends on existing nav structure)
 - [ ] T009 [US4] Add navigation call from SettingsHomeScreen to AutoPauseSettingsScreen in `app/src/main/java/com/example/bikeredlights/ui/screens/settings/SettingsHomeScreen.kt`
