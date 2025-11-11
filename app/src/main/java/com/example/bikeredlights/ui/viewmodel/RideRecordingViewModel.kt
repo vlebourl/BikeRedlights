@@ -127,8 +127,9 @@ class RideRecordingViewModel @Inject constructor(
      * LocationMarker(bearing = currentBearing, isMoving = currentBearing != null)
      * ```
      */
-    private val _currentBearing = MutableStateFlow<Float?>(null)
-    val currentBearing: StateFlow<Float?> = _currentBearing.asStateFlow()
+    val currentBearing: StateFlow<Float?> =
+        rideRecordingStateRepository.getCurrentBearing()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     /**
      * Current location (last GPS point) for map marker (Feature 006).
