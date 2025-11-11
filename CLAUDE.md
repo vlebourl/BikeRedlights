@@ -904,6 +904,7 @@ When working on this project:
 - Room database (SQLite) - Ride + TrackPoint entities with pause state flags (no schema changes required) (004-fix-auto-resume)
 - Kotlin 2.0.21, Java 17 (OpenJDK) + Jetpack Compose BOM 2024.11.00, Hilt 2.51.1, Kotlin Coroutines 1.9.0, Play Services Location 21.3.0, Room 2.6.1 (005-fix-live-speed)
 - DataStore Preferences (state storage), Room SQLite (ride persistence) (005-fix-live-speed)
+- DataStore Preferences (auto-pause timing setting), no database changes required (007-map-ux-improvements)
 
 ## Recent Changes
 - 001-speed-tracking: Added Kotlin 2.0.21 with Jetpack Compose + Play Services Location 21.3.0, Jetpack Compose (BOM 2024.11.00), Material 3

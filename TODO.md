@@ -1,6 +1,6 @@
 # BikeRedlights - Project TODO
 
-> **Last Updated**: 2025-11-09 (Feature 006: Maps Integration - Ready for PR)
+> **Last Updated**: 2025-11-11 (Feature 007: Map UX Improvements - Ready for PR)
 > **Purpose**: Unified progress tracking for all features, tasks, and pending work
 
 ## 📋 In Progress
@@ -22,6 +22,45 @@ _(No planned features currently - all identified enhancements have been implemen
 ## ✅ Completed
 
 _Features completed and merged_
+
+### Feature 007: Map UX Improvements (v0.6.1 Patch)
+- **Completed**: 2025-11-11
+- **Type**: P1 UX Enhancement Patch (4 user stories for improved navigation UX)
+- **Description**: Enhance Google Maps experience with directional map orientation, real-time pause counter, granular auto-pause settings, and directional location marker
+- **Status**: ✅ COMPLETE - Ready for PR and v0.6.1 patch release
+- **Implementation Summary**:
+  - **User Story 1: Directional Map Orientation (P1)**:
+    - Map rotates to follow rider's heading direction (bearing-based orientation)
+    - Smooth 300ms animation with 5-degree debouncing (prevents jitter from GPS fluctuations)
+    - Automatic north-up fallback when bearing unavailable (stationary)
+    - Implemented in BikeMap composable with LaunchedEffect + CameraPosition animation
+  - **User Story 2: Directional Location Marker (P1)**:
+    - Location marker rotates to show heading direction using Marker rotation parameter
+    - Shows heading degrees in marker title when moving (e.g., "Current Location (heading 45°)")
+    - Standard blue pin when stationary (bearing = null)
+    - Completed ride screens (RideDetail/RideReview) unaffected (use static start/end markers)
+  - **User Story 3: Real-Time Pause Counter (P2)**:
+    - Pause duration updates every second while paused (MM:SS format)
+    - Uses Flow.flatMapLatest pattern with 1-second delay() emission
+    - Shows real-time counter + accumulated pauses from database
+    - Survives screen lock (lifecycle-aware with WhileSubscribed(5000))
+    - Integrated in RideStatistics composable on Live tab
+  - **User Story 4: Granular Auto-Pause Settings (P2)**:
+    - 6 timing options: 1s, 2s, 5s, 10s, 15s, 30s (previously: 5-60s in 5s increments)
+    - Default threshold changed from 30s → 5s (better for urban cycling)
+    - Updated AutoPauseConfig.VALID_THRESHOLDS validation
+    - Existing UI (RideTrackingSettingsScreen) automatically displays new options
+  - **Foundational Infrastructure (Phase 2)**:
+    - Added `bearing: Float?` field to MapViewState domain model
+    - Wired bearing extraction in RideRecordingService (from LocationData)
+    - Exposed `currentBearing: StateFlow<Float?>` in RideRecordingViewModel
+    - Bearing reset on stop (retained on pause per design)
+- **Architecture**: MVVM + Clean Architecture with StateFlow reactive state management
+- **Git Commits**: 7 commits (bearing infrastructure, auto-pause settings, pause counter ViewModel, pause counter UI, map orientation, directional marker, polish)
+- **Task Completion**: 36/36 tasks (100%)
+- **Target Release**: v0.6.1 (patch release after v0.6.0 Maps Integration)
+- **Next Steps**: Create PR, run emulator integration tests, code review, merge, version bump, release
+- **Specification**: specs/007-map-ux-improvements/spec.md, specs/007-map-ux-improvements/plan.md, specs/007-map-ux-improvements/tasks.md
 
 ### Feature 006: Google Maps Integration for Route Visualization
 - **Completed**: 2025-11-09
