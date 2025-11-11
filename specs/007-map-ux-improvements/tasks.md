@@ -36,7 +36,7 @@
 **⚠️ CRITICAL**: These tasks MUST be complete before ANY user story work begins
 
 - [X] T001 [P] Add bearing field to MapViewState data class in `app/src/main/java/com/example/bikeredlights/domain/model/MapViewState.kt`
-- [ ] T002 [P] Add currentBearing StateFlow to RideRecordingViewModel in `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt`
+- [X] T002 [P] Add currentBearing StateFlow to RideRecordingViewModel in `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt`
 - [ ] T003 Update RideRecordingViewModel.onLocationUpdate to extract and emit bearing from Location in `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt`
 
 **Checkpoint**: Foundation ready - User Story 1 & 2 (map/marker) can now begin in parallel

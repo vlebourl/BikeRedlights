@@ -100,6 +100,37 @@ class RideRecordingViewModel @Inject constructor(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     /**
+     * Current GPS bearing (heading direction) in degrees (Feature 007 - v0.6.1).
+     *
+     * **Lifecycle**:
+     * - null when no ride is recording
+     * - Real-time GPS bearing (0-360 degrees) during active recording
+     * - Retains last known bearing when paused
+     * - null when ride is stopped
+     * - null if GPS bearing unavailable (stationary, poor signal)
+     *
+     * **Bearing Values**:
+     * - 0° = North
+     * - 90° = East
+     * - 180° = South
+     * - 270° = West
+     *
+     * **State Sharing**:
+     * - WhileSubscribed(5000): Stops collecting 5 seconds after last subscriber
+     * - Battery optimization: No background updates when UI not visible
+     * - Initial value: null (no bearing available)
+     *
+     * **Usage in UI**:
+     * ```kotlin
+     * val currentBearing by viewModel.currentBearing.collectAsStateWithLifecycle()
+     * BikeMap(bearing = currentBearing)
+     * LocationMarker(bearing = currentBearing, isMoving = currentBearing != null)
+     * ```
+     */
+    private val _currentBearing = MutableStateFlow<Float?>(null)
+    val currentBearing: StateFlow<Float?> = _currentBearing.asStateFlow()
+
+    /**
      * Current location (last GPS point) for map marker (Feature 006).
      *
      * **Lifecycle**:
