@@ -34,7 +34,7 @@ import kotlinx.coroutines.isActive
  * - Distance with one decimal place (km or miles based on settings)
  * - Average speed (distance / moving time)
  * - Max speed (peak value)
- * - Paused time (manual + auto-pause combined)
+ * - Paused time (manual + auto-pause combined) with real-time counter (Feature 007 - v0.6.1)
  *
  * **Layout** (Safety-Focused):
  * - Material 3 Card with elevation
@@ -47,6 +47,7 @@ import kotlinx.coroutines.isActive
  * - Current speed is most prominent (safety-critical for red light warnings)
  * - Duration shows active riding time (excludes pauses)
  * - Paused time shows total pause duration (useful for understanding ride patterns)
+ * - Real-time pause counter updates every second when actively paused (v0.6.1)
  * - Aligns UI priority with app safety mission
  *
  * **Units Support**:
@@ -55,6 +56,7 @@ import kotlinx.coroutines.isActive
  *
  * @param ride Current ride with statistics
  * @param currentSpeed Current speed in m/s from latest GPS update
+ * @param pausedDuration Real-time pause duration (ZERO when not paused) (Feature 007 - v0.6.1)
  * @param unitsSystem Units system for display (Metric or Imperial)
  * @param modifier Modifier for this composable
  */
@@ -62,6 +64,7 @@ import kotlinx.coroutines.isActive
 fun RideStatistics(
     ride: Ride,
     currentSpeed: Double = 0.0,
+    pausedDuration: java.time.Duration = java.time.Duration.ZERO,
     unitsSystem: UnitsSystem = UnitsSystem.METRIC,
     modifier: Modifier = Modifier
 ) {
@@ -167,8 +170,19 @@ fun RideStatistics(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                // Paused time (manual + auto-pause combined)
-                val totalPausedDuration = ride.manualPausedDurationMillis + ride.autoPausedDurationMillis
+                // Paused time (manual + auto-pause combined) with real-time counter (Feature 007 - v0.6.1)
+                // Logic:
+                // - If pausedDuration > ZERO (actively paused): show real-time counter
+                // - Otherwise (not paused): show accumulated value from database
+                val displayedPausedDuration = if (pausedDuration > java.time.Duration.ZERO) {
+                    // Real-time counter: show current pause session + previous accumulated pauses
+                    val previousPauses = ride.manualPausedDurationMillis + ride.autoPausedDurationMillis
+                    previousPauses + pausedDuration.toMillis()
+                } else {
+                    // Not paused: show accumulated value from database
+                    ride.manualPausedDurationMillis + ride.autoPausedDurationMillis
+                }
+
                 Column(
                     modifier = Modifier.weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -180,7 +194,7 @@ fun RideStatistics(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = formatDuration(totalPausedDuration),
+                        text = formatDuration(displayedPausedDuration),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center,

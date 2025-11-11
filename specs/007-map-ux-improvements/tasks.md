@@ -76,9 +76,9 @@
 - [X] T011 [US3] Create pausedDuration StateFlow with Flow.flatMapLatest that emits every second in `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt`
 - [X] T012 [US3] Update RideRecordingViewModel.pauseRide to set _pauseStartTime to Instant.now() in `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt`
 - [X] T013 [US3] Update RideRecordingViewModel.resumeRide to reset _pauseStartTime and accumulate total paused time in `app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideRecordingViewModel.kt`
-- [ ] T014 [US3] Add pausedDuration parameter to RideStatistics composable in `app/src/main/java/com/example/bikeredlights/ui/components/ride/RideStatistics.kt`
-- [ ] T015 [US3] Add real-time pause counter display with MM:SS formatting in RideStatistics composable in `app/src/main/java/com/example/bikeredlights/ui/components/ride/RideStatistics.kt`
-- [ ] T016 [US3] Update LiveRideScreen to collect pausedDuration and pass to RideStatistics in `app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt`
+- [X] T014 [US3] Add pausedDuration parameter to RideStatistics composable in `app/src/main/java/com/example/bikeredlights/ui/components/ride/RideStatistics.kt`
+- [X] T015 [US3] Add real-time pause counter display with MM:SS formatting in RideStatistics composable in `app/src/main/java/com/example/bikeredlights/ui/components/ride/RideStatistics.kt`
+- [X] T016 [US3] Update LiveRideScreen to collect pausedDuration and pass to RideStatistics in `app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt`
 
 **Checkpoint**: User Story 3 complete and independently testable. Pause counter updates in real-time, survives screen lock, final value matches displayed value on resume.
 

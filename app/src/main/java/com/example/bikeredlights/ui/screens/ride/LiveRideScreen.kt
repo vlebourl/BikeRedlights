@@ -75,6 +75,9 @@ fun LiveRideScreen(
     val unitsSystem by viewModel.unitsSystem.collectAsStateWithLifecycle()
     val currentSpeed by viewModel.currentSpeed.collectAsStateWithLifecycle()
 
+    // Real-time pause counter (Feature 007 - v0.6.1)
+    val pausedDuration by viewModel.pausedDuration.collectAsStateWithLifecycle()
+
     // Map state (Feature 006)
     val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
     val polylineData by viewModel.polylineData.collectAsStateWithLifecycle()
@@ -247,6 +250,7 @@ fun LiveRideScreen(
                     RecordingContent(
                         ride = ride,
                         currentSpeed = currentSpeed,
+                        pausedDuration = pausedDuration,
                         unitsSystem = unitsSystem,
                         onPauseRide = { viewModel.pauseRide() },
                         onStopRide = { viewModel.stopRide() },
@@ -264,6 +268,7 @@ fun LiveRideScreen(
                     PausedContent(
                         ride = ride,
                         currentSpeed = currentSpeed,
+                        pausedDuration = pausedDuration,
                         unitsSystem = unitsSystem,
                         onResumeRide = { viewModel.resumeRide() },
                         onStopRide = { viewModel.stopRide() },
@@ -281,6 +286,7 @@ fun LiveRideScreen(
                     AutoPausedContent(
                         ride = ride,
                         currentSpeed = currentSpeed,
+                        pausedDuration = pausedDuration,
                         unitsSystem = unitsSystem,
                         onResumeRide = { viewModel.resumeRide() },
                         onStopRide = { viewModel.stopRide() },
@@ -299,6 +305,7 @@ fun LiveRideScreen(
                     RecordingContent(
                         ride = ride,
                         currentSpeed = currentSpeed,
+                        pausedDuration = pausedDuration,
                         unitsSystem = unitsSystem,
                         onPauseRide = { }, // No action while dialog is shown
                         onStopRide = { }, // No action while dialog is shown
@@ -508,6 +515,7 @@ private fun SplitScreenMapContent(
 private fun RecordingContent(
     ride: com.example.bikeredlights.domain.model.Ride,
     currentSpeed: Double,
+    pausedDuration: java.time.Duration,
     unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     onPauseRide: () -> Unit,
     onStopRide: () -> Unit,
@@ -543,6 +551,7 @@ private fun RecordingContent(
         RideStatistics(
             ride = ride,
             currentSpeed = currentSpeed, // Real-time GPS speed (Feature 005)
+            pausedDuration = pausedDuration, // Real-time pause counter (Feature 007)
             unitsSystem = unitsSystem,
             modifier = Modifier
                 .weight(1f)
@@ -571,6 +580,7 @@ private fun RecordingContent(
 private fun PausedContent(
     ride: com.example.bikeredlights.domain.model.Ride,
     currentSpeed: Double,
+    pausedDuration: java.time.Duration,
     unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     onResumeRide: () -> Unit,
     onStopRide: () -> Unit,
@@ -606,6 +616,7 @@ private fun PausedContent(
         RideStatistics(
             ride = ride,
             currentSpeed = currentSpeed, // 0.0 when paused (reset by service)
+            pausedDuration = pausedDuration, // Real-time pause counter (Feature 007)
             unitsSystem = unitsSystem,
             modifier = Modifier
                 .weight(1f)
@@ -634,6 +645,7 @@ private fun PausedContent(
 private fun AutoPausedContent(
     ride: com.example.bikeredlights.domain.model.Ride,
     currentSpeed: Double,
+    pausedDuration: java.time.Duration,
     unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     onResumeRide: () -> Unit,
     onStopRide: () -> Unit,
@@ -670,6 +682,7 @@ private fun AutoPausedContent(
         RideStatistics(
             ride = ride,
             currentSpeed = currentSpeed, // Real-time (may trigger auto-resume if > 1 km/h)
+            pausedDuration = pausedDuration, // Real-time pause counter (Feature 007)
             unitsSystem = unitsSystem,
             modifier = Modifier
                 .weight(1f)
