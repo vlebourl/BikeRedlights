@@ -7,6 +7,20 @@
 
 _Features and changes completed but not yet released_
 
+### ⚙️ Feature 008: Stop Detection Settings Configuration
+
+**Status**: ✅ COMPLETE - Settings infrastructure for stop detection parameters (Features 009/010)
+**Focus**: Configurable thresholds for future stop detection and clustering features
+**Tested On**: Pixel 6 API 34 emulator
+
+**Implementation Details**:
+- **Speed Threshold Setting**: Dropdown control with 5 options (1-5 km/h), Imperial/Metric unit conversion, default 2.0 km/h
+- **Duration Threshold Setting**: Dropdown control with 6 options (5-30s), default 15 seconds
+- **Clustering Radius Setting**: Dropdown control with 7 options (10-50m), default 20 meters
+- **Settings Access**: New "Stop Detection" card on Settings home screen, navigation to detail screen
+- **Technical**: Created reusable `ExposedDropdownMenuSetting` component (Material 3 ExposedDropdownMenuBox), extended SettingsRepository/ViewModel with stopDetectionConfig StateFlow, domain model with validation
+- **Design Decision**: Used Material Design 3 ExposedDropdownMenuBox instead of segmented buttons (recommended for 5+ options, better UX)
+
 ---
 
 ## v0.7.0 - Map UX Improvements (2025-11-11)
