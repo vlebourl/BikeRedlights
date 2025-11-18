@@ -1,316 +1,355 @@
 # Next Feature Prompt for /speckit.specify
 
-> **Purpose**: Prompt for Feature 008 - Red Light Detection & Immobile Time Tracking
+> **Purpose**: Prompt for Feature 008 - Stop Detection Settings (v0.8.0)
 > **Created**: 2025-11-18
-> **Target Version**: v0.8.0 (MINOR - new safety-critical feature)
+> **Target Version**: v0.8.0 (MINOR - new settings category)
+> **Roadmap Reference**: Feature 2B: Stop Detection Settings
 
 ## 🚦 Feature Description
 
-**Feature 008: Red Light Detection & Immobile Time Tracking**
+**Feature 008: Stop Detection Settings Infrastructure**
 
-Implement the core safety feature that BikeRedlights was designed for: detect when a cyclist is stopped at a red light and track immobile time separately from manual/auto-pause time.
+Add a new "Stop Detection" settings card to the Settings tab with configuration for red light detection parameters. This feature prepares the settings infrastructure needed for Feature 009 (actual stop detection implementation).
 
-This feature addresses the TODO comment in `RideStatistics.kt:line 97`:
-```kotlin
-text = "00:00:00", // TODO: Track immobile time (stopped at lights while recording)
-```
+According to `docs/roadmap.md` lines 1019-1030 and 1406-1409, this feature adds settings for:
+1. **Speed Threshold**: Consider stopped when speed drops below this value (1-5 km/h)
+2. **Duration Threshold**: Minimum time stationary to count as a stop (5-30s)
+3. **Clustering Radius**: Group stops within this distance as same location (10-50m)
 
 ## 📋 User Story
 
-**As a cyclist**, I want the app to automatically detect when I'm stopped at red lights (immobile while ride is actively recording) and track this time separately from pause time, so I can:
-1. See how much time I spend waiting at traffic signals during my commute
-2. Understand the impact of red lights on my total ride time
-3. Distinguish between intentional breaks (pause) and forced stops (red lights)
-4. Get insights into my route efficiency and traffic patterns
+**As a cyclist**, I want to configure how the app detects stops at red lights, so I can customize the detection sensitivity to match my riding style and urban environment.
+
+**Specific needs**:
+- **Urban commuters**: Short duration threshold (10s) for quick traffic light cycles
+- **Suburban riders**: Longer duration threshold (20-30s) to avoid counting brief slow-downs
+- **Dense city riders**: Small clustering radius (10-15m) for closely-spaced intersections
+- **Suburban riders**: Larger clustering radius (30-50m) for spread-out intersections
 
 ## 🎯 Key Requirements
 
 ### Functional Requirements
 
-1. **Immobile Detection Logic**
-   - Detect when speed drops to 0 km/h (or below threshold like 0.5 km/h) while ride is in "Recording" state
-   - Distinguish from "Paused" or "AutoPaused" states (those are intentional breaks)
-   - Start immobile timer when stopped, stop when movement resumes
-   - Handle rapid stop/start cycles (e.g., stop-and-go traffic)
+1. **New Settings Card**
+   - Add "🚦 Stop Detection" card to Settings home screen
+   - Card subtitle: "Thresholds, Clustering" (shows what's inside)
+   - Tappable → navigates to Stop Detection detail screen
+   - Positioned below "🚴 Ride & Tracking" card
 
-2. **Data Persistence**
-   - Store immobile duration in Room database (Ride entity)
-   - Track cumulative immobile time across entire ride
-   - Preserve immobile time history for ride statistics and analysis
+2. **Stop Detection Detail Screen**
+   - Three settings with clear labels and descriptions
+   - Validation: ensure values are within acceptable ranges
+   - Defaults chosen for typical urban cycling
 
-3. **Real-Time Display**
-   - Show live immobile counter on LiveRideScreen while stopped at lights
-   - Update counter every second (similar to pause counter from Feature 007)
-   - Display cumulative immobile time in ride statistics
-   - Show immobile time in RideDetail/RideReview screens after ride completion
+3. **Setting A: Speed Threshold**
+   - **Control**: Number picker or segmented buttons
+   - **Range**: 1-5 km/h (or mph if Imperial units selected)
+   - **Options**: 1, 2, 3, 4, 5 km/h
+   - **Default**: 3 km/h (~1.9 mph)
+   - **Description**: "Consider stopped when speed drops below this value"
+   - **Why 3 km/h**: Typical walking pace, clearly indicates stopped at intersection
 
-4. **User Feedback**
-   - Visual indicator when immobile (e.g., different color, icon, or label)
-   - Clear distinction between:
-     - **Paused**: User manually paused ride
-     - **Auto-Paused**: User stopped for extended time (configured threshold)
-     - **Immobile**: Stopped at red light/traffic while ride is actively recording
+4. **Setting B: Duration Threshold**
+   - **Control**: Number picker or segmented buttons
+   - **Range**: 5s, 10s, 15s, 20s, 25s, 30s
+   - **Default**: 15s
+   - **Description**: "Minimum time stationary to count as a stop"
+   - **Why 15s**: Filters out brief slow-downs, captures typical red light waits
+
+5. **Setting C: Clustering Radius**
+   - **Control**: Number picker or segmented buttons
+   - **Range**: 10m, 15m, 20m, 25m, 30m, 40m, 50m
+   - **Default**: 20m (~65 feet)
+   - **Description**: "Group stops within this distance as same location"
+   - **Why 20m**: Typical intersection size, accounts for GPS accuracy variations
+
+6. **Data Persistence (DataStore)**
+   - Store all three settings in DataStore Preferences
+   - Key-value pairs:
+     - `stop_detection_speed_threshold_kmh`: 1.0-5.0 (Float)
+     - `stop_detection_duration_threshold_seconds`: 5-30 (Int)
+     - `stop_detection_clustering_radius_meters`: 10-50 (Int)
+   - Persist across app restarts
+   - Apply defaults on first launch
+
+7. **Units Integration**
+   - Speed threshold displays in km/h or mph based on existing units setting
+   - Convert internally: `mph = kmh * 0.621371`
+   - Store in DataStore as km/h (canonical format)
+   - Display conversion in UI when Imperial selected
 
 ### Non-Functional Requirements
 
-1. **Safety-Critical Design**
-   - Minimal battery impact (use existing GPS data)
-   - No UI changes required while riding (passive tracking)
-   - Reliable detection in various scenarios (urban intersections, stop signs, bike lane stops)
+1. **Material Design 3 Compliance**
+   - Card component with elevation and proper spacing
+   - Number pickers or segmented buttons (consistent with existing settings)
+   - 48dp minimum touch targets for accessibility
+   - Dark mode support
+   - Dynamic color scheme
 
-2. **Performance**
-   - Use existing location updates (no additional GPS polling)
-   - Efficient state transitions (stopped ↔ moving)
-   - Minimal memory overhead for immobile time tracking
+2. **Architecture**
+   - Follow existing settings pattern (from Feature 2A v0.2.0)
+   - SettingsRepository extension with new methods
+   - SettingsViewModel update to expose new StateFlows
+   - Reuse SettingCard composable from Feature 2A
 
-3. **Architecture**
-   - Follow MVVM + Clean Architecture pattern
-   - Add domain model for immobile state
-   - Update RideRecordingState enum if needed (or use internal state machine)
-   - Use StateFlow for reactive UI updates
+3. **Validation**
+   - Ensure speed threshold ≥ 1 km/h and ≤ 5 km/h
+   - Ensure duration threshold in [5, 10, 15, 20, 25, 30]s
+   - Ensure clustering radius in [10, 15, 20, 25, 30, 40, 50]m
+   - Prevent invalid values from being stored
 
 ## 🔍 Edge Cases to Consider
 
-1. **Rapid Stop/Start (Stop-and-Go Traffic)**
-   - Should each individual stop be tracked separately?
-   - Or should stops within X seconds be merged?
-   - Recommendation: Track continuously while speed < threshold, reset timer on movement
+1. **Imperial Units Conversion**
+   - 1 km/h = 0.62 mph, 5 km/h = 3.1 mph
+   - Should mph options be rounded (1, 2, 3 mph) or precise (0.6, 1.2, 1.9, 2.5, 3.1)?
+   - **Recommendation**: Show precise mph values (e.g., "1.9 mph") to maintain accuracy
 
-2. **Speed Threshold for "Immobile"**
-   - 0.0 km/h exactly? (GPS drift may prevent exact 0)
-   - 0.5 km/h or 1.0 km/h threshold? (more forgiving for GPS noise)
-   - Recommendation: Use 1.0 km/h threshold (same as auto-pause detection logic)
+2. **Settings Migration**
+   - No existing stop detection settings in DataStore
+   - First launch: apply defaults silently
+   - No migration needed (new feature)
 
-3. **Auto-Pause vs. Immobile**
-   - What happens if user is immobile for longer than auto-pause threshold?
-   - Should immobile time stop tracking when auto-pause triggers?
-   - Recommendation: Auto-pause takes priority - immobile time is only tracked while ride is in "Recording" state
+3. **Future Feature Dependency**
+   - These settings will be READ by Feature 009 (Stop Detection implementation)
+   - Must ensure repository interface is ready for consumption
+   - Document expected behavior for future integration
 
-4. **Stationary at Start/End of Ride**
-   - Should immobile time count before user presses "Start" or after "End"?
-   - Recommendation: No - only track while ride is actively recording
-
-5. **Manual Pause While Immobile**
-   - User stops at red light, then manually pauses ride
-   - Should immobile time continue or stop?
-   - Recommendation: Stop immobile tracking when any pause (manual/auto) is triggered
+4. **Validation Feedback**
+   - If user somehow enters invalid value (edge case), show error message
+   - Reset to default on validation failure
+   - Log warning for debugging
 
 ## 🏗️ Suggested Architecture
 
 ### Domain Layer Changes
 
-**New/Updated Models**:
+**New Models**:
 ```kotlin
-// Update Ride entity
-data class Ride(
-    // ... existing fields ...
-    val immobileDurationSeconds: Long = 0  // NEW: time stopped at lights
-)
+// domain/model/settings/StopDetectionConfig.kt
+data class StopDetectionConfig(
+    val speedThresholdKmh: Float = DEFAULT_SPEED_THRESHOLD_KMH,
+    val durationThresholdSeconds: Int = DEFAULT_DURATION_THRESHOLD_SECONDS,
+    val clusteringRadiusMeters: Int = DEFAULT_CLUSTERING_RADIUS_METERS
+) {
+    companion object {
+        const val DEFAULT_SPEED_THRESHOLD_KMH = 3f
+        const val DEFAULT_DURATION_THRESHOLD_SECONDS = 15
+        const val DEFAULT_CLUSTERING_RADIUS_METERS = 20
 
-// Potentially add immobile state tracking
-enum class RideRecordingState {
-    Idle,
-    Recording,
-    Immobile,      // NEW: stopped at red light (speed < threshold)
-    Paused,
-    AutoPaused,
-    Stopped
-}
-// OR keep Recording state and use internal flag in service
-```
+        val VALID_SPEED_THRESHOLDS = listOf(1f, 2f, 3f, 4f, 5f)
+        val VALID_DURATION_THRESHOLDS = listOf(5, 10, 15, 20, 25, 30)
+        val VALID_CLUSTERING_RADII = listOf(10, 15, 20, 25, 30, 40, 50)
+    }
 
-**New Use Cases**:
-- `TrackImmobileTimeUseCase` - Update immobile duration when stopped
-- OR extend existing `RecordTrackPointUseCase` to handle immobile time
-
-### Data Layer Changes
-
-**Repository Updates**:
-```kotlin
-interface RideRepository {
-    suspend fun updateImmobileDuration(rideId: Long, durationSeconds: Long)
-    // ... existing methods ...
-}
-```
-
-**Room DAO Updates**:
-```kotlin
-@Query("UPDATE rides SET immobileDurationSeconds = :duration WHERE id = :rideId")
-suspend fun updateImmobileDuration(rideId: Long, duration: Long)
-```
-
-### Service Layer Changes
-
-**RideRecordingService Updates**:
-- Add immobile timer (similar to pause timer from Feature 007)
-- Detect speed < threshold while in Recording state
-- Emit immobile state via StateFlow
-- Update immobile duration in database
-
-### UI Layer Changes
-
-**RideStatistics Component**:
-- Replace TODO comment with actual immobile time display
-- Use real-time counter (MM:SS format) similar to pause counter
-- Add visual distinction (e.g., different color, icon)
-
-**LiveRideScreen**:
-- Show immobile status indicator (optional)
-- Display live immobile counter when stopped
-
-**RideDetailScreen & RideReviewScreen**:
-- Display total immobile time in statistics
-
-## 📊 Data Model Migration
-
-**Room Database Migration Required**:
-```kotlin
-// Migration from version 1 to version 2
-val MIGRATION_1_2 = object : Migration(1, 2) {
-    override fun migrate(database: SupportSQLiteDatabase) {
-        database.execSQL("ALTER TABLE rides ADD COLUMN immobileDurationSeconds INTEGER NOT NULL DEFAULT 0")
+    init {
+        require(speedThresholdKmh in 1f..5f) { "Speed threshold must be 1-5 km/h" }
+        require(durationThresholdSeconds in VALID_DURATION_THRESHOLDS) { "Invalid duration threshold" }
+        require(clusteringRadiusMeters in VALID_CLUSTERING_RADII) { "Invalid clustering radius" }
     }
 }
 ```
 
-## 🧪 Testing Strategy
+### Data Layer Changes
 
-### Unit Tests
-- `TrackImmobileTimeUseCase`: Test immobile detection logic
-- `RideRepository`: Test immobile duration updates
-- `RideRecordingViewModel`: Test immobile StateFlow emissions
+**SettingsRepository Extension**:
+```kotlin
+interface SettingsRepository {
+    // Existing methods...
 
-### Emulator Testing (MANDATORY)
-1. Start ride, simulate GPS movement → verify no immobile time
-2. Stop at simulated intersection → verify immobile timer starts
-3. Resume movement → verify immobile timer stops, duration persisted
-4. Stop at multiple intersections → verify cumulative immobile time
-5. Manual pause while immobile → verify immobile tracking stops
-6. Auto-pause trigger while immobile → verify auto-pause takes priority
+    // NEW: Stop detection settings
+    suspend fun saveStopDetectionConfig(config: StopDetectionConfig)
+    fun getStopDetectionConfig(): Flow<StopDetectionConfig>
+}
+```
 
-### Physical Device Testing (Recommended)
-- Real bike ride through urban area with traffic lights
-- Validate immobile detection accuracy vs. actual red light stops
-- Compare immobile time with rider's perception of stops
+**DataStore Keys** (in `PreferencesKeys.kt`):
+```kotlin
+val STOP_DETECTION_SPEED_THRESHOLD_KMH = floatPreferencesKey("stop_detection_speed_threshold_kmh")
+val STOP_DETECTION_DURATION_THRESHOLD_SECONDS = intPreferencesKey("stop_detection_duration_threshold_seconds")
+val STOP_DETECTION_CLUSTERING_RADIUS_METERS = intPreferencesKey("stop_detection_clustering_radius_meters")
+```
+
+### UI Layer Changes
+
+**SettingsHomeScreen**:
+- Add new "Stop Detection" card after "Ride & Tracking" card
+- Use existing SettingCard composable (reuse from Feature 2A)
+
+**New Screen: StopDetectionSettingsScreen**:
+- Three settings with number pickers or segmented buttons
+- Validation and error handling
+- Units conversion for speed threshold
+
+**ViewModel Update**:
+```kotlin
+class SettingsViewModel @Inject constructor(
+    private val settingsRepository: SettingsRepository
+) : ViewModel() {
+    // Existing StateFlows...
+
+    // NEW: Stop detection config
+    val stopDetectionConfig = settingsRepository.getStopDetectionConfig()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), StopDetectionConfig())
+
+    fun updateStopDetectionConfig(config: StopDetectionConfig) {
+        viewModelScope.launch {
+            settingsRepository.saveStopDetectionConfig(config)
+        }
+    }
+}
+```
 
 ## 🎨 UI/UX Mockup
 
-**RideStatistics Display (Live Tab)**:
+**Settings Home Screen (Updated)**:
 ```
-┌────────────────────────────────────┐
-│ Current Speed: 18.5 km/h           │ ← Hero metric (displayLarge)
-├────────────────────────────────────┤
-│ Duration: 00:15:30  Distance: 5.2km│ ← Secondary row
-├────────────────────────────────────┤
-│ Avg: 14.2 km/h    Max: 32.1 km/h  │ ← Supporting grid
-├────────────────────────────────────┤
-│ ⏸️ Paused: 00:02:15 (manual + auto)│ ← Paused time
-│ 🚦 Immobile: 00:03:45 (red lights) │ ← NEW: Immobile time
-└────────────────────────────────────┘
+⚙️ Settings
+
+┌────────────────────────────────┐
+│ 🚴 Ride & Tracking             │
+│ Units, GPS, Auto-pause         │
+│                             >  │
+└────────────────────────────────┘
+
+┌────────────────────────────────┐  ← NEW
+│ 🚦 Stop Detection              │  ← NEW
+│ Thresholds, Clustering         │  ← NEW
+│                             >  │  ← NEW
+└────────────────────────────────┘  ← NEW
+
+(Future: About, Privacy, etc.)
 ```
 
-**Visual States**:
-- **Moving**: Speed > 1 km/h, no special indicator
-- **Immobile**: Speed ≤ 1 km/h while Recording, show 🚦 icon + live counter
-- **Paused**: User/auto-paused, show ⏸️ icon + accumulated time
-- **Auto-Paused**: Same as Paused, with auto-pause label
+**Stop Detection Settings Screen (NEW)**:
+```
+← Back    Stop Detection
+
+Speed Threshold
+Consider stopped when speed drops below:
+┌────────────────────────────────┐
+│ [1] [2] [3] [4] [5] km/h       │  ← Segmented buttons (3 selected)
+└────────────────────────────────┘
+OR
+┌────────────────────────────────┐
+│ Speed Threshold     [3 km/h ▼] │  ← Number picker
+└────────────────────────────────┘
+
+Duration Threshold
+Minimum time stationary to count as stop:
+┌────────────────────────────────┐
+│ [5s] [10s] [15s] [20s] [25s] [30s] │  ← Segmented buttons (15s selected)
+│ (Selected: 15s)                 │
+└────────────────────────────────┘
+
+Clustering Radius
+Group stops within this distance:
+┌────────────────────────────────┐
+│ [10m] [15m] [20m] [25m]        │  ← Segmented buttons (20m selected)
+│ [30m] [40m] [50m]              │  ← Second row
+└────────────────────────────────┘
+```
+
+**With Imperial Units (mph)**:
+```
+Speed Threshold
+Consider stopped when speed drops below:
+┌────────────────────────────────┐
+│ [0.6] [1.2] [1.9] [2.5] [3.1] mph │  ← Converted from km/h
+└────────────────────────────────┘
+```
 
 ## 🚀 Implementation Phases
 
-### Phase 1: Domain Layer (2-3 tasks)
-- Update Ride domain model with immobileDurationSeconds
-- Add immobile state tracking (enum or internal flag)
-- Create/update use cases for immobile time tracking
+### Phase 1: Domain Layer (2 tasks)
+- Create StopDetectionConfig domain model with validation
+- Add validation constants and init block
 
-### Phase 2: Data Layer (3-4 tasks)
-- Add Room database migration (v1 → v2)
-- Update RideRepository interface and implementation
-- Add DAO query for immobile duration updates
-- Test migration on emulator
+### Phase 2: Data Layer (3 tasks)
+- Add DataStore keys to PreferencesKeys.kt
+- Extend SettingsRepository interface with new methods
+- Implement new methods in SettingsRepositoryImpl (save/load)
 
-### Phase 3: Service Layer (4-5 tasks)
-- Add immobile detection logic to RideRecordingService
-- Implement immobile timer (similar to pause counter)
-- Emit immobile state via StateFlow
-- Update immobile duration in database on state changes
-- Handle edge cases (auto-pause, manual pause, stop-and-go)
+### Phase 3: ViewModel Layer (2 tasks)
+- Add stopDetectionConfig StateFlow to SettingsViewModel
+- Add updateStopDetectionConfig() method
+- Wire to repository with Flow transformation
 
-### Phase 4: ViewModel Layer (2-3 tasks)
-- Expose immobile StateFlow in RideRecordingViewModel
-- Add real-time immobile counter (1-second updates)
-- Wire immobile duration to UI state
+### Phase 4: UI Layer - Settings Home (1 task)
+- Add "Stop Detection" card to SettingsHomeScreen
+- Reuse SettingCard composable from Feature 2A
+- Wire navigation to detail screen
 
-### Phase 5: UI Layer (3-4 tasks)
-- Replace TODO in RideStatistics with immobile time display
-- Add visual indicator for immobile state (icon, color)
-- Update RideDetailScreen to show immobile time
-- Update RideReviewScreen to show immobile time
+### Phase 5: UI Layer - Detail Screen (3-4 tasks)
+- Create StopDetectionSettingsScreen composable
+- Implement speed threshold picker/segmented buttons with units conversion
+- Implement duration threshold picker/segmented buttons
+- Implement clustering radius picker/segmented buttons
+- Wire to ViewModel StateFlow and update methods
 
-### Phase 6: Testing & Validation (5-6 tasks)
-- Write unit tests for immobile detection logic
-- Emulator testing with GPS simulation
-- Physical device testing (real bike ride)
-- Edge case validation (stop-and-go, pause transitions)
-- Performance profiling (battery impact)
+### Phase 6: Testing & Validation (3-4 tasks)
+- Unit tests for StopDetectionConfig validation
+- Unit tests for SettingsRepository save/load
+- ViewModel tests for StateFlow emissions
+- Emulator testing (all three settings, units conversion, persistence)
 
-### Phase 7: Documentation & Release (2-3 tasks)
-- Update CLAUDE.md with immobile time feature
+### Phase 7: Documentation & Release (2 tasks)
 - Update TODO.md and RELEASE.md
 - Create PR, code review, merge
 - Version bump to v0.8.0
 - Build release APK and create GitHub Release
 
-**Estimated Total Tasks**: 23-28 tasks
+**Estimated Total Tasks**: 16-19 tasks
 
 ## 📚 References
 
 ### Existing Code to Review
-- `RideStatistics.kt:97` - TODO comment for immobile time
-- `RideRecordingService.kt` - Auto-pause detection logic (reuse for immobile)
-- `RideRecordingViewModel.kt` - Pause counter implementation (template for immobile counter)
-- `AutoPauseConfig.kt` - Threshold validation (similar for immobile threshold)
+- `SettingsHomeScreen.kt` - Add new card here
+- `SettingsViewModel.kt` - Extend with new StateFlow
+- `SettingsRepository.kt` + `SettingsRepositoryImpl.kt` - Add new methods
+- `PreferencesKeys.kt` - Add new DataStore keys
+- `RideTrackingSettingsScreen.kt` - Template for detail screen layout
+- `SegmentedButtonSetting.kt` - Reusable component for segmented buttons
 
 ### Related Features
-- **Feature 004**: Auto-resume logic (similar state transitions)
-- **Feature 007**: Real-time pause counter (template for immobile counter)
-- **Feature 002**: Core ride recording (extend with immobile tracking)
+- **Feature 2A (v0.2.0)**: Basic Settings Infrastructure - template for this feature
+- **Feature 009 (Future)**: Stop Detection implementation - will READ these settings
+- **Feature 010 (Future)**: Stop Clustering - will READ clustering radius
 
 ## 🎯 Success Criteria
 
-1. ✅ Immobile time is tracked accurately when stopped at red lights
-2. ✅ Immobile counter updates in real-time on LiveRideScreen
-3. ✅ Immobile time persists in Room database
-4. ✅ Immobile time displays correctly in RideDetail/RideReview screens
-5. ✅ Auto-pause takes priority over immobile tracking
-6. ✅ Manual pause stops immobile tracking
-7. ✅ No battery impact (uses existing GPS data)
-8. ✅ Room database migration succeeds without data loss
-9. ✅ All unit tests pass (80%+ coverage)
-10. ✅ Emulator testing validates all edge cases
-11. ✅ Physical device testing confirms accuracy
+1. ✅ "Stop Detection" card appears on Settings home screen
+2. ✅ Tapping card navigates to Stop Detection detail screen
+3. ✅ All three settings are configurable with proper controls
+4. ✅ Default values applied on first launch (3 km/h, 15s, 20m)
+5. ✅ Settings persist across app restarts
+6. ✅ Speed threshold converts correctly to mph when Imperial units selected
+7. ✅ Validation prevents invalid values from being stored
+8. ✅ Material 3 design with dark mode support
+9. ✅ Emulator testing validates all settings and persistence
+10. ✅ No crashes, no errors in logcat
+11. ✅ Repository interface ready for Feature 009 consumption
 
-## 🔒 Safety-Critical Considerations
+## 🔒 Safety Considerations
 
-**This is a safety-critical feature** - accurate immobile detection is important for:
-1. **Route safety insights**: Understanding which routes have excessive red light stops
-2. **Ride planning**: Choosing routes with fewer traffic signal delays
-3. **Safety awareness**: Recognizing high-stop-density areas
+**This feature prepares infrastructure for safety-critical stop detection** - settings must be:
+1. **Reliable**: Always persist correctly, no data loss
+2. **Validated**: Prevent out-of-range values that could cause detection failures
+3. **Accessible**: Clear labels and descriptions for user understanding
+4. **Reversible**: Users can reset to defaults if needed
 
-**Critical Requirements**:
-- No false positives (classifying movement as immobile)
-- No false negatives (missing actual red light stops)
-- Robust GPS accuracy handling (noise, drift)
-- Battery-efficient implementation
+**No actual stop detection occurs in this feature** - it only prepares the settings. Feature 009 will implement the actual detection logic.
 
 ## 🎓 Learning Opportunities
 
 This feature provides experience with:
-- Room database migrations (v1 → v2)
-- Complex state machine logic (Recording → Immobile transitions)
-- Real-time counters with lifecycle awareness
-- GPS data interpretation (speed threshold detection)
-- Safety-critical feature development
-- Physical device validation
+- Extending existing settings infrastructure (building on Feature 2A)
+- DataStore Preferences for new key-value pairs
+- Settings validation and error handling
+- Units conversion (km/h ↔ mph)
+- Reusable UI components (SettingCard, SegmentedButtonSetting)
+- Material 3 settings patterns
 
 ## 📝 Prompt for /speckit.specify
 
@@ -319,63 +358,65 @@ This feature provides experience with:
 ```
 /speckit.specify
 
-Feature 008: Red Light Detection & Immobile Time Tracking
+Feature 008: Stop Detection Settings (Roadmap Feature 2B)
 
-Implement automatic detection and tracking of time spent stopped at red lights (immobile time) during active ride recording. This is the core safety feature BikeRedlights was designed for.
+Add a new "Stop Detection" settings card and detail screen to configure red light detection parameters. This prepares the settings infrastructure for Feature 009 (actual stop detection implementation).
 
-**User Story**: As a cyclist, I want the app to detect when I'm stopped at red lights and track this time separately from pause time, so I can understand how much time I spend waiting at traffic signals and get insights into route efficiency.
+**User Story**: As a cyclist, I want to configure how the app detects stops at red lights (speed threshold, duration threshold, clustering radius), so I can customize detection sensitivity to match my riding style and urban environment.
+
+**Three Settings**:
+1. **Speed Threshold**: 1-5 km/h (default 3 km/h) - "Consider stopped when speed drops below this value"
+2. **Duration Threshold**: 5s, 10s, 15s, 20s, 25s, 30s (default 15s) - "Minimum time stationary to count as a stop"
+3. **Clustering Radius**: 10m, 15m, 20m, 25m, 30m, 40m, 50m (default 20m) - "Group stops within this distance as same location"
 
 **Key Requirements**:
-1. Detect when speed drops to ≤1 km/h while ride is in "Recording" state
-2. Track immobile duration in real-time (updates every second)
-3. Persist immobile time in Room database (add new field to Ride entity)
-4. Display immobile counter on LiveRideScreen (similar to pause counter from Feature 007)
-5. Show total immobile time in RideDetail and RideReview screens
-6. Distinguish between Paused (intentional break), Auto-Paused (long stop), and Immobile (red light stop)
-7. Auto-pause takes priority: stop immobile tracking when any pause triggers
-8. Room database migration required (v1 → v2) to add immobileDurationSeconds field
-
-**Edge Cases**:
-- Rapid stop/start (stop-and-go traffic): Track continuously while speed < threshold
-- Auto-pause vs. immobile: Auto-pause takes priority, immobile only while Recording
-- Manual pause while immobile: Stop immobile tracking when pause triggered
-- GPS drift/noise: Use 1 km/h threshold (not exact 0.0) for robustness
+1. Add "🚦 Stop Detection" card to Settings home screen
+2. Create Stop Detection detail screen with three configurable settings
+3. Use number pickers or segmented buttons (consistent with Feature 2A patterns)
+4. Persist settings in DataStore Preferences
+5. Validate all values are within acceptable ranges
+6. Convert speed threshold to mph when Imperial units selected
+7. Apply defaults on first launch (3 km/h, 15s, 20m)
 
 **Architecture**:
-- Domain: Update Ride model, add immobile tracking logic
-- Data: Room migration (v1 → v2), update RideRepository
-- Service: Add immobile detection to RideRecordingService (reuse auto-pause logic)
-- ViewModel: Add immobile StateFlow with real-time counter
-- UI: Replace TODO in RideStatistics.kt:97 with actual immobile display
+- Domain: Create StopDetectionConfig model with validation
+- Data: Extend SettingsRepository with save/load methods, add DataStore keys
+- ViewModel: Add stopDetectionConfig StateFlow to SettingsViewModel
+- UI: Add card to SettingsHomeScreen, create StopDetectionSettingsScreen
+
+**Build On**:
+- Reuse SettingCard composable from Feature 2A (v0.2.0)
+- Reuse SegmentedButtonSetting if applicable
+- Follow existing settings patterns (RideTrackingSettingsScreen as template)
+- Extend existing SettingsRepository and SettingsViewModel
 
 **Testing**:
-- MANDATORY emulator testing with GPS simulation (multiple red light stops)
-- Physical device testing recommended (real bike ride in urban area)
-- Validate accuracy vs. actual traffic signal stops
+- MANDATORY emulator testing (all settings, persistence, units conversion)
+- Validate settings survive app restart
+- Test Imperial units conversion for speed threshold
+- Verify defaults applied correctly on first launch
 
-**Safety-Critical**: This feature is critical for route safety insights and ride planning. Requires robust GPS accuracy handling and battery-efficient implementation.
+**Prepares For**: Feature 009 (Stop Detection implementation) which will READ these settings to detect stops at red lights.
 
-**Target Release**: v0.8.0 (MINOR - new feature)
-**Estimated Tasks**: 23-28 tasks across 7 phases
-**References**:
-- RideStatistics.kt:97 (TODO comment)
-- Feature 007 (pause counter implementation - template for immobile counter)
-- Feature 004 (auto-resume logic - similar state transitions)
+**Target Release**: v0.8.0 (MINOR - new settings category)
+**Estimated Tasks**: 16-19 tasks across 7 phases
+**Roadmap Reference**: Feature 2B (docs/roadmap.md line 1406-1409)
 ```
 
 ---
 
-## 🎉 Why This is the Right Next Feature
+## 🎉 Why This is the Right Next Feature (Per Roadmap)
 
-1. **Core Mission Alignment**: This is THE feature BikeRedlights was named for - detecting red light stops
-2. **Clear TODO**: Explicit TODO comment in codebase (RideStatistics.kt:97)
-3. **Natural Progression**: Builds on existing pause/auto-pause infrastructure from Features 004 and 007
-4. **User Value**: Provides actionable insights for route planning and safety awareness
-5. **Technical Learning**: Room migrations, complex state machines, real-time tracking
-6. **Safety-Critical**: Demonstrates handling of safety-critical features with robust testing
+1. **Roadmap Alignment**: Explicitly listed as Feature 2B in `docs/roadmap.md`
+2. **Logical Progression**: Prepares settings for upcoming stop detection (Feature 009/F4)
+3. **Low Complexity**: 1-2 days according to roadmap (16-19 tasks estimated)
+4. **Builds on Foundation**: Extends Feature 2A settings infrastructure (already implemented)
+5. **Enables Future Features**: Required dependency for Features 009 (Stop Detection) and 010 (Clustering)
+6. **No External Dependencies**: Uses existing DataStore, no Google Maps needed
 
 ---
 
 **Last Updated**: 2025-11-18
 **Status**: Ready for /speckit.specify
-**Recommended Priority**: P1 (Core Feature)
+**Recommended Priority**: P1 (Roadmap Feature)
+**Roadmap Phase**: Phase 3 (Red Light Detection System preparation)
