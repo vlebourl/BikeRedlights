@@ -124,7 +124,19 @@ fun StopDetectionSettingsScreen(
                     }
                 )
 
-                // TODO: User Story 3 - Clustering Radius Section (T039-T045)
+                // User Story 3 - Clustering Radius Section
+                val radiusOptions = StopDetectionConfig.VALID_CLUSTERING_RADII
+                MultiOptionSegmentedButtonSetting(
+                    label = "Clustering Radius",
+                    options = radiusOptions,
+                    selectedValue = config.clusteringRadiusMeters,
+                    onValueChange = { newRadiusMeters ->
+                        onConfigChange(config.copy(clusteringRadiusMeters = newRadiusMeters))
+                    },
+                    valueFormatter = { meters ->
+                        "${meters}m"
+                    }
+                )
             }
         }
     }
