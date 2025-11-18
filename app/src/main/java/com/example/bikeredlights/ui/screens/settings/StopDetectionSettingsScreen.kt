@@ -22,7 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.bikeredlights.domain.model.settings.StopDetectionConfig
 import com.example.bikeredlights.domain.model.settings.UnitsSystem
-import com.example.bikeredlights.ui.components.settings.MultiOptionSegmentedButtonSetting
+import com.example.bikeredlights.ui.components.settings.ExposedDropdownMenuSetting
 import com.example.bikeredlights.ui.theme.BikeRedlightsTheme
 
 /**
@@ -92,7 +92,7 @@ fun StopDetectionSettingsScreen(
                     config.speedThresholdKmh
                 }
 
-                MultiOptionSegmentedButtonSetting(
+                ExposedDropdownMenuSetting(
                     label = "Speed Threshold",
                     options = speedOptions,
                     selectedValue = config.speedThresholdKmh,
@@ -112,7 +112,7 @@ fun StopDetectionSettingsScreen(
 
                 // User Story 2 - Duration Threshold Section
                 val durationOptions = StopDetectionConfig.VALID_DURATION_THRESHOLDS
-                MultiOptionSegmentedButtonSetting(
+                ExposedDropdownMenuSetting(
                     label = "Duration Threshold",
                     options = durationOptions,
                     selectedValue = config.durationThresholdSeconds,
@@ -126,7 +126,7 @@ fun StopDetectionSettingsScreen(
 
                 // User Story 3 - Clustering Radius Section
                 val radiusOptions = StopDetectionConfig.VALID_CLUSTERING_RADII
-                MultiOptionSegmentedButtonSetting(
+                ExposedDropdownMenuSetting(
                     label = "Clustering Radius",
                     options = radiusOptions,
                     selectedValue = config.clusteringRadiusMeters,
