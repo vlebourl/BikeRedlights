@@ -7,19 +7,132 @@
 
 _Features and changes completed but not yet released_
 
-### ⚙️ Feature 008: Stop Detection Settings Configuration
+---
+
+## v0.8.0 - Stop Detection Settings (2025-11-18)
+
+### ⚙️ Configurable Stop Detection Parameters
 
 **Status**: ✅ COMPLETE - Settings infrastructure for stop detection parameters (Features 009/010)
 **Focus**: Configurable thresholds for future stop detection and clustering features
+**APK Size**: TBD (release build pending)
 **Tested On**: Pixel 6 API 34 emulator
 
-**Implementation Details**:
-- **Speed Threshold Setting**: Dropdown control with 5 options (1-5 km/h), Imperial/Metric unit conversion, default 2.0 km/h
-- **Duration Threshold Setting**: Dropdown control with 6 options (5-30s), default 15 seconds
-- **Clustering Radius Setting**: Dropdown control with 7 options (10-50m), default 20 meters
-- **Settings Access**: New "Stop Detection" card on Settings home screen, navigation to detail screen
-- **Technical**: Created reusable `ExposedDropdownMenuSetting` component (Material 3 ExposedDropdownMenuBox), extended SettingsRepository/ViewModel with stopDetectionConfig StateFlow, domain model with validation
-- **Design Decision**: Used Material Design 3 ExposedDropdownMenuBox instead of segmented buttons (recommended for 5+ options, better UX)
+### ✨ Features Added
+
+**Feature 008: Stop Detection Settings Configuration** ([spec](specs/008-stop-detection-settings/spec.md) | [plan](specs/008-stop-detection-settings/plan.md) | [tasks](specs/008-stop-detection-settings/tasks.md))
+
+- **User Story 1 (P1): Configure Speed Threshold** ✅
+  - Material 3 ExposedDropdownMenuBox with 5 options (1-5 km/h)
+  - Default: 2.0 km/h
+  - Imperial/Metric unit conversion (km/h ↔ mph)
+  - Persistence via DataStore Preferences
+  - Emulator tested: Value changes, unit conversion, persistence verified
+
+- **User Story 2 (P1): Configure Duration Threshold** ✅
+  - Material 3 ExposedDropdownMenuBox with 6 options (5-30s)
+  - Default: 15 seconds
+  - Persistence via DataStore Preferences
+  - Emulator tested: Value changes, persistence verified
+
+- **User Story 3 (P2): Configure Clustering Radius** ✅
+  - Material 3 ExposedDropdownMenuBox with 7 options (10-50m)
+  - Default: 20 meters
+  - Persistence via DataStore Preferences
+  - Emulator tested: Value changes, persistence verified
+
+- **User Story 4 (P1): Settings Access** ✅
+  - New "Stop Detection" card on Settings home screen
+  - Navigation to dedicated detail screen
+  - Subtitle: "Speed, Duration, Clustering"
+  - Back button navigation
+
+### 🏗️ Architecture
+
+**MVVM + Clean Architecture with Material Design 3**:
+
+- **Domain Layer**:
+  - `StopDetectionConfig`: Pure Kotlin model with validation (default values, range validation)
+  - Validation constants: `VALID_SPEED_THRESHOLDS`, `VALID_DURATION_THRESHOLDS`, `VALID_CLUSTERING_RADII`
+  - Unit tests: Default values, invalid input rejection
+
+- **Data Layer**:
+  - Extended `SettingsRepository` interface with `stopDetectionConfig` Flow
+  - Extended `SettingsRepositoryImpl` with DataStore persistence
+  - Atomic writes via `dataStore.edit` for transactional updates
+  - PreferencesKeys: `STOP_DETECTION_SPEED_THRESHOLD_KMH`, `STOP_DETECTION_DURATION_THRESHOLD_SECONDS`, `STOP_DETECTION_CLUSTERING_RADIUS_METERS`
+
+- **UI Layer**:
+  - New reusable component: `ExposedDropdownMenuSetting<T>` (generic, type-safe)
+  - `StopDetectionSettingsScreen`: Three dropdown controls with real-time updates
+  - `SettingsViewModel`: Extended with `stopDetectionConfig` StateFlow
+  - Material 3 ExposedDropdownMenuBox with `MenuAnchorType.PrimaryNotEditable` for accessibility
+
+**Key Technical Features**:
+- 🎨 Material Design 3 dropdowns (recommended for 5+ options, better UX than segmented buttons)
+- 🔄 Reactive StateFlow for real-time UI updates
+- 💾 DataStore Preferences persistence (key-value pairs, local device only)
+- 🔒 Domain validation (pure Kotlin, no Android dependencies)
+- ♿ Accessibility support (semantic descriptions, 48dp touch targets)
+- 🌙 Dark mode compatible (Material 3 theming)
+
+### 🔬 Testing
+
+**Emulator Testing Complete** (Pixel 6 API 34):
+- ✅ Speed threshold: All 5 options selectable, default 2.0 km/h
+- ✅ Imperial/Metric conversion: 2.0 km/h ↔ 1.2 mph
+- ✅ Duration threshold: All 6 options selectable, default 15s
+- ✅ Clustering radius: All 7 options selectable, default 20m
+- ✅ Persistence: All settings survive app restart
+- ✅ Back navigation: Returns to Settings home screen
+- ✅ Dark mode: All dropdowns render correctly
+- ✅ No crashes, ANR events, or memory leaks
+
+**Unit Tests**: Domain model validation (default values, range validation)
+
+### 📦 Files Changed
+
+**New Files**:
+- `ExposedDropdownMenuSetting.kt` (194 lines) - Reusable Material 3 dropdown component
+- `StopDetectionConfig.kt` - Domain model with validation
+- `StopDetectionSettingsScreen.kt` - UI screen with three dropdowns
+- `StopDetectionConfigTest.kt` - Unit tests
+
+**Modified Files**:
+- `PreferencesKeys.kt` - Added DataStore keys
+- `SettingsRepository.kt` - Interface extension
+- `SettingsRepositoryImpl.kt` - Implementation
+- `SettingsViewModel.kt` - Added StateFlow
+- `SettingsHomeScreen.kt` - Added navigation card
+- `TODO.md`, `RELEASE.md`, `tasks.md`
+
+### 🎯 Design Decision
+
+**Material 3 Dropdowns vs Segmented Buttons**:
+- **Choice**: ExposedDropdownMenuBox instead of SegmentedButton
+- **Rationale**: Material Design 3 guidelines recommend dropdowns for 5+ options (better UX, no horizontal scrolling)
+- **Benefits**: Clearer visual hierarchy, consistent with Android platform patterns, better accessibility
+- **Components**: Created reusable `ExposedDropdownMenuSetting<T>` for future use
+
+### 💥 Breaking Changes
+
+None - all changes are backward compatible with v0.7.0.
+
+### 📚 Documentation
+
+- **Feature Specification**: `specs/008-stop-detection-settings/spec.md`
+- **Implementation Plan**: `specs/008-stop-detection-settings/plan.md`
+- **Task Breakdown**: `specs/008-stop-detection-settings/tasks.md` (53 tasks, all completed)
+- **Data Model**: `specs/008-stop-detection-settings/data-model.md`
+- **Research**: `specs/008-stop-detection-settings/research.md`
+- **Quickstart**: `specs/008-stop-detection-settings/quickstart.md`
+- **Component Contracts**: `specs/008-stop-detection-settings/contracts/`
+
+### 🔮 Next Steps
+
+This feature prepares infrastructure for:
+- **Feature 009**: Stop detection implementation (uses speed/duration thresholds)
+- **Feature 010**: Stop clustering logic (uses clustering radius)
 
 ---
 
