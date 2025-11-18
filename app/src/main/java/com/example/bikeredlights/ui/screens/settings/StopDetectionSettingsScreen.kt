@@ -110,7 +110,20 @@ fun StopDetectionSettingsScreen(
                     }
                 )
 
-                // TODO: User Story 2 - Duration Threshold Section (T032-T038)
+                // User Story 2 - Duration Threshold Section
+                val durationOptions = StopDetectionConfig.VALID_DURATION_THRESHOLDS
+                MultiOptionSegmentedButtonSetting(
+                    label = "Duration Threshold",
+                    options = durationOptions,
+                    selectedValue = config.durationThresholdSeconds,
+                    onValueChange = { newDurationSeconds ->
+                        onConfigChange(config.copy(durationThresholdSeconds = newDurationSeconds))
+                    },
+                    valueFormatter = { seconds ->
+                        "${seconds}s"
+                    }
+                )
+
                 // TODO: User Story 3 - Clustering Radius Section (T039-T045)
             }
         }
