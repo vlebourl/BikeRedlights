@@ -23,6 +23,37 @@ _(No planned features currently - all identified enhancements have been implemen
 
 _Features completed and merged_
 
+### Feature 008: Stop Detection Settings (v0.7.0)
+- **Completed**: 2025-11-18
+- **Type**: P1 Settings Infrastructure (3 user stories for configurable stop detection parameters)
+- **Description**: Add Stop Detection settings screen with three configurable parameters: Speed Threshold (1-5 km/h), Duration Threshold (5-30s), Clustering Radius (10-50m). Prepares infrastructure for Features 009 (stop detection) and 010 (clustering).
+- **Status**: ✅ COMPLETE - Implemented with Material 3 ExposedDropdownMenuBox components
+- **Implementation Summary**:
+  - **User Story 1: Speed Threshold Configuration (P1)**:
+    - Dropdown control with 5 options (1-5 km/h)
+    - Imperial/Metric unit conversion (km/h ↔ mph)
+    - Default: 2.0 km/h (1.2 mph)
+    - DataStore persistence with atomic writes
+  - **User Story 2: Duration Threshold Configuration (P1)**:
+    - Dropdown control with 6 options (5-30s in 5s increments)
+    - Default: 15 seconds
+    - DataStore persistence
+  - **User Story 3: Clustering Radius Configuration (P2)**:
+    - Dropdown control with 7 options (10-50m)
+    - Default: 20 meters
+    - DataStore persistence
+  - **User Story 4: Navigation & Access (P1)**:
+    - Settings card on Settings home screen
+    - Navigation to Stop Detection detail screen
+    - Material 3 UI consistent with existing settings
+- **Technical Highlights**:
+  - Created reusable `ExposedDropdownMenuSetting` component (Material 3 best practice for 5+ options)
+  - Extended `SettingsRepository` and `SettingsViewModel` with `stopDetectionConfig` StateFlow
+  - Domain model `StopDetectionConfig` with validation (pure Kotlin, no Android dependencies)
+  - Unit tests for domain validation (default values, range validation)
+  - Emulator testing: all dropdowns work, persistence verified, unit conversion tested
+- **Design Decision**: Chose ExposedDropdownMenuBox over segmented buttons per Material Design 3 guidelines (recommended for 5+ options, better UX than horizontal scrolling)
+
 ### Feature 007: Map UX Improvements (v0.6.1 Patch)
 - **Completed**: 2025-11-11
 - **Type**: P1 UX Enhancement Patch (4 user stories for improved navigation UX)

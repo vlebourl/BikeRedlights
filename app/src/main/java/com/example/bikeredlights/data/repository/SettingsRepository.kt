@@ -3,6 +3,7 @@ package com.example.bikeredlights.data.repository
 import com.example.bikeredlights.domain.model.history.SortPreference
 import com.example.bikeredlights.domain.model.settings.AutoPauseConfig
 import com.example.bikeredlights.domain.model.settings.GpsAccuracy
+import com.example.bikeredlights.domain.model.settings.StopDetectionConfig
 import com.example.bikeredlights.domain.model.settings.UnitsSystem
 import kotlinx.coroutines.flow.Flow
 
@@ -76,4 +77,26 @@ interface SettingsRepository {
      * @param sortPreference New sort preference
      */
     suspend fun setRideSortPreference(sortPreference: SortPreference)
+
+    /**
+     * Reactive stream of user's stop detection configuration.
+     * Emits default values (3 km/h, 15s, 20m) on first read if not yet set.
+     * Emits new values whenever setting changes.
+     *
+     * Feature 008 (v0.8.0) - Prepares for Feature 009 (Stop Detection) and Feature 010 (Clustering)
+     */
+    val stopDetectionConfig: Flow<StopDetectionConfig>
+
+    /**
+     * Update user's stop detection configuration.
+     * Change persists immediately to DataStore.
+     *
+     * All 3 values are saved atomically in a single DataStore.edit transaction.
+     *
+     * @param config New stop detection configuration
+     * @throws IllegalArgumentException if any config value is invalid (should not happen with proper UI validation)
+     *
+     * Feature 008 (v0.8.0)
+     */
+    suspend fun setStopDetectionConfig(config: StopDetectionConfig)
 }

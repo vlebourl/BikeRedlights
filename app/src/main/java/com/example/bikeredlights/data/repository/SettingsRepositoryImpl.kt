@@ -11,6 +11,7 @@ import com.example.bikeredlights.data.preferences.PreferencesKeys
 import com.example.bikeredlights.domain.model.history.SortPreference
 import com.example.bikeredlights.domain.model.settings.AutoPauseConfig
 import com.example.bikeredlights.domain.model.settings.GpsAccuracy
+import com.example.bikeredlights.domain.model.settings.StopDetectionConfig
 import com.example.bikeredlights.domain.model.settings.UnitsSystem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -138,6 +139,48 @@ class SettingsRepositoryImpl(
             Log.d(TAG, "Ride sort preference updated to: $sortPreference")
         } catch (e: IOException) {
             Log.e(TAG, "Error writing ride sort preference", e)
+        }
+    }
+
+    // Feature 008 - Stop Detection Settings (v0.8.0)
+
+    override val stopDetectionConfig: Flow<StopDetectionConfig> = context.dataStore.data
+        .catch { exception ->
+            if (exception is IOException) {
+                Log.e(TAG, "Error reading stop detection preferences", exception)
+                emit(emptyPreferences())
+            } else {
+                throw exception
+            }
+        }
+        .map { preferences ->
+            val speedThresholdKmh = preferences[PreferencesKeys.STOP_DETECTION_SPEED_THRESHOLD_KMH]
+                ?: StopDetectionConfig.DEFAULT_SPEED_THRESHOLD_KMH
+            val durationThresholdSeconds = preferences[PreferencesKeys.STOP_DETECTION_DURATION_THRESHOLD_SECONDS]
+                ?: StopDetectionConfig.DEFAULT_DURATION_THRESHOLD_SECONDS
+            val clusteringRadiusMeters = preferences[PreferencesKeys.STOP_DETECTION_CLUSTERING_RADIUS_METERS]
+                ?: StopDetectionConfig.DEFAULT_CLUSTERING_RADIUS_METERS
+
+            // StopDetectionConfig validates values in init block
+            StopDetectionConfig(
+                speedThresholdKmh = speedThresholdKmh,
+                durationThresholdSeconds = durationThresholdSeconds,
+                clusteringRadiusMeters = clusteringRadiusMeters
+            )
+        }
+
+    override suspend fun setStopDetectionConfig(config: StopDetectionConfig) {
+        try {
+            // Atomic write of all 3 settings in single transaction
+            context.dataStore.edit { preferences ->
+                preferences[PreferencesKeys.STOP_DETECTION_SPEED_THRESHOLD_KMH] = config.speedThresholdKmh
+                preferences[PreferencesKeys.STOP_DETECTION_DURATION_THRESHOLD_SECONDS] = config.durationThresholdSeconds
+                preferences[PreferencesKeys.STOP_DETECTION_CLUSTERING_RADIUS_METERS] = config.clusteringRadiusMeters
+            }
+            Log.d(TAG, "Stop detection config updated: speed=${config.speedThresholdKmh}km/h, " +
+                    "duration=${config.durationThresholdSeconds}s, radius=${config.clusteringRadiusMeters}m")
+        } catch (e: IOException) {
+            Log.e(TAG, "Error writing stop detection preferences", e)
         }
     }
 }

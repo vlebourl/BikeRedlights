@@ -17,6 +17,7 @@ import com.example.bikeredlights.ui.screens.ride.RideReviewScreen
 import com.example.bikeredlights.ui.screens.settings.RideTrackingSettingsScreen
 import com.example.bikeredlights.ui.screens.settings.SettingsHomeScreen
 import com.example.bikeredlights.ui.screens.settings.SettingsViewModel
+import com.example.bikeredlights.ui.screens.settings.StopDetectionSettingsScreen
 import com.example.bikeredlights.ui.viewmodel.RideRecordingViewModel
 
 /**
@@ -106,6 +107,9 @@ fun AppNavigation(
             SettingsHomeScreen(
                 onRideTrackingClick = {
                     navController.navigate(SettingsDestination.RIDE_TRACKING.route)
+                },
+                onStopDetectionClick = {
+                    navController.navigate(SettingsDestination.STOP_DETECTION.route)
                 }
             )
         }
@@ -127,6 +131,23 @@ fun AppNavigation(
                 onAutoPauseChange = { config ->
                     // Use atomic update to avoid race condition
                     settingsViewModel.setAutoPauseConfig(config)
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // Settings detail screen - Stop Detection (Feature 008 - v0.8.0)
+        composable(SettingsDestination.STOP_DETECTION.route) {
+            val stopDetectionConfig by settingsViewModel.stopDetectionConfig.collectAsStateWithLifecycle()
+            val uiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
+
+            StopDetectionSettingsScreen(
+                config = stopDetectionConfig,
+                unitsSystem = uiState.unitsSystem,
+                onConfigChange = { config ->
+                    settingsViewModel.updateStopDetectionConfig(config)
                 },
                 onNavigateBack = {
                     navController.popBackStack()

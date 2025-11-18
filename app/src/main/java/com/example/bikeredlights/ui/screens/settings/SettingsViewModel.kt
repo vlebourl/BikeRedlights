@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.bikeredlights.data.repository.SettingsRepository
 import com.example.bikeredlights.domain.model.settings.AutoPauseConfig
 import com.example.bikeredlights.domain.model.settings.GpsAccuracy
+import com.example.bikeredlights.domain.model.settings.StopDetectionConfig
 import com.example.bikeredlights.domain.model.settings.UnitsSystem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -113,6 +114,39 @@ class SettingsViewModel @Inject constructor(
     fun setAutoPauseConfig(config: AutoPauseConfig) {
         viewModelScope.launch {
             settingsRepository.setAutoPauseConfig(config)
+        }
+    }
+
+    // Feature 008 - Stop Detection Settings (v0.8.0)
+
+    /**
+     * Reactive stream of stop detection configuration.
+     * Emits default values (3 km/h, 15s, 20m) on first subscription if not yet set.
+     * Emits new values whenever setting changes.
+     *
+     * Consumed by StopDetectionSettingsScreen for displaying current values and
+     * handling user selections.
+     */
+    val stopDetectionConfig: StateFlow<StopDetectionConfig> = settingsRepository.stopDetectionConfig
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = StopDetectionConfig()
+        )
+
+    /**
+     * Update user's stop detection configuration.
+     *
+     * All 3 values (speed threshold, duration threshold, clustering radius) are
+     * persisted atomically to DataStore in a single transaction.
+     *
+     * @param config New stop detection configuration
+     * @throws IllegalArgumentException if any config value is invalid
+     *         (should not occur with proper UI validation using SegmentedButtonSetting)
+     */
+    fun updateStopDetectionConfig(config: StopDetectionConfig) {
+        viewModelScope.launch {
+            settingsRepository.setStopDetectionConfig(config)
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.example.bikeredlights.data.preferences
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -69,4 +70,32 @@ object PreferencesKeys {
      * Maps to: DateRangeFilter.customEndDate
      */
     val RIDE_FILTER_CUSTOM_END = longPreferencesKey("ride_filter_custom_end")
+
+    // Stop Detection Settings (Feature 008 - v0.8.0)
+
+    /**
+     * Speed threshold for stop detection in km/h.
+     * Allowed values: 1.0, 2.0, 3.0, 4.0, 5.0
+     * Default: 3.0
+     * Maps to: StopDetectionConfig.speedThresholdKmh
+     *
+     * Note: Always stored in km/h internally. UI converts to mph when Imperial units selected.
+     */
+    val STOP_DETECTION_SPEED_THRESHOLD_KMH = floatPreferencesKey("stop_detection_speed_threshold_kmh")
+
+    /**
+     * Duration threshold for stop detection in seconds.
+     * Allowed values: 5, 10, 15, 20, 25, 30
+     * Default: 15
+     * Maps to: StopDetectionConfig.durationThresholdSeconds
+     */
+    val STOP_DETECTION_DURATION_THRESHOLD_SECONDS = intPreferencesKey("stop_detection_duration_threshold_seconds")
+
+    /**
+     * Clustering radius for grouping nearby stops in meters.
+     * Allowed values: 10, 15, 20, 25, 30, 40, 50
+     * Default: 20
+     * Maps to: StopDetectionConfig.clusteringRadiusMeters
+     */
+    val STOP_DETECTION_CLUSTERING_RADIUS_METERS = intPreferencesKey("stop_detection_clustering_radius_meters")
 }
