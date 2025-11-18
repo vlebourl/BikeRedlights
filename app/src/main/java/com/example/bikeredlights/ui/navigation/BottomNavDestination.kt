@@ -76,7 +76,13 @@ enum class SettingsDestination(
      * Ride & Tracking settings detail screen.
      * Contains: Units, GPS Accuracy, Auto-Pause settings.
      */
-    RIDE_TRACKING(route = "settings/ride_tracking");
+    RIDE_TRACKING(route = "settings/ride_tracking"),
+
+    /**
+     * Stop Detection settings detail screen (Feature 008 - v0.8.0).
+     * Contains: Speed threshold, Duration threshold, Clustering radius.
+     */
+    STOP_DETECTION(route = "settings/stop_detection");
 
     companion object {
         /**

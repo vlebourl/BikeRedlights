@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsBike
+import androidx.compose.material.icons.filled.PinDrop
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -26,19 +27,21 @@ import com.example.bikeredlights.ui.theme.BikeRedlightsTheme
  *
  * Currently displays:
  * - "Ride & Tracking" card (Units, GPS Accuracy, Auto-pause settings)
+ * - "Stop Detection" card (Speed threshold, Duration threshold, Clustering radius)
  *
  * Future cards (deferred to later features):
- * - "Stop Detection" (Feature 2B)
  * - "App Behavior" (theme, language, notifications)
  * - "About" (version, licenses, privacy policy)
  *
  * @param onRideTrackingClick Callback when user taps "Ride & Tracking" card
+ * @param onStopDetectionClick Callback when user taps "Stop Detection" card
  * @param modifier Modifier for customizing layout and behavior
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsHomeScreen(
     onRideTrackingClick: () -> Unit,
+    onStopDetectionClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -72,8 +75,15 @@ fun SettingsHomeScreen(
                     onClick = onRideTrackingClick
                 )
 
+                // Stop Detection card (Feature 008 - v0.8.0)
+                SettingCard(
+                    title = "Stop Detection",
+                    subtitle = "Speed, Duration, Clustering",
+                    icon = Icons.Default.PinDrop,
+                    onClick = onStopDetectionClick
+                )
+
                 // Future cards will be added here:
-                // - "Stop Detection" card (Feature 2B)
                 // - "App Behavior" card (future)
                 // - "About" card (future)
             }
@@ -89,7 +99,8 @@ fun SettingsHomeScreen(
 private fun SettingsHomeScreenPreview() {
     BikeRedlightsTheme {
         SettingsHomeScreen(
-            onRideTrackingClick = {}
+            onRideTrackingClick = {},
+            onStopDetectionClick = {}
         )
     }
 }
@@ -102,7 +113,8 @@ private fun SettingsHomeScreenPreview() {
 private fun SettingsHomeScreenPreviewDark() {
     BikeRedlightsTheme {
         SettingsHomeScreen(
-            onRideTrackingClick = {}
+            onRideTrackingClick = {},
+            onStopDetectionClick = {}
         )
     }
 }
