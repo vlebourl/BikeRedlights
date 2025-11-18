@@ -141,9 +141,11 @@ fun AppNavigation(
         // Settings detail screen - Stop Detection (Feature 008 - v0.8.0)
         composable(SettingsDestination.STOP_DETECTION.route) {
             val stopDetectionConfig by settingsViewModel.stopDetectionConfig.collectAsStateWithLifecycle()
+            val uiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
 
             StopDetectionSettingsScreen(
                 config = stopDetectionConfig,
+                unitsSystem = uiState.unitsSystem,
                 onConfigChange = { config ->
                     settingsViewModel.updateStopDetectionConfig(config)
                 },

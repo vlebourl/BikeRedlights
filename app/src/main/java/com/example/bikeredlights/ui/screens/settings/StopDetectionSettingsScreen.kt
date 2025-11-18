@@ -21,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.bikeredlights.domain.model.settings.StopDetectionConfig
+import com.example.bikeredlights.domain.model.settings.UnitsSystem
+import com.example.bikeredlights.ui.components.settings.MultiOptionSegmentedButtonSetting
 import com.example.bikeredlights.ui.theme.BikeRedlightsTheme
 
 /**
@@ -35,6 +37,7 @@ import com.example.bikeredlights.ui.theme.BikeRedlightsTheme
  * Feature 010 (Stop Clustering), which will use these thresholds during rides.
  *
  * @param config Current stop detection configuration
+ * @param unitsSystem Current units system (for km/h ↔ mph conversion)
  * @param onConfigChange Callback when user changes any setting
  * @param onNavigateBack Callback when user presses back button
  * @param modifier Modifier for customizing layout and behavior
@@ -43,6 +46,7 @@ import com.example.bikeredlights.ui.theme.BikeRedlightsTheme
 @Composable
 fun StopDetectionSettingsScreen(
     config: StopDetectionConfig,
+    unitsSystem: UnitsSystem,
     onConfigChange: (StopDetectionConfig) -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
@@ -79,7 +83,33 @@ fun StopDetectionSettingsScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                // TODO: User Story 1 - Speed Threshold Section (T022-T031)
+                // User Story 1 - Speed Threshold Section
+                val kmhToMph = 0.621371f
+                val speedOptions = StopDetectionConfig.VALID_SPEED_THRESHOLDS
+                val displayedSpeed = if (unitsSystem == UnitsSystem.IMPERIAL) {
+                    config.speedThresholdKmh * kmhToMph
+                } else {
+                    config.speedThresholdKmh
+                }
+
+                MultiOptionSegmentedButtonSetting(
+                    label = "Speed Threshold",
+                    options = speedOptions,
+                    selectedValue = config.speedThresholdKmh,
+                    onValueChange = { newSpeedKmh ->
+                        onConfigChange(config.copy(speedThresholdKmh = newSpeedKmh))
+                    },
+                    valueFormatter = { speedKmh ->
+                        val displayValue = if (unitsSystem == UnitsSystem.IMPERIAL) {
+                            speedKmh * kmhToMph
+                        } else {
+                            speedKmh
+                        }
+                        val unit = if (unitsSystem == UnitsSystem.IMPERIAL) "mph" else "km/h"
+                        String.format("%.1f %s", displayValue, unit)
+                    }
+                )
+
                 // TODO: User Story 2 - Duration Threshold Section (T032-T038)
                 // TODO: User Story 3 - Clustering Radius Section (T039-T045)
             }
@@ -88,7 +118,7 @@ fun StopDetectionSettingsScreen(
 }
 
 /**
- * Preview for StopDetectionSettingsScreen in light theme.
+ * Preview for StopDetectionSettingsScreen in light theme (Metric units).
  */
 @Preview(showBackground = true)
 @Composable
@@ -96,6 +126,23 @@ private fun StopDetectionSettingsScreenPreview() {
     BikeRedlightsTheme {
         StopDetectionSettingsScreen(
             config = StopDetectionConfig(),
+            unitsSystem = UnitsSystem.METRIC,
+            onConfigChange = {},
+            onNavigateBack = {}
+        )
+    }
+}
+
+/**
+ * Preview for StopDetectionSettingsScreen in light theme (Imperial units).
+ */
+@Preview(showBackground = true)
+@Composable
+private fun StopDetectionSettingsScreenPreviewImperial() {
+    BikeRedlightsTheme {
+        StopDetectionSettingsScreen(
+            config = StopDetectionConfig(),
+            unitsSystem = UnitsSystem.IMPERIAL,
             onConfigChange = {},
             onNavigateBack = {}
         )
@@ -111,6 +158,7 @@ private fun StopDetectionSettingsScreenPreviewDark() {
     BikeRedlightsTheme {
         StopDetectionSettingsScreen(
             config = StopDetectionConfig(),
+            unitsSystem = UnitsSystem.METRIC,
             onConfigChange = {},
             onNavigateBack = {}
         )
