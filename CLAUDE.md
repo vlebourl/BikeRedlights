@@ -907,6 +907,7 @@ When working on this project:
 - DataStore Preferences (auto-pause timing setting), no database changes required (007-map-ux-improvements)
 - Kotlin 2.0.21 with Java 17 (OpenJDK) (008-stop-detection-settings)
 - DataStore Preferences (key-value pairs, local device only) - existing infrastructure from Feature 002 (008-stop-detection-settings)
+- Room SQLite database - New `stops` table with foreign key to existing `rides` table (CASCADE delete) (009-stop-detection)
 
 ## Recent Changes
 - 001-speed-tracking: Added Kotlin 2.0.21 with Jetpack Compose + Play Services Location 21.3.0, Jetpack Compose (BOM 2024.11.00), Material 3
