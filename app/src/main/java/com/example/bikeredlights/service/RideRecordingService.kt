@@ -135,6 +135,14 @@ class RideRecordingService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // CRITICAL: Call startForeground() IMMEDIATELY to avoid crash
+        // Android requires startForeground() within 5-10 seconds of startForegroundService()
+        // Must happen BEFORE any async operations (database, network, etc.)
+        if (intent?.action == ACTION_START_RECORDING) {
+            val initialNotification = buildNotification("Starting ride...")
+            startForegroundService(initialNotification)
+        }
+
         when (intent?.action) {
             ACTION_START_RECORDING -> {
                 startRecording()
@@ -190,9 +198,9 @@ class RideRecordingService : Service() {
             currentState = RideRecordingState.Recording(rideId)
             rideRecordingStateRepository.updateRecordingState(currentState)
 
-            // Start foreground service
+            // Update notification (foreground already started in onStartCommand)
             val notification = buildNotification("Recording...")
-            startForegroundService(notification)
+            notificationManager.notify(NOTIFICATION_ID, notification)
 
             // Start GPS tracking
             startLocationTracking(rideId)

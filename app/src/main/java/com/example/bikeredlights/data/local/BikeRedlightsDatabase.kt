@@ -126,13 +126,15 @@ abstract class BikeRedlightsDatabase : RoomDatabase() {
                 """)
 
                 // Critical: Create indexes for foreign keys (avoids performance warnings)
-                database.execSQL("CREATE INDEX idx_stops_ride_id ON stops(ride_id)")
-                database.execSQL("CREATE INDEX idx_stops_cluster_id ON stops(cluster_id)")
-                database.execSQL("CREATE INDEX idx_stops_start_timestamp ON stops(start_timestamp)")
+                // IMPORTANT: Index names MUST match Room's auto-generated names exactly
+                // Room naming pattern: "index_{table}_{column}" or "index_{table}_{col1}_{col2}"
+                database.execSQL("CREATE INDEX index_stops_ride_id ON stops(ride_id)")
+                database.execSQL("CREATE INDEX index_stops_cluster_id ON stops(cluster_id)")
+                database.execSQL("CREATE INDEX index_stops_start_timestamp ON stops(start_timestamp)")
 
                 // UNIQUE constraint on (ride_id, stop_number) prevents duplicate stop numbers per ride
                 database.execSQL(
-                    "CREATE UNIQUE INDEX idx_stops_ride_stop_unique ON stops(ride_id, stop_number)"
+                    "CREATE UNIQUE INDEX index_stops_ride_id_stop_number ON stops(ride_id, stop_number)"
                 )
             }
         }
