@@ -224,6 +224,28 @@ class RideRecordingService : Service() {
             )
             stopDetectionStateMachine?.startRide(rideId)
 
+            // Feature 009: Collect stop detection events and update repository StateFlows (T020)
+            serviceScope.launch {
+                stopDetectionStateMachine?.events?.collect { event ->
+                    when (event) {
+                        is com.example.bikeredlights.domain.util.StopEvent.StopDetected -> {
+                            // Update stop number when stop is confirmed
+                            (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
+                                ?.updateCurrentStopNumber(event.stopNumber)
+                            android.util.Log.d("RideRecordingService",
+                                "Stop #${event.stopNumber} detected (ID: ${event.stopId})")
+                        }
+                        is com.example.bikeredlights.domain.util.StopEvent.StopEnded -> {
+                            // Clear stop state when stop ends
+                            (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
+                                ?.resetStopState()
+                            android.util.Log.d("RideRecordingService",
+                                "Stop ended (ID: ${event.stopId})")
+                        }
+                    }
+                }
+            }
+
             // Start GPS tracking
             startLocationTracking(rideId)
 
@@ -388,6 +410,8 @@ class RideRecordingService : Service() {
 
             // Feature 009: End stop detection and cleanup (T022)
             stopDetectionStateMachine?.stopRide()
+            (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
+                ?.resetStopState()
 
             // Update state to Stopped
             currentState = RideRecordingState.Stopped(rideId)
@@ -764,6 +788,17 @@ class RideRecordingService : Service() {
             else -> {
                 // ManuallyPaused, Stopped, or Idle: Don't update
                 // Manual pause is handled by ViewModel when resuming/stopping
+            }
+        }
+
+        // Feature 009: Update stop duration if currently stopped (T020)
+        val stopDetectionState = stopDetectionStateMachine?.getCurrentState()
+        if (stopDetectionState?.isStopConfirmed == true) {
+            val stopStartTime = stopDetectionState.detectionStartTime
+            if (stopStartTime != null) {
+                val stopDurationSeconds = ((System.currentTimeMillis() - stopStartTime) / 1000).toInt()
+                (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
+                    ?.updateCurrentStopDuration(stopDurationSeconds)
             }
         }
     }
