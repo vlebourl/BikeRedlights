@@ -18,14 +18,17 @@ import androidx.core.app.ServiceCompat
 import com.example.bikeredlights.MainActivity
 import com.example.bikeredlights.R
 import com.example.bikeredlights.domain.model.RideRecordingState
+import com.example.bikeredlights.domain.model.StopDetectionState
 import com.example.bikeredlights.data.repository.SettingsRepository
 import com.example.bikeredlights.domain.repository.LocationRepository
 import com.example.bikeredlights.domain.repository.RideRecordingStateRepository
 import com.example.bikeredlights.domain.repository.RideRepository
+import com.example.bikeredlights.domain.repository.StopRepository
 import com.example.bikeredlights.domain.repository.TrackPointRepository
 import com.example.bikeredlights.domain.usecase.CalculateDistanceUseCase
 import com.example.bikeredlights.domain.usecase.RecordTrackPointUseCase
 import com.example.bikeredlights.domain.usecase.StartRideUseCase
+import com.example.bikeredlights.domain.util.StopDetectionStateMachine
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -99,7 +102,11 @@ class RideRecordingService : Service() {
     @Inject
     lateinit var settingsRepository: SettingsRepository
 
+    @Inject
+    lateinit var stopRepository: StopRepository
+
     private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
+    private var stopDetectionStateMachine: StopDetectionStateMachine? = null
     private var locationJob: Job? = null
     private var durationUpdateJob: Job? = null
     private var gpsAccuracyObserverJob: Job? = null  // T082: Observe GPS accuracy changes
@@ -201,6 +208,21 @@ class RideRecordingService : Service() {
             // Update notification (foreground already started in onStartCommand)
             val notification = buildNotification("Recording...")
             notificationManager.notify(NOTIFICATION_ID, notification)
+
+            // Feature 009: Initialize stop detection state machine (T017)
+            val stopDetectionSettings = try {
+                settingsRepository.stopDetectionConfig.first()
+            } catch (e: Exception) {
+                com.example.bikeredlights.domain.model.settings.StopDetectionConfig()
+            }
+
+            stopDetectionStateMachine = StopDetectionStateMachine(
+                stopRepository = stopRepository,
+                speedThresholdKmh = stopDetectionSettings.speedThresholdKmh,
+                durationThresholdSeconds = stopDetectionSettings.durationThresholdSeconds,
+                scope = serviceScope
+            )
+            stopDetectionStateMachine?.startRide(rideId)
 
             // Start GPS tracking
             startLocationTracking(rideId)
@@ -364,6 +386,9 @@ class RideRecordingService : Service() {
             (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
                 ?.resetCurrentBearing()
 
+            // Feature 009: End stop detection and cleanup (T022)
+            stopDetectionStateMachine?.stopRide()
+
             // Update state to Stopped
             currentState = RideRecordingState.Stopped(rideId)
             rideRecordingStateRepository.updateRecordingState(currentState)
@@ -463,6 +488,16 @@ class RideRecordingService : Service() {
                     val currentBearing = locationData.bearing
                     (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
                         ?.updateCurrentBearing(currentBearing)
+
+                    // Feature 009: Process GPS speed through stop detection state machine (T018)
+                    if (!isManuallyPaused) {
+                        stopDetectionStateMachine?.processSpeed(
+                            speedKmh = (currentSpeed * 3.6).toFloat(),  // Convert m/s to km/h
+                            latitude = locationData.latitude,
+                            longitude = locationData.longitude,
+                            timestamp = locationData.timestamp
+                        )
+                    }
 
                     // Check for auto-resume (before pause gate)
                     // This allows auto-resume to execute during AutoPaused state
