@@ -74,7 +74,12 @@ Android single-module app structure:
 - [X] T017 [US1] Modify RideRecordingService.kt to own StopDetectionStateMachine instance in service scope (survives backgrounding)
 - [X] T018 [US1] Add stop detection initialization in RideRecordingService.startRide() (load thresholds from settings, create state machine)
 - [X] T019 [US1] Add stop detection cleanup in RideRecordingService.stopRide() (end active stop if exists, reset state)
-- [ ] T020 [US1] Add stop event emissions to RideRecordingService using SharedFlow (emit stopDetected, stopEnded events to ViewModel)
+- [X] T020 [US1] Add stop event emissions/state exposure to RideRecordingService using StateFlow (expose currentStopNumber and currentStopDuration to UI)
+  - ✅ Added getCurrentStopNumber() and getCurrentStopDuration() to RideRecordingStateRepository interface
+  - ✅ Implemented StateFlows with validation in RideRecordingStateRepositoryImpl
+  - ✅ Service collects state machine events and updates StateFlows
+  - ✅ Stop duration updates every 100ms during active stop
+  - ✅ Stop state resets on stop end or ride end
 - [X] T021 [US1] Consecutive seconds filtering handled by StopDetectionStateMachine (speedBelowThresholdCount, speedAboveThresholdCount)
 - [X] T022 [US1] Stop confirmation logic in StopDetectionStateMachine (when duration threshold met, calls StopRepository.insertStop internally)
 - [X] T023 [US1] Stop end detection in StopDetectionStateMachine (when speed > threshold for 3 seconds, calls StopRepository.updateStopEnd internally)
