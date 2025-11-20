@@ -189,6 +189,64 @@ class RideRecordingViewModel @Inject constructor(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     /**
+     * Current stop number during active ride (Feature 009 - Stop Detection).
+     *
+     * **Lifecycle**:
+     * - null when no ride is recording
+     * - null while moving (not stopped)
+     * - Stop number (1, 2, 3...) when stopped (speed < threshold for duration)
+     * - null when stop ends (rider starts moving again)
+     * - null when ride is stopped
+     *
+     * **UI Integration**:
+     * - Drives StopPopup visibility (popup shows when not null)
+     * - Displayed in popup header: "🛑 Stop #N"
+     *
+     * **State Sharing**:
+     * - WhileSubscribed(5000): Stops collecting 5 seconds after last subscriber
+     * - Battery optimization: No background updates when UI not visible
+     * - Initial value: null (not stopped)
+     *
+     * **Usage in UI**:
+     * ```kotlin
+     * val currentStopNumber by viewModel.currentStopNumber.collectAsStateWithLifecycle()
+     * StopPopup(stopNumber = currentStopNumber, duration = currentStopDuration)
+     * ```
+     */
+    val currentStopNumber: StateFlow<Int?> =
+        rideRecordingStateRepository.getCurrentStopNumber()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    /**
+     * Current stop duration in seconds during active stop (Feature 009 - Stop Detection).
+     *
+     * **Lifecycle**:
+     * - null when no ride is recording
+     * - null while moving (not stopped)
+     * - Duration in seconds when stopped (increments every second: 0, 1, 2, 3...)
+     * - null when stop ends (rider starts moving again)
+     * - null when ride is stopped
+     *
+     * **UI Integration**:
+     * - Displayed in StopPopup as live counter (formatted as MM:SS or HH:MM:SS)
+     * - Updates in real-time every second during active stop
+     *
+     * **State Sharing**:
+     * - WhileSubscribed(5000): Stops collecting 5 seconds after last subscriber
+     * - Battery optimization: No background updates when UI not visible
+     * - Initial value: null (not stopped)
+     *
+     * **Usage in UI**:
+     * ```kotlin
+     * val currentStopDuration by viewModel.currentStopDuration.collectAsStateWithLifecycle()
+     * StopPopup(stopNumber = currentStopNumber, duration = currentStopDuration)
+     * ```
+     */
+    val currentStopDuration: StateFlow<Int?> =
+        rideRecordingStateRepository.getCurrentStopDuration()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    /**
      * Current location (last GPS point) for map marker (Feature 006).
      *
      * **Lifecycle**:

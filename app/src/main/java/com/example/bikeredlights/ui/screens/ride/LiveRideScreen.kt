@@ -36,6 +36,7 @@ import com.example.bikeredlights.ui.components.ride.KeepScreenOn
 import com.example.bikeredlights.ui.components.ride.RideControls
 import com.example.bikeredlights.ui.components.ride.RideStatistics
 import com.example.bikeredlights.ui.components.ride.SaveRideDialog
+import com.example.bikeredlights.ui.components.ride.StopPopup
 import com.example.bikeredlights.ui.viewmodel.NavigationEvent
 import com.example.bikeredlights.ui.viewmodel.RideRecordingUiState
 import com.example.bikeredlights.ui.viewmodel.RideRecordingViewModel
@@ -82,6 +83,10 @@ fun LiveRideScreen(
 
     // Map bearing for directional orientation (Feature 007 - v0.6.1)
     val mapBearing by viewModel.currentBearing.collectAsStateWithLifecycle()
+
+    // Stop detection state (Feature 009)
+    val currentStopNumber by viewModel.currentStopNumber.collectAsStateWithLifecycle()
+    val currentStopDuration by viewModel.currentStopDuration.collectAsStateWithLifecycle()
 
     // Map state (Feature 006)
     val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
@@ -221,6 +226,13 @@ fun LiveRideScreen(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = 16.dp, end = 16.dp)
+        )
+
+        // Stop Popup (Feature 009 - displays at top-center when stop is active)
+        StopPopup(
+            stopNumber = currentStopNumber,
+            durationSeconds = currentStopDuration,
+            modifier = Modifier.align(Alignment.TopCenter)
         )
 
         // Main content with split-screen layout (Feature 006)
