@@ -117,6 +117,7 @@ class StopDetectionStateMachine @Inject constructor(
             StopDetectionUtils.isSpeedBelowThreshold(speedKmh, speedThresholdKmh) -> {
                 if (state.isStopConfirmed) {
                     // Already stopped - reset resume counter
+                    android.util.Log.d("StopDetection", "Speed below threshold during active stop: ${speedKmh}km/h (still stopped)")
                     state = state.copy(speedAboveThresholdCount = 0)
                 } else {
                     // Increment below-threshold counter
@@ -124,6 +125,7 @@ class StopDetectionStateMachine @Inject constructor(
 
                     if (newCount == 1) {
                         // First second below threshold - start detection
+                        android.util.Log.d("StopDetection", "⚠️ DETECTION START: Speed dropped below ${speedThresholdKmh}km/h (current: ${speedKmh}km/h)")
                         state = state.copy(
                             speedBelowThresholdCount = 1,
                             speedAboveThresholdCount = 0,
@@ -132,6 +134,7 @@ class StopDetectionStateMachine @Inject constructor(
                     } else {
                         // Update counter (caps at 3)
                         val cappedCount = newCount.coerceAtMost(StopDetectionState.MAX_CONSECUTIVE_SECONDS)
+                        android.util.Log.d("StopDetection", "Detection ongoing: ${cappedCount}/3 consecutive seconds below threshold (${speedKmh}km/h)")
                         state = state.copy(speedBelowThresholdCount = cappedCount)
 
                         // Check duration threshold if we've reached 3 consecutive seconds
@@ -139,8 +142,11 @@ class StopDetectionStateMachine @Inject constructor(
                             val detectionStart = state.detectionStartTime ?: timestamp
                             val durationSoFar = ((timestamp - detectionStart) / 1000).toInt()
 
+                            android.util.Log.d("StopDetection", "3 consecutive seconds confirmed! Duration so far: ${durationSoFar}s (threshold: ${durationThresholdSeconds}s)")
+
                             if (durationSoFar >= durationThresholdSeconds) {
                                 // Duration threshold met - confirm stop
+                                android.util.Log.i("StopDetection", "🛑 STOP CONFIRMED! Duration ${durationSoFar}s >= threshold ${durationThresholdSeconds}s")
                                 confirmStop(rideId, latitude, longitude, detectionStart)
                             }
                         }
@@ -154,14 +160,20 @@ class StopDetectionStateMachine @Inject constructor(
                     // Currently stopped - increment resume counter
                     val newCount = state.speedAboveThresholdCount + 1
 
+                    android.util.Log.d("StopDetection", "✅ Speed above threshold during stop: ${speedKmh}km/h - resume counter ${newCount}/3")
+
                     if (newCount >= StopDetectionState.MAX_CONSECUTIVE_SECONDS) {
                         // 3 consecutive seconds above threshold - end stop
+                        android.util.Log.i("StopDetection", "🚀 STOP ENDED! 3 consecutive seconds above threshold - rider moving again")
                         endCurrentStop()
                     } else {
                         state = state.copy(speedAboveThresholdCount = newCount)
                     }
                 } else {
                     // Was detecting or moving - reset to moving
+                    if (state.speedBelowThresholdCount > 0) {
+                        android.util.Log.d("StopDetection", "❌ Detection cancelled: Speed back above threshold (${speedKmh}km/h) before stop confirmed")
+                    }
                     state = state.copy(
                         speedBelowThresholdCount = 0,
                         speedAboveThresholdCount = 0,
@@ -217,10 +229,13 @@ class StopDetectionStateMachine @Inject constructor(
 
         // Insert to database (async) and update with real stopId
         scope.launch {
+            android.util.Log.i("StopDetection", "💾 Inserting stop #${stopNumber} to database - Location: (${latitude}, ${longitude})")
             val stopId = stopRepository.insertStop(stop)
 
             // Update state with real database ID
             state = state.copy(activeStopId = stopId)
+
+            android.util.Log.i("StopDetection", "✅ Stop #${stopNumber} persisted with ID: $stopId")
 
             // Emit event to ViewModel
             _events.emit(StopEvent.StopDetected(stopNumber, stopId))
@@ -240,6 +255,8 @@ class StopDetectionStateMachine @Inject constructor(
         val startTime = state.detectionStartTime ?: return // Invalid state
         val endTime = System.currentTimeMillis()
         val duration = StopDetectionUtils.calculateDuration(startTime, endTime)
+
+        android.util.Log.i("StopDetection", "📊 Ending stop ID:$stopId - Duration: ${duration}s")
 
         // Update database (async)
         scope.launch {
