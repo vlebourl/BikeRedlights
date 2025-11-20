@@ -50,13 +50,13 @@ Android single-module app structure:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T009 Create StopDetectionState.kt data class in app/src/main/java/com/example/bikeredlights/domain/model/StopDetectionState.kt (runtime state: counters, timers, active stop ID)
-- [ ] T010 [P] Create StopDetectionUtils.kt in app/src/main/java/com/example/bikeredlights/domain/util/StopDetectionUtils.kt (consecutive seconds filtering, duration formatting)
-- [ ] T011 Create StopDetectionStateMachine.kt in app/src/main/java/com/example/bikeredlights/domain/util/StopDetectionStateMachine.kt (state transitions: Moving → Detecting → Confirmed)
-- [ ] T012 Write unit tests for StopDetectionStateMachine in app/src/test/java/com/example/bikeredlights/domain/util/StopDetectionStateMachineTest.kt (test all state transitions, consecutive seconds logic, edge cases)
-- [ ] T013 Write instrumented tests for StopDao in app/src/androidTest/java/com/example/bikeredlights/data/local/dao/StopDaoTest.kt (test insert, updateStopEnd, CASCADE delete, UNIQUE constraint, Flow reactivity)
-- [ ] T014 Write unit tests for StopRepository in app/src/test/java/com/example/bikeredlights/data/repository/StopRepositoryTest.kt (test CRUD operations, domain/entity mapping)
-- [ ] T015 Verify database migration 4→5 using Database Inspector (check stops table schema, foreign keys, indexes)
+- [X] T009 Create StopDetectionState.kt data class in app/src/main/java/com/example/bikeredlights/domain/model/StopDetectionState.kt (runtime state: counters, timers, active stop ID)
+- [X] T010 [P] Create StopDetectionUtils.kt in app/src/main/java/com/example/bikeredlights/domain/util/StopDetectionUtils.kt (consecutive seconds filtering, duration formatting)
+- [X] T011 Create StopDetectionStateMachine.kt in app/src/main/java/com/example/bikeredlights/domain/util/StopDetectionStateMachine.kt (state transitions: Moving → Detecting → Confirmed)
+- [X] T012 Write unit tests for StopDetectionStateMachine in app/src/test/java/com/example/bikeredlights/domain/util/StopDetectionStateMachineTest.kt (test all state transitions, consecutive seconds logic, edge cases)
+- [X] T013 Write instrumented tests for StopDao in app/src/androidTest/java/com/example/bikeredlights/data/local/dao/StopDaoTest.kt (test insert, updateStopEnd, CASCADE delete, UNIQUE constraint, Flow reactivity)
+- [X] T014 Write unit tests for StopRepository in app/src/test/java/com/example/bikeredlights/data/repository/StopRepositoryTest.kt (test CRUD operations, domain/entity mapping)
+- [X] T015 Verify database migration 4→5 using Database Inspector (check stops table schema, foreign keys, indexes)
 
 **Checkpoint**: Foundation ready - state machine tested, database validated, user story implementation can now begin
 
