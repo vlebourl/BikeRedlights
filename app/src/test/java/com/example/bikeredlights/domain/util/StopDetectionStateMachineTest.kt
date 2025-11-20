@@ -44,10 +44,16 @@ class StopDetectionStateMachineTest {
     @Before
     fun setup() {
         stopRepository = mockk(relaxed = true)
-        testScope = TestScope(UnconfinedTestDispatcher())
 
-        // Mock database insert to return stopId
+        // Use UnconfinedTestDispatcher for immediate execution
+        val testDispatcher = UnconfinedTestDispatcher()
+        testScope = TestScope(testDispatcher)
+
+        // Mock database insert to return stopId immediately
         coEvery { stopRepository.insertStop(any()) } returns 1L
+
+        // Mock database update to complete immediately
+        coEvery { stopRepository.updateStopEnd(any(), any(), any()) } returns Unit
 
         stateMachine = StopDetectionStateMachine(
             stopRepository = stopRepository,
@@ -142,8 +148,11 @@ class StopDetectionStateMachineTest {
 
         val startTime = 1000L
 
-        // Simulate 15 seconds at 2 km/h (below threshold)
-        for (i in 0..14) {
+        // Simulate 16 seconds at 2 km/h (below threshold)
+        // Need 16 iterations to reach 15 seconds duration:
+        // i=0 (1000ms) starts detection
+        // i=15 (16000ms) gives duration of 15 seconds
+        for (i in 0..15) {
             stateMachine.processSpeed(
                 speedKmh = 2f,
                 latitude = testLatitude,
@@ -152,15 +161,18 @@ class StopDetectionStateMachineTest {
             )
         }
 
-        // Wait for async database insert
-        testScope.testScheduler.advanceUntilIdle()
-
         val state = stateMachine.getCurrentState()
 
+        // State should be updated immediately (synchronous)
         assertTrue("Should be stopped", state.isStopped)
         assertFalse("Should not be moving", state.isMoving)
         assertNotNull("Active stop ID should be set", state.activeStopId)
-        assertEquals(1L, state.activeStopId)
+
+        // Wait for async database insert to get real stopId
+        testScope.testScheduler.advanceUntilIdle()
+
+        val stateAfterAsync = stateMachine.getCurrentState()
+        assertEquals(1L, stateAfterAsync.activeStopId)
 
         // Verify database insert was called
         coVerify(exactly = 1) {
@@ -210,8 +222,8 @@ class StopDetectionStateMachineTest {
 
         val startTime = 1000L
 
-        // Confirm stop (15 seconds at 2 km/h)
-        for (i in 0..14) {
+        // Confirm stop (need 16 readings to get 15 seconds duration)
+        for (i in 0..15) {
             stateMachine.processSpeed(2f, testLatitude, testLongitude, startTime + (i * 1000))
         }
 
@@ -302,7 +314,7 @@ class StopDetectionStateMachineTest {
         stateMachine.startRide(rideId)
 
         // Confirm stop
-        for (i in 0..14) {
+        for (i in 0..15) {
             stateMachine.processSpeed(2f, testLatitude, testLongitude, 1000L + (i * 1000))
         }
         testScope.testScheduler.advanceUntilIdle()
@@ -323,7 +335,7 @@ class StopDetectionStateMachineTest {
         stateMachine.startRide(rideId)
 
         // Confirm stop
-        for (i in 0..14) {
+        for (i in 0..15) {
             stateMachine.processSpeed(2f, testLatitude, testLongitude, 1000L + (i * 1000))
         }
         testScope.testScheduler.advanceUntilIdle()
@@ -345,7 +357,7 @@ class StopDetectionStateMachineTest {
         stateMachine.startRide(rideId)
 
         // First stop
-        for (i in 0..14) {
+        for (i in 0..15) {
             stateMachine.processSpeed(2f, testLatitude, testLongitude, 1000L + (i * 1000))
         }
         testScope.testScheduler.advanceUntilIdle()
@@ -359,7 +371,7 @@ class StopDetectionStateMachineTest {
         assertEquals(2, stateMachine.getCurrentState().currentStopNumber)
 
         // Second stop
-        for (i in 0..14) {
+        for (i in 0..15) {
             stateMachine.processSpeed(2f, testLatitude, testLongitude, 30000L + (i * 1000))
         }
         testScope.testScheduler.advanceUntilIdle()
@@ -381,7 +393,7 @@ class StopDetectionStateMachineTest {
         stateMachine.startRide(rideId)
 
         // Confirm stop
-        for (i in 0..14) {
+        for (i in 0..15) {
             stateMachine.processSpeed(2f, testLatitude, testLongitude, 1000L + (i * 1000))
         }
         testScope.testScheduler.advanceUntilIdle()
@@ -422,7 +434,7 @@ class StopDetectionStateMachineTest {
         stateMachine.startRide(rideId)
 
         // Confirm stop
-        for (i in 0..14) {
+        for (i in 0..15) {
             stateMachine.processSpeed(2f, testLatitude, testLongitude, 1000L + (i * 1000))
         }
         testScope.testScheduler.advanceUntilIdle()

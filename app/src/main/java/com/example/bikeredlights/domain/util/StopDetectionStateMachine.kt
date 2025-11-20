@@ -194,6 +194,15 @@ class StopDetectionStateMachine @Inject constructor(
 
         val stopNumber = state.currentStopNumber
 
+        // Update state immediately (synchronous) with temporary stopId
+        // This ensures tests and UI see state change right away
+        state = state.copy(
+            isStopConfirmed = true,
+            activeStopId = -1L, // Temporary until database insert completes
+            speedBelowThresholdCount = 0,
+            speedAboveThresholdCount = 0
+        )
+
         // Create stop entity
         val stop = Stop(
             id = 0L, // Will be assigned by database
@@ -206,17 +215,12 @@ class StopDetectionStateMachine @Inject constructor(
             clusterId = null // For Feature 010
         )
 
-        // Insert to database (async)
+        // Insert to database (async) and update with real stopId
         scope.launch {
             val stopId = stopRepository.insertStop(stop)
 
-            // Update state with active stop ID
-            state = state.copy(
-                isStopConfirmed = true,
-                activeStopId = stopId,
-                speedBelowThresholdCount = 0,
-                speedAboveThresholdCount = 0
-            )
+            // Update state with real database ID
+            state = state.copy(activeStopId = stopId)
 
             // Emit event to ViewModel
             _events.emit(StopEvent.StopDetected(stopNumber, stopId))
