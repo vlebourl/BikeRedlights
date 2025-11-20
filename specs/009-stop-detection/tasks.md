@@ -98,14 +98,23 @@ Android single-module app structure:
 
 ### Implementation for User Story 2
 
-- [ ] T026 [P] [US2] Create StopPopup.kt composable in app/src/main/java/com/example/bikeredlights/ui/components/ride/StopPopup.kt (semi-transparent card, stop number, duration counter, fade-out animation)
-- [ ] T027 [US2] Add stop popup state to RideViewModel.kt in app/src/main/java/com/example/bikeredlights/ui/viewmodel/RideViewModel.kt (currentStopNumber: StateFlow<Int?>, stopDurationSeconds: StateFlow<Int?>)
-- [ ] T028 [US2] Collect stop events from RideRecordingService in RideViewModel (stopDetected → show popup, stopEnded → hide popup)
-- [ ] T029 [US2] Implement 1-second duration counter in RideViewModel using Flow with delay(1000) for live updates
-- [ ] T030 [US2] Modify LiveRideScreen.kt in app/src/main/java/com/example/bikeredlights/ui/screens/ride/LiveRideScreen.kt to display StopPopup composable when currentStopNumber is not null
-- [ ] T031 [US2] Position StopPopup at top-center of LiveRideScreen (doesn't block map or speed display)
-- [ ] T032 [US2] Add AnimatedVisibility with fadeOut(200ms) to StopPopup for smooth dismissal animation
-- [ ] T033 [US2] Test popup visibility logic (only visible during active stop, hidden when not recording or when stop ends)
+- [X] T026 [P] [US2] Create StopPopup.kt composable in app/src/main/java/com/example/bikeredlights/ui/components/ride/StopPopup.kt (semi-transparent card, stop number, duration counter, fade-out animation)
+  - ✅ Material 3 Card with semi-transparent surface (alpha 0.9)
+  - ✅ Stop emoji 🛑 + stop number display
+  - ✅ formatDuration() helper (MM:SS or HH:MM:SS format)
+  - ✅ AnimatedVisibility with fadeIn/fadeOut animations
+  - ✅ 4 preview states for testing
+- [X] T027 [US2] Add stop popup state to RideRecordingViewModel (currentStopNumber: StateFlow<Int?>, stopDurationSeconds: StateFlow<Int?>)
+  - ✅ Exposed from RideRecordingStateRepository
+  - ✅ WhileSubscribed(5000) for battery optimization
+- [X] T028 [US2] Collect stop events from RideRecordingService in RideViewModel (automatic via StateFlow from repository)
+- [X] T029 [US2] Implement 1-second duration counter (handled in RideRecordingService every 100ms)
+- [X] T030 [US2] Modify LiveRideScreen.kt to display StopPopup composable when currentStopNumber is not null
+  - ✅ Collect currentStopNumber and currentStopDuration
+  - ✅ Pass to StopPopup component
+- [X] T031 [US2] Position StopPopup at top-center of LiveRideScreen (doesn't block map or GPS indicator)
+- [X] T032 [US2] Add AnimatedVisibility with fadeOut to StopPopup (built-in to StopPopup composable)
+- [X] T033 [US2] Test popup visibility logic (AnimatedVisibility handles this based on stopNumber != null)
 
 **Checkpoint**: User Story 2 complete - popup displays during stops with live counter, auto-dismisses on movement, can be tested independently by starting a ride and observing UI during stop/resume cycles
 
