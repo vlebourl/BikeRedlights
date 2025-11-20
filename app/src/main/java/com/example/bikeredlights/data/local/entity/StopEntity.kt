@@ -37,7 +37,7 @@ import androidx.room.PrimaryKey
     tableName = "stops",
     foreignKeys = [
         ForeignKey(
-            entity = RideEntity::class,
+            entity = Ride::class,
             parentColumns = ["id"],
             childColumns = ["ride_id"],
             onDelete = ForeignKey.CASCADE

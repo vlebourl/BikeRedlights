@@ -129,21 +129,21 @@ class StopDetectionStateMachine @Inject constructor(
                             speedAboveThresholdCount = 0,
                             detectionStartTime = timestamp
                         )
-                    } else if (newCount >= StopDetectionState.MAX_CONSECUTIVE_SECONDS) {
-                        // 3 consecutive seconds below threshold
-                        val detectionStart = state.detectionStartTime ?: timestamp
-                        val durationSoFar = ((timestamp - detectionStart) / 1000).toInt()
-
-                        if (durationSoFar >= durationThresholdSeconds) {
-                            // Duration threshold met - confirm stop
-                            confirmStop(rideId, latitude, longitude, detectionStart)
-                        } else {
-                            // Still counting, update state
-                            state = state.copy(speedBelowThresholdCount = newCount)
-                        }
                     } else {
-                        // Still counting consecutive seconds
-                        state = state.copy(speedBelowThresholdCount = newCount)
+                        // Update counter (caps at 3)
+                        val cappedCount = newCount.coerceAtMost(StopDetectionState.MAX_CONSECUTIVE_SECONDS)
+                        state = state.copy(speedBelowThresholdCount = cappedCount)
+
+                        // Check duration threshold if we've reached 3 consecutive seconds
+                        if (cappedCount >= StopDetectionState.MAX_CONSECUTIVE_SECONDS) {
+                            val detectionStart = state.detectionStartTime ?: timestamp
+                            val durationSoFar = ((timestamp - detectionStart) / 1000).toInt()
+
+                            if (durationSoFar >= durationThresholdSeconds) {
+                                // Duration threshold met - confirm stop
+                                confirmStop(rideId, latitude, longitude, detectionStart)
+                            }
+                        }
                     }
                 }
             }
@@ -203,7 +203,6 @@ class StopDetectionStateMachine @Inject constructor(
             longitude = longitude,
             startTimestamp = startTimestamp,
             endTimestamp = null, // Still active
-            durationSeconds = null, // Calculated when ended
             clusterId = null // For Feature 010
         )
 
@@ -236,10 +235,11 @@ class StopDetectionStateMachine @Inject constructor(
         val stopId = state.activeStopId ?: return // No active stop
         val startTime = state.detectionStartTime ?: return // Invalid state
         val endTime = System.currentTimeMillis()
+        val duration = StopDetectionUtils.calculateDuration(startTime, endTime)
 
         // Update database (async)
         scope.launch {
-            stopRepository.updateStopEnd(stopId, endTime)
+            stopRepository.updateStopEnd(stopId, endTime, duration)
 
             // Increment stop number for next stop
             val nextStopNumber = state.currentStopNumber + 1
