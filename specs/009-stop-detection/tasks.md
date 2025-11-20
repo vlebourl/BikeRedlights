@@ -70,16 +70,16 @@ Android single-module app structure:
 
 ### Implementation for User Story 1
 
-- [ ] T016 [US1] Modify TrackLocationUseCase.kt in app/src/main/java/com/example/bikeredlights/domain/usecase/TrackLocationUseCase.kt to integrate stop detection logic (call state machine on each speed update)
-- [ ] T017 [US1] Modify RideRecordingService.kt in app/src/main/java/com/example/bikeredlights/service/RideRecordingService.kt to own StopDetectionStateMachine instance in service scope (survives backgrounding)
-- [ ] T018 [US1] Add stop detection initialization in RideRecordingService.startRide() (reset state, load thresholds from settings)
-- [ ] T019 [US1] Add stop detection cleanup in RideRecordingService.stopRide() (end active stop if exists, reset state)
+- [X] T016 [US1] Integrate stop detection in RideRecordingService location callback (call stopDetectionStateMachine.processSpeed() on each GPS update)
+- [X] T017 [US1] Modify RideRecordingService.kt to own StopDetectionStateMachine instance in service scope (survives backgrounding)
+- [X] T018 [US1] Add stop detection initialization in RideRecordingService.startRide() (load thresholds from settings, create state machine)
+- [X] T019 [US1] Add stop detection cleanup in RideRecordingService.stopRide() (end active stop if exists, reset state)
 - [ ] T020 [US1] Add stop event emissions to RideRecordingService using SharedFlow (emit stopDetected, stopEnded events to ViewModel)
-- [ ] T021 [US1] Implement consecutive seconds filtering in RideRecordingService location update callback (speedBelowThresholdCount, speedAboveThresholdCount)
-- [ ] T022 [US1] Implement stop confirmation logic in RideRecordingService (when duration threshold met, call StopRepository.insertStop)
-- [ ] T023 [US1] Implement stop end detection in RideRecordingService (when speed > threshold for 3 consecutive seconds, call StopRepository.updateStopEnd)
-- [ ] T024 [US1] Handle manual pause during active stop in RideRecordingService (end stop immediately, save to database)
-- [ ] T025 [US1] Add FR-028 data persistence on stop confirmation (save start time, location immediately, not waiting for stop end)
+- [X] T021 [US1] Consecutive seconds filtering handled by StopDetectionStateMachine (speedBelowThresholdCount, speedAboveThresholdCount)
+- [X] T022 [US1] Stop confirmation logic in StopDetectionStateMachine (when duration threshold met, calls StopRepository.insertStop internally)
+- [X] T023 [US1] Stop end detection in StopDetectionStateMachine (when speed > threshold for 3 seconds, calls StopRepository.updateStopEnd internally)
+- [X] T024 [US1] Manual pause during active stop handled by StopDetectionStateMachine.endCurrentStop() (called internally on stopRide())
+- [X] T025 [US1] FR-028 data persistence on stop confirmation (StopDetectionStateMachine saves start time, location immediately to database)
 
 **Checkpoint**: User Story 1 complete - stop detection works during rides, data is persisted to database, can be tested independently by recording a ride with stops and verifying database records
 
