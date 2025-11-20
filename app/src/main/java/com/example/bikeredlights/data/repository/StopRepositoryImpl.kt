@@ -1,0 +1,176 @@
+package com.example.bikeredlights.data.repository
+
+import com.example.bikeredlights.data.local.dao.StopDao
+import com.example.bikeredlights.data.local.entity.StopEntity
+import com.example.bikeredlights.domain.model.Stop
+import com.example.bikeredlights.domain.repository.StopRepository
+import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
+
+/**
+ * Implementation of StopRepository interface (Feature 009).
+ *
+ * Responsibilities:
+ * - Map between domain models (Stop) and database entities (StopEntity)
+ * - Delegate database operations to StopDao
+ * - Handle validation and error transformation
+ *
+ * Thread Safety:
+ * - All methods are suspend functions or return Flow
+ * - Room handles threading internally
+ * - No shared mutable state
+ *
+ * Dependency Injection:
+ * - Injected via Hilt @Inject constructor
+ * - Bound to StopRepository interface in DatabaseModule
+ *
+ * @property stopDao Room DAO for stop database operations
+ */
+class StopRepositoryImpl @Inject constructor(
+    private val stopDao: StopDao
+) : StopRepository {
+
+    /**
+     * Insert a new stop record when stop is confirmed.
+     *
+     * Validation: Stop domain model validates lat/long/stopNumber in its init block.
+     * Mapping: Domain model → Entity (entity has Room-specific annotations).
+     *
+     * @param stop Stop domain model with rideId, stopNumber, lat, long, startTimestamp
+     * @return Database ID of inserted stop
+     * @throws IllegalArgumentException if validation fails in Stop init block
+     * @throws SQLiteConstraintException if rideId invalid or stopNumber duplicate
+     */
+    override suspend fun insertStop(stop: Stop): Long {
+        val entity = stop.toEntity()
+        return stopDao.insertStop(entity)
+    }
+
+    /**
+     * Update stop end timestamp and duration when movement resumes.
+     *
+     * Immutability: Only updates endTimestamp and durationSeconds fields.
+     *
+     * @param stopId Database ID from insertStop return value
+     * @param endTimestamp Unix epoch milliseconds when movement detected
+     * @param durationSeconds Calculated as (endTimestamp - startTimestamp) / 1000
+     */
+    override suspend fun updateStopEnd(stopId: Long, endTimestamp: Long, durationSeconds: Int) {
+        stopDao.updateStopEnd(stopId, endTimestamp, durationSeconds)
+    }
+
+    /**
+     * Get all stops for a specific ride, ordered by sequential stop number.
+     *
+     * Mapping: Entity list → Domain model list
+     *
+     * @param rideId Foreign key to rides table
+     * @return List of Stop domain models ordered by stop_number
+     */
+    override suspend fun getStopsByRideId(rideId: Long): List<Stop> {
+        val entities = stopDao.getStopsByRideId(rideId)
+        return entities.map { it.toDomainModel() }
+    }
+
+    /**
+     * Get live stop count for a ride (reactive Flow).
+     *
+     * No mapping needed: Flow<Int> is already technology-agnostic.
+     *
+     * @param rideId Current ride being recorded
+     * @return Flow emitting stop count
+     */
+    override fun getStopCountByRideId(rideId: Long): Flow<Int> {
+        return stopDao.getStopCountByRideId(rideId)
+    }
+
+    /**
+     * Get all stops without assigned cluster (for Feature 010).
+     *
+     * Mapping: Entity list → Domain model list
+     *
+     * @return List of unclustered Stop domain models
+     */
+    override suspend fun getUnclusteredStops(): List<Stop> {
+        val entities = stopDao.getUnclusteredStops()
+        return entities.map { it.toDomainModel() }
+    }
+
+    /**
+     * Update cluster ID for a stop (Feature 010 only).
+     *
+     * @param stopId Database ID of stop
+     * @param clusterId Foreign key to clusters table
+     */
+    override suspend fun updateStopCluster(stopId: Long, clusterId: Long) {
+        stopDao.updateStopCluster(stopId, clusterId)
+    }
+
+    /**
+     * Get a single stop by ID (for testing/debugging).
+     *
+     * Mapping: Entity → Domain model (or null)
+     *
+     * @param stopId Primary key
+     * @return Stop domain model or null if not found
+     */
+    override suspend fun getStopById(stopId: Long): Stop? {
+        val entity = stopDao.getStopById(stopId)
+        return entity?.toDomainModel()
+    }
+
+    /**
+     * Delete all stops for a ride (for testing).
+     *
+     * Note: In production, CASCADE foreign key handles deletion automatically.
+     *
+     * @param rideId Foreign key to rides table
+     */
+    override suspend fun deleteStopsByRideId(rideId: Long) {
+        stopDao.deleteStopsByRideId(rideId)
+    }
+
+    /**
+     * Convert Stop domain model to StopEntity database entity.
+     *
+     * Mapping: Domain layer (technology-agnostic) → Data layer (Room-specific)
+     *
+     * @receiver Stop domain model
+     * @return StopEntity for Room database
+     */
+    private fun Stop.toEntity(): StopEntity {
+        return StopEntity(
+            id = id,
+            rideId = rideId,
+            stopNumber = stopNumber,
+            latitude = latitude,
+            longitude = longitude,
+            startTimestamp = startTimestamp,
+            endTimestamp = endTimestamp,
+            durationSeconds = durationSeconds,
+            clusterId = clusterId
+        )
+    }
+
+    /**
+     * Convert StopEntity database entity to Stop domain model.
+     *
+     * Mapping: Data layer (Room-specific) → Domain layer (technology-agnostic)
+     *
+     * @receiver StopEntity from Room database
+     * @return Stop domain model
+     */
+    private fun StopEntity.toDomainModel(): Stop {
+        return Stop(
+            id = id,
+            rideId = rideId,
+            stopNumber = stopNumber,
+            latitude = latitude,
+            longitude = longitude,
+            startTimestamp = startTimestamp,
+            endTimestamp = endTimestamp,
+            durationSeconds = durationSeconds,
+            clusterId = clusterId
+        )
+    }
+}
