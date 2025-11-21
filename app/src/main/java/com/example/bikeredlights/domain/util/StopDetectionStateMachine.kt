@@ -77,11 +77,27 @@ class StopDetectionStateMachine @Inject constructor(
     /**
      * Stop detection and cleanup state.
      *
-     * If a stop is active, end it immediately before cleanup.
+     * If a stop is active when ride ends, delete it (not a traffic stop, it's the destination).
+     *
+     * **Rationale**: When ending a ride during an active stop:
+     * - The stop is the rider's final destination, not a traffic light/stop sign
+     * - We want to track traffic delays, not destination stops
+     * - Prevents spurious stop records at ride end locations
+     *
+     * **Edge Case**: If rider stops at a red light for 30s then ends ride, we lose that stop.
+     * This is acceptable - the stop wasn't the "ride-ending event", just coincidental timing.
      */
     fun stopRide() {
         if (state.isStopped) {
-            endCurrentStop()
+            // Delete the active stop instead of ending it
+            // (it's the ride destination, not a traffic stop)
+            val stopId = state.activeStopId
+            if (stopId != null && stopId > 0) {
+                android.util.Log.i("StopDetection", "🗑️ Deleting stop ID:$stopId (ride ended during stop - destination, not traffic stop)")
+                scope.launch {
+                    stopRepository.deleteStop(stopId)
+                }
+            }
         }
         state = StopDetectionState.initial()
         currentRideId = null

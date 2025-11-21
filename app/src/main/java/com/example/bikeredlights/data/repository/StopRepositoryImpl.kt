@@ -120,6 +120,17 @@ class StopRepositoryImpl @Inject constructor(
     }
 
     /**
+     * Delete a specific stop by its ID (Feature 009).
+     *
+     * Use Case: Remove stop if ride ends during active stop detection.
+     *
+     * @param stopId Primary key of the stop to delete
+     */
+    override suspend fun deleteStop(stopId: Long) {
+        stopDao.deleteStop(stopId)
+    }
+
+    /**
      * Delete all stops for a ride (for testing).
      *
      * Note: In production, CASCADE foreign key handles deletion automatically.

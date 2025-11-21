@@ -151,6 +151,17 @@ interface StopDao {
     suspend fun getStopById(stopId: Long): StopEntity?
 
     /**
+     * Delete a specific stop by its ID (Feature 009 - Stop Detection).
+     *
+     * Use Case: Remove stop if ride ends during active stop detection
+     * (destination stop, not a traffic stop).
+     *
+     * @param stopId Primary key of the stop to delete
+     */
+    @Query("DELETE FROM stops WHERE id = :stopId")
+    suspend fun deleteStop(stopId: Long)
+
+    /**
      * Delete all stops for a ride (for testing - CASCADE handles in production).
      *
      * Use Case: Test setup/teardown, manual cleanup in edge cases.
