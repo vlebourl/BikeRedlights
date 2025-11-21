@@ -225,22 +225,28 @@ class RideRecordingService : Service() {
             stopDetectionStateMachine?.startRide(rideId)
 
             // Feature 009: Collect stop detection events and update repository StateFlows (T020)
+            android.util.Log.d("RideRecordingService", "📡 Starting event collection for stop detection")
             serviceScope.launch {
                 stopDetectionStateMachine?.events?.collect { event ->
+                    android.util.Log.d("RideRecordingService", "📨 Received stop event: $event")
                     when (event) {
                         is com.example.bikeredlights.domain.util.StopEvent.StopDetected -> {
+                            android.util.Log.d("RideRecordingService",
+                                "🔄 Updating repository with stop #${event.stopNumber} (ID: ${event.stopId})")
                             // Update stop number when stop is confirmed
                             (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
                                 ?.updateCurrentStopNumber(event.stopNumber)
                             android.util.Log.d("RideRecordingService",
-                                "Stop #${event.stopNumber} detected (ID: ${event.stopId})")
+                                "✅ Repository updated - Stop #${event.stopNumber} detected (ID: ${event.stopId})")
                         }
                         is com.example.bikeredlights.domain.util.StopEvent.StopEnded -> {
+                            android.util.Log.d("RideRecordingService",
+                                "🔄 Clearing stop state for ID: ${event.stopId}")
                             // Clear stop state when stop ends
                             (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
                                 ?.resetStopState()
                             android.util.Log.d("RideRecordingService",
-                                "Stop ended (ID: ${event.stopId})")
+                                "✅ Repository updated - Stop ended (ID: ${event.stopId})")
                         }
                     }
                 }

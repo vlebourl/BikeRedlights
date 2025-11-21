@@ -300,7 +300,9 @@ class RideRecordingStateRepositoryImpl @Inject constructor(
         if (stopNumber != null) {
             require(stopNumber > 0) { "Stop number must be positive, got: $stopNumber" }
         }
+        android.util.Log.d("RideStateRepo", "🔢 Updating currentStopNumber: $stopNumber (before: ${_currentStopNumber.value})")
         _currentStopNumber.value = stopNumber
+        android.util.Log.d("RideStateRepo", "✅ currentStopNumber StateFlow updated: ${_currentStopNumber.value}")
     }
 
     /**
@@ -322,6 +324,7 @@ class RideRecordingStateRepositoryImpl @Inject constructor(
         if (duration != null) {
             require(duration >= 0) { "Stop duration must be non-negative, got: $duration seconds" }
         }
+        android.util.Log.d("RideStateRepo", "⏱️ Updating currentStopDuration: $duration seconds")
         _currentStopDuration.value = duration
     }
 
@@ -341,8 +344,10 @@ class RideRecordingStateRepositoryImpl @Inject constructor(
      * - Emits null to all collectors
      */
     internal suspend fun resetStopState() {
+        android.util.Log.d("RideStateRepo", "🔄 Resetting stop state (currentStopNumber: ${_currentStopNumber.value}, currentStopDuration: ${_currentStopDuration.value})")
         _currentStopNumber.value = null
         _currentStopDuration.value = null
+        android.util.Log.d("RideStateRepo", "✅ Stop state reset complete")
     }
 
     /**
