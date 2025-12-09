@@ -50,12 +50,17 @@ fun StopPopup(
     durationSeconds: Int?,
     modifier: Modifier = Modifier
 ) {
+    // DEBUG: Log whenever this composable is called
+    android.util.Log.d("StopPopup", "🎨 COMPOSING: stopNumber=$stopNumber, durationSeconds=$durationSeconds, visible=${stopNumber != null}")
+
     AnimatedVisibility(
         visible = stopNumber != null,
         enter = fadeIn(),
         exit = fadeOut(),
         modifier = modifier
     ) {
+        // DEBUG: Log when AnimatedVisibility content is composed
+        android.util.Log.d("StopPopup", "✅ INSIDE AnimatedVisibility content block (should be visible now)")
         Card(
             modifier = Modifier.padding(16.dp),
             shape = RoundedCornerShape(16.dp),

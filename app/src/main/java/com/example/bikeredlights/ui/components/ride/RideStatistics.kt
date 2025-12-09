@@ -202,7 +202,11 @@ fun RideStatistics(
                     )
                 }
 
-                // Immobile time (placeholder - not yet tracked)
+                // Immobile time (stop detection) - Feature 009
+                // This is NOT the same as "Paused" time:
+                // - Paused: User manually paused OR auto-paused (speed < 0.3 km/h for 3s)
+                // - Immobile: Stopped at traffic lights/signs (speed < 3 km/h for 5s)
+                // Placeholder until Feature 009 Phase 5 implements accumulation
                 Column(
                     modifier = Modifier.weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -214,7 +218,7 @@ fun RideStatistics(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "00:00:00", // TODO: Track immobile time (stopped at lights while recording)
+                        text = "00:00:00", // TODO Feature 009 Phase 5: Display sum of all stop durations for this ride
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center,

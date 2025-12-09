@@ -88,6 +88,11 @@ fun LiveRideScreen(
     val currentStopNumber by viewModel.currentStopNumber.collectAsStateWithLifecycle()
     val currentStopDuration by viewModel.currentStopDuration.collectAsStateWithLifecycle()
 
+    // DEBUG: Log stop state changes
+    androidx.compose.runtime.LaunchedEffect(currentStopNumber, currentStopDuration) {
+        android.util.Log.d("LiveRideScreen", "🎨 UI STATE CHANGE: stopNumber=$currentStopNumber, stopDuration=$currentStopDuration")
+    }
+
     // Map state (Feature 006)
     val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
     val polylineData by viewModel.polylineData.collectAsStateWithLifecycle()
@@ -220,23 +225,9 @@ fun LiveRideScreen(
     Box(
         modifier = modifier.fillMaxSize()
     ) {
-        // GPS Status Indicator (always visible at top-right to avoid overlap)
-        GpsStatusIndicator(
-            uiState = uiState,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 16.dp, end = 16.dp)
-        )
-
-        // Stop Popup (Feature 009 - displays at top-center when stop is active)
-        StopPopup(
-            stopNumber = currentStopNumber,
-            durationSeconds = currentStopDuration,
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
-
         // Main content with split-screen layout (Feature 006)
         // Map on top, stats/controls on bottom - Material 3 design
+        // IMPORTANT: This must be FIRST in the Box so overlays render on top
         when (uiState) {
             is RideRecordingUiState.Idle -> {
                 // Show map even in Idle state with "Ready to ride?" message
@@ -336,6 +327,23 @@ fun LiveRideScreen(
                 }
             }
         }
+
+        // Overlays (must be AFTER the main content to render on top)
+        // GPS Status Indicator (always visible at top-right)
+        GpsStatusIndicator(
+            uiState = uiState,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 16.dp, end = 16.dp)
+        )
+
+        // Stop Popup (Feature 009 - displays at top-center when stop is active)
+        // CRITICAL: This must be LAST in the Box to render on top of map
+        StopPopup(
+            stopNumber = currentStopNumber,
+            durationSeconds = currentStopDuration,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
 }
 
