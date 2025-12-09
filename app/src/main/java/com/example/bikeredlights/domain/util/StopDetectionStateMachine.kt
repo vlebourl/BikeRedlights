@@ -221,14 +221,17 @@ class StopDetectionStateMachine @Inject constructor(
         if (state.isStopConfirmed) return // Already confirmed
 
         val stopNumber = state.currentStopNumber
+        val confirmationTime = System.currentTimeMillis()
 
         // Update state immediately (synchronous) with temporary stopId
         // This ensures tests and UI see state change right away
+        // IMPORTANT: Set stopConfirmedTime to NOW (not startTimestamp) for accurate UI duration
         state = state.copy(
             isStopConfirmed = true,
             activeStopId = -1L, // Temporary until database insert completes
             speedBelowThresholdCount = 0,
-            speedAboveThresholdCount = 0
+            speedAboveThresholdCount = 0,
+            stopConfirmedTime = confirmationTime // Used for UI duration calculation
         )
 
         // Create stop entity
@@ -268,7 +271,7 @@ class StopDetectionStateMachine @Inject constructor(
      */
     private fun endCurrentStop() {
         val stopId = state.activeStopId ?: return // No active stop
-        val startTime = state.detectionStartTime ?: return // Invalid state
+        val startTime = state.stopConfirmedTime ?: return // Invalid state - use confirmed time, not detection time
         val endTime = System.currentTimeMillis()
         val duration = StopDetectionUtils.calculateDuration(startTime, endTime)
 
@@ -288,7 +291,8 @@ class StopDetectionStateMachine @Inject constructor(
                 currentStopNumber = nextStopNumber,
                 speedBelowThresholdCount = 0,
                 speedAboveThresholdCount = 0,
-                detectionStartTime = null
+                detectionStartTime = null,
+                stopConfirmedTime = null
             )
 
             // Emit event to ViewModel

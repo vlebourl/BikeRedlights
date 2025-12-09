@@ -29,7 +29,8 @@ package com.example.bikeredlights.domain.model
  * @property currentStopNumber Next stop number to assign (1, 2, 3... per ride)
  * @property activeStopId Database ID of current in-progress stop (null when not stopped)
  * @property isStopConfirmed True when duration threshold met, false during detection phase
- * @property detectionStartTime Timestamp when speed first dropped below threshold (for duration calculation)
+ * @property detectionStartTime Timestamp when speed first dropped below threshold (used for threshold checking only)
+ * @property stopConfirmedTime Timestamp when stop was confirmed (used for UI duration calculation)
  */
 data class StopDetectionState(
     val currentSpeed: Float = 0f,
@@ -39,7 +40,8 @@ data class StopDetectionState(
     val currentStopNumber: Int = 1,
     val activeStopId: Long? = null,
     val isStopConfirmed: Boolean = false,
-    val detectionStartTime: Long? = null
+    val detectionStartTime: Long? = null,
+    val stopConfirmedTime: Long? = null
 ) {
     /**
      * Check if currently in Moving state (not detecting, not stopped).
@@ -62,12 +64,15 @@ data class StopDetectionState(
     /**
      * Get current stop duration in seconds (only valid when stopped).
      *
+     * Uses stopConfirmedTime (not detectionStartTime) to show accurate duration
+     * from when stop was confirmed, not from when detection started.
+     *
      * @return Duration in seconds, or 0 if not stopped
      */
     fun getCurrentStopDuration(): Int {
-        if (!isStopped || detectionStartTime == null) return 0
+        if (!isStopped || stopConfirmedTime == null) return 0
         val currentTime = System.currentTimeMillis()
-        return ((currentTime - detectionStartTime) / 1000).toInt()
+        return ((currentTime - stopConfirmedTime) / 1000).toInt()
     }
 
     /**
@@ -82,7 +87,8 @@ data class StopDetectionState(
             currentStopNumber = 1,
             activeStopId = null,
             isStopConfirmed = false,
-            detectionStartTime = null
+            detectionStartTime = null,
+            stopConfirmedTime = null
         )
     }
 
