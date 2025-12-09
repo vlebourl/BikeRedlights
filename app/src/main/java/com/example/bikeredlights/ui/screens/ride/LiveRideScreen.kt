@@ -88,11 +88,6 @@ fun LiveRideScreen(
     val currentStopNumber by viewModel.currentStopNumber.collectAsStateWithLifecycle()
     val currentStopDuration by viewModel.currentStopDuration.collectAsStateWithLifecycle()
 
-    // DEBUG: Log stop state changes
-    androidx.compose.runtime.LaunchedEffect(currentStopNumber, currentStopDuration) {
-        android.util.Log.d("LiveRideScreen", "🎨 UI STATE CHANGE: stopNumber=$currentStopNumber, stopDuration=$currentStopDuration")
-    }
-
     // Map state (Feature 006)
     val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
     val polylineData by viewModel.polylineData.collectAsStateWithLifecycle()
