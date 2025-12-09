@@ -800,7 +800,7 @@ class RideRecordingService : Service() {
         // Feature 009: Update stop duration if currently stopped (T020)
         val stopDetectionState = stopDetectionStateMachine?.getCurrentState()
         if (stopDetectionState?.isStopConfirmed == true) {
-            val stopStartTime = stopDetectionState.detectionStartTime
+            val stopStartTime = stopDetectionState.stopConfirmedTime // Use confirmation time, not detection time
             if (stopStartTime != null) {
                 val stopDurationSeconds = ((System.currentTimeMillis() - stopStartTime) / 1000).toInt()
                 (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)

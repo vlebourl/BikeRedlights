@@ -252,6 +252,44 @@ fun `when speed exceeds threshold, red light warning is shown`() = runTest {
 }
 ```
 
+### ADB UI Interaction (MANDATORY)
+
+**CRITICAL**: When using `adb shell input tap` to interact with UI elements, you MUST ALWAYS get the UI hierarchy first to find exact tap coordinates.
+
+**NEVER GUESS TAP COORDINATES**. Guessing leads to missed taps and wasted time.
+
+**Required Process**:
+1. **Get UI hierarchy**: `adb shell uiautomator dump /dev/tty`
+2. **Parse XML**: Find target element by text, resource-id, or content-desc
+3. **Extract bounds**: Parse bounds="[left,top][right,bottom]" attribute
+4. **Calculate center**: `x = (left + right) / 2`, `y = (top + bottom) / 2`
+5. **Execute tap**: `adb shell input tap <x> <y>`
+
+**Example Workflow**:
+```bash
+# 1. Get UI hierarchy (outputs XML to terminal)
+adb shell uiautomator dump /dev/tty
+
+# 2. Look for the target element in XML output
+# Example element: <node text="Start Ride" bounds="[157,1068][549,1131]" .../>
+
+# 3. Calculate center coordinates
+# left=157, top=1068, right=549, bottom=1131
+# x = (157 + 549) / 2 = 353
+# y = (1068 + 1131) / 2 = 1099.5 ≈ 1100
+
+# 4. Tap at calculated coordinates
+adb shell input tap 353 1100
+```
+
+**Common Element Attributes to Search**:
+- `text="Button Text"` - visible text
+- `resource-id="com.example.app:id/button_start"` - Android resource ID
+- `content-desc="Start button"` - accessibility description
+- `class="android.widget.Button"` - UI component class
+
+**Why This Matters**: Screen resolutions, DPI, and UI layouts vary across devices and emulators. Hardcoded coordinates from screenshots are unreliable and lead to failed interactions. Always use UI hierarchy analysis for accurate tap coordinates.
+
 ### Emulator Testing (MANDATORY)
 
 **When Required**: Every completed feature MUST be tested on an Android emulator before merge.

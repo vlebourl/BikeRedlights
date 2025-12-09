@@ -335,13 +335,13 @@ fun LiveRideScreen(
         // Stop Popup (Feature 009 - displays at very bottom of map section, just above "REC")
         // CRITICAL: This must be LAST in the Box to render on top of map
         // Positioned at center of screen vertically (50% = boundary between map/stats)
-        // with small upward offset to sit just above "REC" indicator
+        // with upward offset to position at bottom of map section
         StopPopup(
             stopNumber = currentStopNumber,
             durationSeconds = currentStopDuration,
             modifier = Modifier
                 .align(Alignment.Center) // Center of entire screen
-                .offset(y = (-8).dp) // Slight upward offset to sit just above "REC"
+                .offset(y = (-32).dp) // Upward offset to position at bottom of map, above "REC"
         )
     }
 }
