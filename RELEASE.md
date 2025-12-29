@@ -32,8 +32,15 @@ _Features and changes completed but not yet released_
 
 - **Unit Tests**: 33 tests passing (HaversineDistance: 11, DBSCAN: 17, UseCase: 2, Worker: 3)
 - **Test Coverage**: Distance calculations, clustering edge cases, WorkManager integration
-- **Performance Benchmarks**: Pending (Task T043)
-- **Emulator Testing**: Pending (Task T046)
+- **Emulator Testing**: ✅ COMPLETE
+  - Manual test button in Stop Detection Settings screen validated
+  - Test data: 18 stops from 2 rides (Ride 1: 2 stops, Ride 2: 16 stops)
+  - **Clustering Results**: 1 cluster found (4 stops at same intersection)
+  - **Cluster 1**: Stops 12-15 (lat ~46.206°, lon ~6.142°) within 20m radius
+  - **Other stops**: Individual clusters (noise - no nearby neighbors within 20m)
+  - **Data Validation**: Stop model correctly rejected corrupt duration data (29s vs 92s calculated)
+  - **Database Verification**: All cluster_id assignments persisted correctly
+- **Manual Test Button**: Material 3 UI with status feedback (Idle → Running → Success/Error)
 
 ### 📦 Database Changes (Feature 010)
 
