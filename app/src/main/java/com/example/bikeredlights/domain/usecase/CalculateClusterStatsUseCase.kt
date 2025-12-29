@@ -59,11 +59,11 @@ class CalculateClusterStatsUseCase @Inject constructor(
             val center = calculateClusterCenterUseCase(clusterStops)
             val stopCount = clusterStops.size
 
-            // Calculate average duration (only completed stops with endTime != null)
-            val completedStops = clusterStops.filter { it.endTime != null }
+            // Calculate average duration (only completed stops with endTimestamp != null)
+            val completedStops = clusterStops.filter { it.endTimestamp != null }
             val averageDuration = if (completedStops.isNotEmpty()) {
                 completedStops.map { stop ->
-                    val duration = (stop.endTime!! - stop.startTime) / 1000 // Convert ms to seconds
+                    val duration = (stop.endTimestamp!! - stop.startTimestamp) / 1000 // Convert ms to seconds
                     duration
                 }.average().toLong()
             } else {
@@ -71,7 +71,7 @@ class CalculateClusterStatsUseCase @Inject constructor(
             }
 
             // Generate frequency text
-            val stopTimestamps = clusterStops.map { it.startTime }
+            val stopTimestamps = clusterStops.map { it.startTimestamp }
             val frequencyText = formatClusterAnalyticsUseCase(
                 stopCount = stopCount,
                 stopTimestamps = stopTimestamps
