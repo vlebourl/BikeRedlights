@@ -173,7 +173,7 @@ fun BikeMap(
         cameraPositionState = cameraPositionState,
         properties = mapProperties,
         uiSettings = mapUiSettings,
-        contentPadding = if (navigationMode) PaddingValues(bottom = 200.dp) else PaddingValues(),
+        contentPadding = if (navigationMode) PaddingValues(top = 400.dp) else PaddingValues(),
         content = content
     )
 }

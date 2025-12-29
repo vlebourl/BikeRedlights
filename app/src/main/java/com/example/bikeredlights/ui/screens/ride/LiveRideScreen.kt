@@ -257,6 +257,7 @@ fun LiveRideScreen(
                         ride = ride,
                         currentSpeed = currentSpeed,
                         pausedDuration = pausedDuration,
+                        stopCount = stopCount,
                         unitsSystem = unitsSystem,
                         onPauseRide = { viewModel.pauseRide() },
                         onStopRide = { viewModel.stopRide() },
@@ -317,6 +318,7 @@ fun LiveRideScreen(
                         ride = ride,
                         currentSpeed = currentSpeed,
                         pausedDuration = pausedDuration,
+                        stopCount = stopCount,
                         unitsSystem = unitsSystem,
                         onPauseRide = { }, // No action while dialog is shown
                         onStopRide = { }, // No action while dialog is shown
@@ -625,6 +627,7 @@ private fun RecordingContent(
     ride: com.example.bikeredlights.domain.model.Ride,
     currentSpeed: Double,
     pausedDuration: java.time.Duration,
+    stopCount: Int,
     unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     onPauseRide: () -> Unit,
     onStopRide: () -> Unit,
