@@ -1,13 +1,33 @@
 # BikeRedlights - Project TODO
 
-> **Last Updated**: 2025-12-29 (Feature 009: Stop Detection & Recording - v0.9.0 released)
+> **Last Updated**: 2025-12-29 (Feature 010: Stop Clustering - implementation complete, testing in progress)
 > **Purpose**: Unified progress tracking for all features, tasks, and pending work
 
 ## 📋 In Progress
 
 _Features currently being developed_
 
-_(No features currently in progress)_
+### Feature 010: Stop Clustering (v0.10.0 - MVP)
+- **Started**: 2025-12-29
+- **Type**: P1 Core Analytics Feature (User Story 1 - Automatic Stop Clustering)
+- **Description**: Implement geospatial stop clustering using DBSCAN algorithm to group nearby stops (default: 20m radius) across multiple rides. Enables analytics like "you stopped at this intersection 15 times this month".
+- **Status**: 🔨 Implementation complete, testing/polish in progress
+- **Completed Tasks**:
+  - ✅ Phase 1: Setup verification (database, settings, prerequisites)
+  - ✅ Phase 2: Foundational components (HaversineDistance, DBSCAN algorithm)
+  - ✅ Phase 3: Core clustering logic (ClusterStopsUseCase, repository methods)
+  - ✅ Phase 4: WorkManager integration (background re-clustering on radius change)
+  - ⏳ Phase 7: Polish & testing (TODO.md, RELEASE.md, benchmarks, emulator testing)
+- **Implementation Summary**:
+  - **HaversineDistance**: Pure Kotlin function for GPS distance calculation (±0.5% accuracy)
+  - **DBSCAN Algorithm**: O(n²) clustering with epsilon/minPts parameters, 11 unit tests passing
+  - **ClusterStopsUseCase**: Orchestrates fetch → cluster → update flow
+  - **Room DAO**: getAllStops() and updateClusterIds() queries for batch processing
+  - **WorkManager**: ReclusterStopsWorker with @HiltWorker annotation, exponential backoff retry
+  - **Settings Integration**: Triggers re-clustering when radius changes (20m→30m)
+- **Testing**: 33 unit tests passing (Haversine: 11, DBSCAN: 17, UseCase: 2, Worker: 3)
+- **Next Steps**: Benchmarks, emulator testing, documentation updates, release
+- **Specification**: specs/010-stop-clustering/spec.md, plan.md, tasks.md
 
 ---
 
