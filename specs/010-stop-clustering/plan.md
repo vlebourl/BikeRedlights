@@ -1,104 +1,160 @@
-# Implementation Plan: [FEATURE]
+# Implementation Plan: Stop Clustering
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+**Branch**: `010-stop-clustering` | **Date**: 2025-12-29 | **Spec**: [spec.md](./spec.md)
+**Input**: Feature specification from `/specs/010-stop-clustering/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
 ## Summary
 
-[Extract from feature spec: primary requirement + technical approach from research]
+Implement geospatial stop clustering using DBSCAN algorithm to group nearby stops (within configurable radius, default 20m) across multiple rides. Updates cluster_id field in existing stops table. Enables analytics like "you stopped at this intersection 15 times this month" by calculating cluster statistics (stop count, average duration, frequency ranking). Supports incremental clustering after each ride, manual re-clustering, and optional manual cluster split/merge operations for power users.
 
 ## Technical Context
 
-<!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
--->
-
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [single/web/mobile - determines source structure]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Language/Version**: Kotlin 2.0.21, Java 17 (OpenJDK)
+**Primary Dependencies**: Room 2.6.1 (database), Hilt 2.51.1 (DI), Kotlin Coroutines 1.9.0, Jetpack Compose BOM 2024.11.00, WorkManager 2.9.1
+**Storage**: Room SQLite database - extends existing `stops` table with `cluster_id` column, no new tables required
+**Testing**: JUnit 4.13.2, MockK 1.13.13, Turbine 1.2.0 (Flow testing), Truth 1.4.4 (assertions), Coroutines Test 1.9.0
+**Target Platform**: Android 14+ (API 34+, minSdk 34, targetSdk 35)
+**Project Type**: Mobile (Android single application)
+**Performance Goals**: Cluster 100 stops in <2 seconds, full re-clustering of 1000 stops in <10 seconds, incremental clustering in <1 second
+**Constraints**: Offline-first (all clustering local, no cloud), battery-efficient (background work via WorkManager), UI non-blocking (async clustering)
+**Scale/Scope**: Expected 10-50 stops per ride, 1-10 rides per week, hundreds to thousands of stops total per user
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Based on CLAUDE.md development standards:
+
+### ✅ Architecture Pattern
+- **Requirement**: MVVM + Clean Architecture (UI → ViewModel → Domain → Data)
+- **Status**: PASS - Feature follows established pattern:
+  - Domain layer: ClusteringUseCase (DBSCAN algorithm), StopCluster domain model
+  - Data layer: StopRepository (extend existing), clustering queries via Room DAO
+  - ViewModel: ClusterAnalyticsViewModel (if analytics UI implemented in this feature)
+  - UI: Jetpack Compose screens (if analytics UI implemented in this feature)
+
+### ✅ Technology Stack
+- **Requirement**: Kotlin, Jetpack Compose, Room, Hilt, Coroutines/Flow, WorkManager
+- **Status**: PASS - All requirements met:
+  - Room for database (existing stops table + cluster_id column)
+  - Hilt for DI (repository, use cases)
+  - Coroutines for async clustering operations
+  - WorkManager for background re-clustering on settings change
+  - No XML layouts (if UI added, uses Compose)
+
+### ✅ Testing Requirements
+- **Requirement**: 80%+ unit test coverage for ViewModels/UseCases/Repositories
+- **Status**: PASS (to be verified in implementation):
+  - DBSCAN algorithm unit tests (100% coverage target - critical business logic)
+  - Haversine distance calculation tests
+  - ClusteringUseCase tests with MockK repository
+  - Repository integration tests with in-memory Room database
+
+### ✅ Performance & Battery
+- **Requirement**: Battery-efficient, offline-first, background work via WorkManager
+- **Status**: PASS - Design meets requirements:
+  - All clustering is local (no network calls)
+  - Background re-clustering uses WorkManager (not foreground service)
+  - Incremental clustering minimizes computation per ride
+  - Database queries use Room coroutines for async execution
+
+### ✅ Code Quality
+- **Requirement**: Small frequent commits, conventional commit format, TODO.md/RELEASE.md updates
+- **Status**: PASS (to be enforced during implementation):
+  - Commit after each layer/component (domain models, DAO methods, use case, etc.)
+  - Use `feat(domain):`, `feat(data):`, `test(domain):` prefixes
+  - Update TODO.md when starting/completing phases
+  - Update RELEASE.md with feature entry in Unreleased section
+
+### ✅ Emulator Testing
+- **Requirement**: Test on emulator before merge, validate GPS-dependent features
+- **Status**: PASS (to be executed in Phase 8 testing):
+  - Create 3 test rides with stops at same location (within 20m)
+  - Verify cluster_id assignment in database
+  - Test radius setting changes trigger re-clustering
+  - Validate analytics calculations (stop count, avg duration)
+
+**GATE RESULT**: ✅ **PASS** - All constitution requirements satisfied, proceed to Phase 0 research.
 
 ## Project Structure
 
 ### Documentation (this feature)
 
 ```text
-specs/[###-feature]/
+specs/010-stop-clustering/
 ├── plan.md              # This file (/speckit.plan command output)
-├── research.md          # Phase 0 output (/speckit.plan command)
-├── data-model.md        # Phase 1 output (/speckit.plan command)
-├── quickstart.md        # Phase 1 output (/speckit.plan command)
-├── contracts/           # Phase 1 output (/speckit.plan command)
+├── spec.md              # Feature specification (already complete)
+├── research.md          # Phase 0 output (DBSCAN algorithm, Haversine formula, clustering patterns)
+├── data-model.md        # Phase 1 output (StopCluster domain model, database schema migration)
+├── quickstart.md        # Phase 1 output (developer setup, testing clustering locally)
+├── contracts/           # Phase 1 output (StopRepository contract extensions, ClusteringUseCase interface)
+├── checklists/          # Quality validation checklists
+│   └── requirements.md  # Specification quality checklist (already complete)
 └── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+app/src/main/java/com/example/bikeredlights/
+├── domain/
+│   ├── model/
+│   │   └── StopCluster.kt                    # NEW: Domain model for cluster analytics
+│   ├── usecase/
+│   │   └── ClusterStopsUseCase.kt            # NEW: DBSCAN clustering logic
+│   ├── repository/
+│   │   └── StopRepository.kt                 # EXTEND: Add clustering query methods
+│   └── util/
+│       ├── DBSCANAlgorithm.kt                # NEW: DBSCAN implementation
+│       └── HaversineDistance.kt              # NEW: Geographic distance calculation
+│
+├── data/
+│   ├── local/
+│   │   ├── dao/
+│   │   │   └── StopDao.kt                    # EXTEND: Add cluster queries
+│   │   ├── entity/
+│   │   │   └── Stop.kt                       # EXTEND: Add cluster_id column
+│   │   └── database/
+│   │       ├── BikeRedlightsDatabase.kt      # EXTEND: Add migration for cluster_id
+│   │       └── migrations/
+│   │           └── Migration_4_5.kt          # NEW: ALTER TABLE stops ADD cluster_id
+│   └── repository/
+│       └── StopRepositoryImpl.kt             # EXTEND: Implement clustering queries
+│
+├── ui/
+│   ├── viewmodel/
+│   │   └── ClusterAnalyticsViewModel.kt      # NEW (if UI in this feature): Cluster stats
+│   └── screens/
+│       └── cluster/
+│           └── ClusterAnalyticsScreen.kt     # NEW (if UI in this feature): Analytics display
+│
+└── di/
+    └── AppModule.kt                          # EXTEND: Provide ClusterStopsUseCase, DBSCANAlgorithm
 
-tests/
-├── contract/
-├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+app/src/test/java/com/example/bikeredlights/
+├── domain/
+│   ├── usecase/
+│   │   └── ClusterStopsUseCaseTest.kt        # NEW: Unit tests for clustering use case
+│   └── util/
+│       ├── DBSCANAlgorithmTest.kt            # NEW: Algorithm correctness tests
+│       └── HaversineDistanceTest.kt          # NEW: Distance calculation tests
+└── data/
+    └── repository/
+        └── StopRepositoryImplTest.kt         # EXTEND: Add clustering query tests
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Android mobile application (single module). Extends existing MVVM + Clean Architecture layers. New components are isolated in domain/util (DBSCAN algorithm) and data/local (database migration). UI components (ClusterAnalyticsViewModel, ClusterAnalyticsScreen) are optional for MVP - clustering logic can be validated without UI by querying database directly. If UI deferred, focus implementation on Phases 1-4 (algorithm, database, use case, repository), skip Phases 5-7 (ViewModel, UI, navigation).
 
 ## Complexity Tracking
 
-> **Fill ONLY if Constitution Check has violations that must be justified**
+> **No constitution violations - complexity tracking not required.**
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+All complexity is justified by feature requirements:
+- **DBSCAN algorithm**: Required by spec (FR-001), standard density-based clustering approach
+- **Haversine formula**: Required by spec (FR-015), standard geographic distance calculation
+- **Database migration**: Required to add cluster_id column to existing stops table
+- **WorkManager for background re-clustering**: Required by constitution (battery-efficient background work)
+
+No additional complexity beyond feature requirements. No simpler alternatives available.
