@@ -9,6 +9,94 @@ _Features and changes completed but not yet released_
 
 ---
 
+## v0.11.0 - Stop Cluster Visualization (2025-12-29)
+
+### 🗺️ Interactive Cluster Map with 4-Tab Navigation
+
+**Status**: ✅ COMPLETE - Full cluster visualization with filtering and navigation
+**Focus**: Interactive map showing clustered stops with details, filtering, and new Stops tab
+**APK Size**: TBD (release build pending)
+**Tested On**: Pixel 9 Pro emulator (API 34) - Light & dark mode verified
+
+### ✨ Features Added
+
+**Feature 011: Stop Cluster Visualization** ([spec](specs/011-cluster-visualization/spec.md) | [plan](specs/011-cluster-visualization/plan.md) | [tasks](specs/011-cluster-visualization/tasks.md))
+
+- **User Story 1 (P0): View Clusters on Map** ✅
+  - Interactive Google Maps displaying all clustered stops as color-coded markers
+  - Color coding: GREEN (2-5 stops), YELLOW (6-10 stops), RED (11+ stops)
+  - Pan, zoom, and tap markers for cluster details
+  - Loading, error, and empty state handling
+  - Reusable BikeMap component shared with Feature 006
+
+- **User Story 2 (P0): Cluster Details** ✅
+  - Material 3 ModalBottomSheet showing comprehensive cluster analytics
+  - Summary: total stops, average duration, frequency text
+  - Scrollable list of all stops with formatted date/time/duration
+  - Tap any cluster marker to view details
+  - Smooth bottom sheet animations
+
+- **User Story 3 (P1): Filter Clusters** ✅
+  - Date range filtering: All Time (default), Last 7 Days, Last 30 Days
+  - Cluster size filtering: 2+, 3+, 5+, 6+, 10+, 11+ stops
+  - Active filter indicator chip with count
+  - Clear filters button for quick reset
+  - Filter controls overlay at top of map
+
+- **User Story 4 (P0): Stops Navigation Tab** ✅
+  - New "Stops" tab in bottom navigation (4-tab layout)
+  - Material 3 icon-only mode for inactive tabs (recommended for 4+ tabs)
+  - Map state persistence across tab switches using rememberSaveable
+  - Seamless integration with existing Live, Rides, Settings tabs
+
+### 🏗️ Architecture (Feature 011)
+
+- **MVVM + Clean Architecture**: Domain → Data → UI separation
+- **State Management**: Kotlin Flow + StateFlow with collectAsStateWithLifecycle
+- **UI Components**: Jetpack Compose with Material 3 (ModalBottomSheet, ExposedDropdownMenuBox)
+- **Maps Integration**: Google Maps Compose 6.2.0 with custom cluster markers
+- **Repository Queries**: Room database queries for clustered stops (no schema changes)
+- **Performance**: rememberSaveable for state preservation, stable composables, efficient recomposition
+
+### 🧪 Testing (Feature 011)
+
+- **Emulator Testing**: ✅ COMPLETE on Pixel 9 Pro (API 34)
+  - 4-tab navigation renders correctly
+  - Stops tab navigates to cluster map screen
+  - Filter controls display and function properly
+  - Empty state shows when no clusters exist
+  - Tab switching preserves map camera position
+  - Dark mode renders with appropriate theming
+  - Accessibility content descriptions verified
+- **Code Quality**: ✅ Lint checks passed, remember() added to ClusterMarker state
+- **Accessibility**: ✅ Content descriptions on all interactive elements
+
+### 📦 Files Added (Feature 011)
+
+**New Components** (13 files):
+- `ui/components/clusters/`: ClusterMarker, ClusterFilterControls, StopListItem
+- `ui/screens/clusters/`: StopsMapScreen, ClusterDetailBottomSheet
+- `domain/model/`: ClusterSummary, ClusterMarkerData, StopClusterFilter, DateRange, MarkerColor
+- `ui/viewmodel/`: ClusterMapViewModel, ClusterMapUiState
+- `domain/usecase/`: GetClusteredStopsUseCase, CalculateClusterStatsUseCase, CalculateClusterCenterUseCase, FormatClusterAnalyticsUseCase
+- `di/`: ClusterModule (Hilt dependency injection)
+
+**Modified Files** (6 files):
+- `MainActivity.kt`: 4-tab navigation with StopCircle icon
+- `BottomNavDestination.kt`: Added STOPS enum
+- `AppNavigation.kt`: Added Stops route
+- `StopRepository.kt`: Cluster query methods
+- `StopDao.kt`: Database queries for clustered stops
+- `CLAUDE.md`: Documented Feature 011 database usage
+
+### 🔧 Fixes & Improvements (Feature 011)
+
+- Fixed lint error: Added `remember` to ClusterMarker state creation (prevents unnecessary recompositions)
+- Material 3 icon-only mode for 4+ tabs (better UX per Material Design guidelines)
+- Map camera position persists across tab switches (improved user experience)
+
+---
+
 ## v0.10.0 - Stop Clustering (2025-12-29)
 
 ### 📊 Geospatial Stop Clustering with DBSCAN
