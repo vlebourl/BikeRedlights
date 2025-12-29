@@ -3,6 +3,7 @@ package com.example.bikeredlights.ui.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.bikeredlights.domain.model.GpsStatus
 import com.example.bikeredlights.domain.model.Ride
 import com.example.bikeredlights.domain.model.RideRecordingState
 import androidx.compose.ui.graphics.Color
@@ -246,6 +247,48 @@ class RideRecordingViewModel @Inject constructor(
     val currentStopDuration: StateFlow<Int?> =
         rideRecordingStateRepository.getCurrentStopDuration()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    /**
+     * Current GPS status for error notifications and visual indicator (Feature 002 - GPS Error Notifications).
+     *
+     * **Lifecycle**:
+     * - GpsStatus.Unavailable when no ride is recording
+     * - GpsStatus.Acquiring when GPS has weak signal (accuracy 10-50m)
+     * - GpsStatus.Active(accuracy) when GPS has good signal (accuracy ≤10m)
+     * - GpsStatus.Unavailable when accuracy >50m or no updates for >10s
+     * - Resets to GpsStatus.Unavailable when ride is stopped
+     *
+     * **Status Types** (from GpsStatus.kt):
+     * - Unavailable: accuracy >50m, timeout (>10s), GPS disabled, or permission denied
+     * - Acquiring: accuracy 10-50m (weak signal, acquiring better fix)
+     * - Active: accuracy ≤10m (good signal, tracking active)
+     *
+     * **UI Integration**:
+     * - Drives GpsStatusIndicator component visibility and color
+     * - Triggers snackbar notifications on status changes
+     * - Only shows notifications during active ride (Recording/Paused/AutoPaused)
+     *
+     * **State Sharing**:
+     * - WhileSubscribed(5000): Stops collecting 5 seconds after last subscriber
+     * - Battery optimization: No background updates when UI not visible
+     * - Initial value: GpsStatus.Unavailable (no GPS active)
+     *
+     * **Usage in UI**:
+     * ```kotlin
+     * val gpsStatus by viewModel.gpsStatus.collectAsStateWithLifecycle()
+     * GpsStatusIndicator(gpsStatus = gpsStatus)
+     * LaunchedEffect(gpsStatus) {
+     *     when (gpsStatus) {
+     *         is GpsStatus.Unavailable -> showSnackbar("GPS signal lost")
+     *         is GpsStatus.Acquiring -> showSnackbar("Weak GPS signal")
+     *         is GpsStatus.Active -> showSnackbar("GPS signal restored")
+     *     }
+     * }
+     * ```
+     */
+    val gpsStatus: StateFlow<GpsStatus> =
+        rideRecordingStateRepository.getCurrentGpsStatus()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), GpsStatus.Unavailable)
 
     /**
      * Current location (last GPS point) for map marker (Feature 006).
