@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.StopCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -82,6 +83,10 @@ class MainActivity : ComponentActivity() {
                                                 imageVector = Icons.Default.List,
                                                 contentDescription = destination.label
                                             )
+                                            BottomNavDestination.STOPS -> Icon(
+                                                imageVector = Icons.Outlined.StopCircle,
+                                                contentDescription = destination.label
+                                            )
                                             BottomNavDestination.SETTINGS -> Icon(
                                                 imageVector = Icons.Default.Settings,
                                                 contentDescription = destination.label
@@ -89,7 +94,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     },
                                     label = { Text(destination.label) },
-                                    alwaysShowLabel = true  // Material 3 recommendation for 3 items
+                                    alwaysShowLabel = false  // Material 3 recommendation for 4+ items (icon-only when not selected)
                                 )
                             }
                         }

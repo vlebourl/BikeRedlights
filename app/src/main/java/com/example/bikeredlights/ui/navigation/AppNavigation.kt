@@ -10,6 +10,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.bikeredlights.ui.screens.clusters.StopsMapScreen
 import com.example.bikeredlights.ui.screens.history.RideDetailScreen
 import com.example.bikeredlights.ui.screens.history.RideHistoryScreen
 import com.example.bikeredlights.ui.screens.ride.LiveRideScreen
@@ -102,6 +103,13 @@ fun AppNavigation(
             )
         }
 
+        // Stops tab - Feature 011 cluster visualization
+        composable(BottomNavDestination.STOPS.route) {
+            StopsMapScreen(
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
         // Settings tab - Feature 2A home screen
         composable(BottomNavDestination.SETTINGS.route) {
             SettingsHomeScreen(
@@ -159,6 +167,7 @@ fun AppNavigation(
                 }
             )
         }
+
     }
 }
 

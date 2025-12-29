@@ -948,6 +948,7 @@ When working on this project:
 - Room SQLite database - New `stops` table with foreign key to existing `rides` table (CASCADE delete) (009-stop-detection)
 - Kotlin 2.0.21, Java 17 (OpenJDK) + Room 2.6.1 (database), Hilt 2.51.1 (DI), Kotlin Coroutines 1.9.0, Jetpack Compose BOM 2024.11.00, WorkManager 2.9.1 (010-stop-clustering)
 - Room SQLite database - extends existing `stops` table with `cluster_id` column, no new tables required (010-stop-clustering)
+- Room SQLite database (existing stops table with cluster_id column from Feature 010) (011-cluster-visualization)
 
 ## Recent Changes
 - 001-speed-tracking: Added Kotlin 2.0.21 with Jetpack Compose + Play Services Location 21.3.0, Jetpack Compose (BOM 2024.11.00), Material 3

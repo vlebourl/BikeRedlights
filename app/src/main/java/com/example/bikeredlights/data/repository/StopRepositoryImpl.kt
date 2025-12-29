@@ -5,6 +5,7 @@ import com.example.bikeredlights.data.local.entity.StopEntity
 import com.example.bikeredlights.domain.model.Stop
 import com.example.bikeredlights.domain.repository.StopRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 /**
@@ -168,6 +169,69 @@ class StopRepositoryImpl @Inject constructor(
      */
     override suspend fun updateClusterIds(clusterId: Long, stopIds: List<Long>) {
         stopDao.updateClusterIds(clusterId, stopIds)
+    }
+
+    // ========== Feature 011: Cluster Visualization Methods ==========
+
+    /**
+     * Get all stops that belong to clusters (cluster_id IS NOT NULL).
+     *
+     * Use Case: Fetch clustered stops for map visualization (Feature 011 - User Story 1).
+     *
+     * Mapping: Flow<List<StopEntity>> → Flow<List<Stop>> (domain models)
+     *
+     * Reactivity: Flow emits updates when stops table changes
+     *
+     * @return Flow emitting list of clustered stops, ordered by start_timestamp descending
+     */
+    override fun getClusteredStops(): Flow<List<Stop>> {
+        return stopDao.getClusteredStops()
+            .map { entities ->
+                entities.map { it.toDomainModel() }
+            }
+    }
+
+    /**
+     * Get clustered stops within a specific date range.
+     *
+     * Use Case: Filter clusters by date range (Feature 011 - User Story 3).
+     *
+     * Mapping: Flow<List<StopEntity>> → Flow<List<Stop>> (domain models)
+     *
+     * @param startMillis Start of date range (inclusive) in epoch milliseconds
+     * @param endMillis End of date range (inclusive) in epoch milliseconds
+     * @return Flow emitting list of clustered stops within date range
+     */
+    override fun getClusteredStopsByDateRange(
+        startMillis: Long,
+        endMillis: Long
+    ): Flow<List<Stop>> {
+        return stopDao.getClusteredStopsByDateRange(startMillis, endMillis)
+            .map { entities ->
+                entities.map { it.toDomainModel() }
+            }
+    }
+
+    /**
+     * Get stops grouped by cluster ID.
+     *
+     * Use Case: Aggregate stops for ClusterSummary calculation (Feature 011).
+     *
+     * Mapping:
+     * 1. Flow<List<StopEntity>> → Flow<List<Stop>> (entity to domain model)
+     * 2. List<Stop> → Map<Long, List<Stop>> (in-memory grouping by cluster_id)
+     *
+     * Performance: Grouping happens in memory after single query (<100ms for 500 stops)
+     *
+     * @return Flow emitting map of cluster ID to stops
+     */
+    override fun getStopsGroupedByCluster(): Flow<Map<Long, List<Stop>>> {
+        return stopDao.getClusteredStops()
+            .map { entities ->
+                entities
+                    .map { it.toDomainModel() }
+                    .groupBy { it.clusterId!! }  // Safe: query filters cluster_id NOT NULL
+            }
     }
 
     /**
