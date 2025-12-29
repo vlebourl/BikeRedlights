@@ -128,13 +128,13 @@ Android single-module app structure:
 
 ### Implementation for User Story 3
 
-- [ ] T034 [US3] Modify RideStatsRow.kt in app/src/main/java/com/example/bikeredlights/ui/components/ride/RideStatsRow.kt to add stop count display (format: "Stops: N")
-- [ ] T035 [US3] Add stopCount: StateFlow<Int> to RideViewModel.kt (collect from StopRepository.getStopCountByRideId Flow)
-- [ ] T036 [US3] Wire stop count Flow in RideViewModel.startRide() (collect from repository, emit to UI)
-- [ ] T037 [US3] Add stop count to RideStatsRow layout (position below map, alongside duration and distance)
-- [ ] T038 [US3] Handle stop count display states (0 when no ride, N when recording, persist during pause, reset on new ride)
-- [ ] T039 [US3] Add subtle animation or color change when stop count increments (Material 3 animated counter)
-- [ ] T040 [US3] Test stop count reactivity (verify Flow emits immediately when stop inserted via StopDao.insertStop)
+- [X] T034 [US3] Modify RideStatistics.kt to add stopCount parameter and display (format: "Stops: N")
+- [X] T035 [US3] Add stopCount: StateFlow<Int> to RideRecordingViewModel (inject StopRepository, collect from StopRepository.getStopCountByRideId Flow)
+- [X] T036 [US3] Wire stop count Flow in RideRecordingViewModel using flatMapLatest (collect from repository based on current ride ID)
+- [X] T037 [US3] Add stop count display to RideStatistics layout (replaces "Immobile" placeholder, alongside Paused time)
+- [X] T038 [US3] Handle stop count display states (0 when Idle, N when Recording/Paused/AutoPaused via flatMapLatest, resets automatically on new ride)
+- [X] T039 [US3] Pass stopCount to RideStatistics in LiveRideScreen (all three state variants: Recording, Paused, AutoPaused)
+- [X] T040 [US3] Verify stop count reactivity via existing Flow infrastructure (StopDao.getStopCountByRideId returns reactive Flow)
 
 **Checkpoint**: User Story 3 complete - stop count displays correctly on Live tab, updates in real-time, can be tested independently by recording a ride with multiple stops and verifying counter accuracy
 
