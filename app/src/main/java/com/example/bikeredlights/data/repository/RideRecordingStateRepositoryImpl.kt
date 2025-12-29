@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.bikeredlights.domain.model.GpsStatus
 import com.example.bikeredlights.domain.model.RideRecordingState
 import com.example.bikeredlights.domain.repository.RideRecordingStateRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -108,6 +109,24 @@ class RideRecordingStateRepositoryImpl @Inject constructor(
     private val _currentStopDuration = MutableStateFlow<Int?>(null)
 
     /**
+     * In-memory current GPS status for real-time status updates (Feature 002 - GPS Error Notifications).
+     *
+     * **Design Rationale**:
+     * - Ephemeral state (not persisted to DataStore)
+     * - Defaults to GpsStatus.Unavailable when not recording
+     * - Real-time updates from Service GPS location callbacks
+     * - Thread-safe StateFlow for concurrent access
+     * - Resets to GpsStatus.Unavailable when ride stops
+     *
+     * **Status Transitions** (from LocationRepository):
+     * - Unavailable → Acquiring: First location update received
+     * - Acquiring → Active: Accuracy improves to ≤10m
+     * - Active → Acquiring: Accuracy degrades to 10-50m
+     * - Any → Unavailable: Accuracy >50m or no updates for >10s
+     */
+    private val _currentGpsStatus = MutableStateFlow<GpsStatus>(GpsStatus.Unavailable)
+
+    /**
      * DataStore preference keys.
      */
     private companion object {
@@ -193,6 +212,10 @@ class RideRecordingStateRepositoryImpl @Inject constructor(
 
     override fun getCurrentStopDuration(): StateFlow<Int?> {
         return _currentStopDuration.asStateFlow()
+    }
+
+    override fun getCurrentGpsStatus(): StateFlow<GpsStatus> {
+        return _currentGpsStatus.asStateFlow()
     }
 
     /**
@@ -348,6 +371,48 @@ class RideRecordingStateRepositoryImpl @Inject constructor(
         _currentStopNumber.value = null
         _currentStopDuration.value = null
         android.util.Log.d("RideStateRepo", "✅ Stop state reset complete")
+    }
+
+    /**
+     * Update current GPS status from GPS location updates (Feature 002 - GPS Error Notifications).
+     *
+     * **Internal Method**: Called by RideRecordingService on GPS status changes.
+     *
+     * **Status Types** (from GpsStatus.kt):
+     * - Unavailable: accuracy >50m or timeout (no updates for >10s)
+     * - Acquiring: accuracy 10-50m (weak signal)
+     * - Active: accuracy ≤10m (good signal)
+     *
+     * **Side Effects**:
+     * - Updates _currentGpsStatus StateFlow
+     * - Emits new status to all collectors
+     *
+     * @param status Current GPS status from LocationRepository
+     */
+    internal fun updateGpsStatus(status: GpsStatus) {
+        val previousStatus = _currentGpsStatus.value
+        if (status != previousStatus) {
+            android.util.Log.d("RideStateRepo", "📡 GPS status changed: $previousStatus -> $status")
+        }
+        _currentGpsStatus.value = status
+    }
+
+    /**
+     * Reset GPS status to Unavailable (Feature 002 - GPS Error Notifications).
+     *
+     * **Internal Method**: Called by RideRecordingService when ride stops.
+     *
+     * **Use Cases**:
+     * - Stop ride: GPS status should reset to Unavailable
+     * - Discard ride: GPS status should reset to Unavailable
+     *
+     * **Side Effects**:
+     * - Updates _currentGpsStatus StateFlow to Unavailable
+     * - Emits Unavailable to all collectors
+     */
+    internal fun resetGpsStatus() {
+        android.util.Log.d("RideStateRepo", "📡 Resetting GPS status to Unavailable (was: ${_currentGpsStatus.value})")
+        _currentGpsStatus.value = GpsStatus.Unavailable
     }
 
     /**

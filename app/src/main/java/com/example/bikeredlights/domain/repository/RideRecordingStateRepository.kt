@@ -1,5 +1,6 @@
 package com.example.bikeredlights.domain.repository
 
+import com.example.bikeredlights.domain.model.GpsStatus
 import com.example.bikeredlights.domain.model.RideRecordingState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -152,4 +153,29 @@ interface RideRecordingStateRepository {
      * @return StateFlow emitting current stop duration in seconds (null when not stopped)
      */
     fun getCurrentStopDuration(): StateFlow<Int?>
+
+    /**
+     * Get current GPS status as a StateFlow (Feature 002 - GPS Error Notifications).
+     *
+     * **Flow Behavior**:
+     * - Hot Flow (StateFlow)
+     * - Always has a value (defaults to GpsStatus.Unavailable)
+     * - Emits on GPS status changes based on accuracy thresholds
+     * - Debounced to avoid rapid fluctuations
+     *
+     * **Lifecycle**:
+     * - GpsStatus.Unavailable when no ride is recording
+     * - GpsStatus.Acquiring when GPS is acquiring signal (accuracy 10-50m)
+     * - GpsStatus.Active(accuracy) when GPS has good signal (accuracy ≤10m)
+     * - GpsStatus.Unavailable when accuracy >50m or no updates for >10s
+     * - Resets to GpsStatus.Unavailable when ride is stopped
+     *
+     * **Status Types** (from GpsStatus.kt):
+     * - Unavailable: accuracy >50m or timeout (no updates for >10s)
+     * - Acquiring: accuracy 10-50m (weak signal)
+     * - Active: accuracy ≤10m (good signal)
+     *
+     * @return StateFlow emitting current GPS status
+     */
+    fun getCurrentGpsStatus(): StateFlow<GpsStatus>
 }
