@@ -7,14 +7,19 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.bikeredlights.data.preferences.PreferencesKeys
 import com.example.bikeredlights.domain.model.history.SortPreference
 import com.example.bikeredlights.domain.model.settings.AutoPauseConfig
 import com.example.bikeredlights.domain.model.settings.GpsAccuracy
 import com.example.bikeredlights.domain.model.settings.StopDetectionConfig
 import com.example.bikeredlights.domain.model.settings.UnitsSystem
+import com.example.bikeredlights.worker.ReclusterStopsWorker
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
@@ -28,7 +33,11 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
  * Read failures return default values.
  * Write failures are logged but don't crash the app (graceful degradation).
  *
- * @param context Android context for DataStore access
+ * **Feature 010: Stop Clustering**:
+ * - Monitors clustering radius changes and triggers re-clustering via WorkManager
+ * - WorkManager ensures background re-clustering completes even if app is killed
+ *
+ * @param context Android context for DataStore access and WorkManager
  */
 class SettingsRepositoryImpl(
     private val context: Context
@@ -37,6 +46,9 @@ class SettingsRepositoryImpl(
     companion object {
         private const val TAG = "SettingsRepository"
     }
+
+    // WorkManager instance for background re-clustering (Feature 010)
+    private val workManager = WorkManager.getInstance(context)
 
     override val unitsSystem: Flow<UnitsSystem> = context.dataStore.data
         .catch { exception ->
@@ -171,6 +183,10 @@ class SettingsRepositoryImpl(
 
     override suspend fun setStopDetectionConfig(config: StopDetectionConfig) {
         try {
+            // Check if clustering radius changed (Feature 010: triggers re-clustering)
+            val oldRadius = stopDetectionConfig.first().clusteringRadiusMeters
+            val radiusChanged = oldRadius != config.clusteringRadiusMeters
+
             // Atomic write of all 3 settings in single transaction
             context.dataStore.edit { preferences ->
                 preferences[PreferencesKeys.STOP_DETECTION_SPEED_THRESHOLD_KMH] = config.speedThresholdKmh
@@ -179,8 +195,37 @@ class SettingsRepositoryImpl(
             }
             Log.d(TAG, "Stop detection config updated: speed=${config.speedThresholdKmh}km/h, " +
                     "duration=${config.durationThresholdSeconds}s, radius=${config.clusteringRadiusMeters}m")
+
+            // Feature 010: Trigger background re-clustering if radius changed
+            if (radiusChanged) {
+                triggerReclusteringWorker()
+            }
         } catch (e: IOException) {
             Log.e(TAG, "Error writing stop detection preferences", e)
         }
+    }
+
+    /**
+     * Enqueue WorkManager task to re-cluster all stops (Feature 010).
+     *
+     * **Work Policy**: REPLACE (cancel old work if pending, replace with new)
+     * - If work already queued → cancel and start fresh
+     * - If work running → let it finish (ignore new request)
+     *
+     * **Constraints**: None (runs immediately on WiFi/cellular)
+     * **Backoff**: EXPONENTIAL (30s, 60s, 120s... on retry)
+     *
+     * Private helper method called by setStopDetectionConfig when radius changes.
+     */
+    private fun triggerReclusteringWorker() {
+        val reclusterWork = OneTimeWorkRequestBuilder<ReclusterStopsWorker>().build()
+
+        workManager.enqueueUniqueWork(
+            ReclusterStopsWorker.WORK_NAME,
+            ExistingWorkPolicy.REPLACE,
+            reclusterWork
+        )
+
+        Log.d(TAG, "Enqueued background re-clustering worker")
     }
 }
