@@ -1,0 +1,4 @@
+{
+  "task_description": "Currently, the arrow representing the rider on the map is dead center on the map. It needs to appear in the lower part of the map, same as google maps or waze in drive mode.",
+  "workflow_type": "feature"
+}
