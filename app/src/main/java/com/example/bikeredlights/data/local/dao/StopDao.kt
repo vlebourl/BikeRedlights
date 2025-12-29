@@ -172,4 +172,42 @@ interface StopDao {
      */
     @Query("DELETE FROM stops WHERE ride_id = :rideId")
     suspend fun deleteStopsByRideId(rideId: Long)
+
+    // ========== Feature 010: Stop Clustering Queries ==========
+
+    /**
+     * Get all stops across all rides for clustering (Feature 010).
+     *
+     * Use Case: Full re-clustering on settings change or manual trigger.
+     *
+     * Ordering: Chronological by start_timestamp for deterministic clustering.
+     *
+     * Performance: Indexed query on start_timestamp (<100ms for 1000 stops).
+     *
+     * @return List of all stops ordered by start_timestamp ASC
+     */
+    @Query("""
+        SELECT * FROM stops
+        ORDER BY start_timestamp ASC
+    """)
+    suspend fun getAllStops(): List<StopEntity>
+
+    /**
+     * Batch update cluster IDs for multiple stops (Feature 010 clustering).
+     *
+     * Use Case: ClusterStopsUseCase assigns all stops in a cluster to same cluster_id.
+     *
+     * Performance: Single SQL UPDATE with IN clause for efficiency.
+     *
+     * Note: Room executes this in a transaction automatically.
+     *
+     * @param clusterId Cluster ID to assign (1, 2, 3... from DBSCAN result)
+     * @param stopIds List of stop primary keys to update
+     */
+    @Query("""
+        UPDATE stops
+        SET cluster_id = :clusterId
+        WHERE id IN (:stopIds)
+    """)
+    suspend fun updateClusterIds(clusterId: Long, stopIds: List<Long>)
 }

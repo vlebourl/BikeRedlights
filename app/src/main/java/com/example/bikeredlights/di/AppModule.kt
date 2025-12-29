@@ -1,6 +1,8 @@
 package com.example.bikeredlights.di
 
 import android.content.Context
+import com.example.bikeredlights.domain.util.DBSCANAlgorithm
+import com.example.bikeredlights.domain.util.DBSCANAlgorithmImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,6 +15,7 @@ import javax.inject.Singleton
  *
  * Provides dependencies that live as long as the application:
  * - Application Context
+ * - DBSCAN Algorithm (Feature 010)
  * - Other app-wide singletons
  *
  * @InstallIn(SingletonComponent::class) means these dependencies
@@ -32,5 +35,18 @@ object AppModule {
     @Singleton
     fun provideContext(@ApplicationContext context: Context): Context {
         return context
+    }
+
+    /**
+     * Provides DBSCAN clustering algorithm implementation (Feature 010).
+     *
+     * Singleton: Algorithm is stateless, can be reused safely.
+     *
+     * @return DBSCANAlgorithm instance for stop clustering
+     */
+    @Provides
+    @Singleton
+    fun provideDBSCANAlgorithm(): DBSCANAlgorithm {
+        return DBSCANAlgorithmImpl()
     }
 }

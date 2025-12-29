@@ -141,6 +141,35 @@ class StopRepositoryImpl @Inject constructor(
         stopDao.deleteStopsByRideId(rideId)
     }
 
+    // ========== Feature 010: Stop Clustering Methods ==========
+
+    /**
+     * Get all stops across all rides for clustering (Feature 010).
+     *
+     * Use Case: Full re-clustering on settings change or manual trigger.
+     *
+     * Mapping: List<StopEntity> → List<Stop> (domain models)
+     *
+     * @return List of all stops ordered by start_timestamp ASC
+     */
+    override suspend fun getAllStops(): List<Stop> {
+        return stopDao.getAllStops().map { it.toDomainModel() }
+    }
+
+    /**
+     * Batch update cluster IDs for multiple stops (Feature 010 clustering).
+     *
+     * Use Case: ClusterStopsUseCase assigns all stops in a cluster to same cluster_id.
+     *
+     * Transaction: Room executes UPDATE query in transaction automatically.
+     *
+     * @param clusterId Cluster ID to assign (1, 2, 3... from DBSCAN result)
+     * @param stopIds List of stop primary keys to update
+     */
+    override suspend fun updateClusterIds(clusterId: Long, stopIds: List<Long>) {
+        stopDao.updateClusterIds(clusterId, stopIds)
+    }
+
     /**
      * Convert Stop domain model to StopEntity database entity.
      *
