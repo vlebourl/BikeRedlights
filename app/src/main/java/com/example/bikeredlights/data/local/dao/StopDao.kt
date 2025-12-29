@@ -210,4 +210,106 @@ interface StopDao {
         WHERE id IN (:stopIds)
     """)
     suspend fun updateClusterIds(clusterId: Long, stopIds: List<Long>)
+
+    // ========== Feature 011: Cluster Visualization Queries ==========
+
+    /**
+     * Query all stops that belong to clusters (Feature 011).
+     *
+     * Use Case: Fetch clustered stops for map visualization.
+     *
+     * SQL Logic:
+     * - WHERE cluster_id IS NOT NULL (exclude noise points from DBSCAN)
+     * - ORDER BY start_timestamp DESC (most recent first)
+     *
+     * Performance: Indexed query on cluster_id and start_timestamp (<100ms for 500 stops).
+     *
+     * Reactivity: Flow emits updates when new stops are clustered.
+     *
+     * @return Flow emitting list of StopEntity with cluster assignments, newest first
+     */
+    @Query("""
+        SELECT * FROM stops
+        WHERE cluster_id IS NOT NULL
+        ORDER BY start_timestamp DESC
+    """)
+    fun getClusteredStops(): Flow<List<StopEntity>>
+
+    /**
+     * Query clustered stops within date range (Feature 011 - User Story 3).
+     *
+     * Use Case: Filter map display by date range (last 7/30/90 days).
+     *
+     * SQL Logic:
+     * - WHERE cluster_id IS NOT NULL AND start_timestamp BETWEEN :startMillis AND :endMillis
+     * - ORDER BY start_timestamp DESC
+     *
+     * Boundaries: Inclusive (startMillis <= start_timestamp <= endMillis)
+     *
+     * Performance: Composite index on (cluster_id, start_timestamp) for optimal filtering.
+     *
+     * @param startMillis Start of date range (inclusive, epoch milliseconds)
+     * @param endMillis End of date range (inclusive, epoch milliseconds)
+     * @return Flow emitting list of StopEntity matching criteria
+     */
+    @Query("""
+        SELECT * FROM stops
+        WHERE cluster_id IS NOT NULL
+        AND start_timestamp BETWEEN :startMillis AND :endMillis
+        ORDER BY start_timestamp DESC
+    """)
+    fun getClusteredStopsByDateRange(
+        startMillis: Long,
+        endMillis: Long
+    ): Flow<List<StopEntity>>
+
+    /**
+     * Query cluster IDs with stop counts (Feature 011 - minimum size filtering).
+     *
+     * Use Case: First step of two-step filtering for minimum cluster size.
+     *
+     * SQL Logic:
+     * - GROUP BY cluster_id
+     * - HAVING COUNT(*) >= :minSize
+     * - Returns only cluster IDs that meet minimum size threshold
+     *
+     * Usage Pattern:
+     * 1. Call this method to get cluster IDs meeting threshold
+     * 2. Call getStopsByClusterIds() with resulting IDs
+     *
+     * Performance: COUNT aggregation with GROUP BY (<50ms for 500 stops).
+     *
+     * @param minSize Minimum number of stops required in cluster
+     * @return Flow emitting list of cluster IDs meeting threshold
+     */
+    @Query("""
+        SELECT cluster_id FROM stops
+        WHERE cluster_id IS NOT NULL
+        GROUP BY cluster_id
+        HAVING COUNT(*) >= :minSize
+    """)
+    fun getClusterIdsWithMinSize(minSize: Int): Flow<List<Long>>
+
+    /**
+     * Query stops for specific cluster IDs (Feature 011).
+     *
+     * Use Case: Second step of two-step filtering for minimum cluster size.
+     *
+     * SQL Logic:
+     * - WHERE cluster_id IN (:clusterIds)
+     * - ORDER BY start_timestamp DESC
+     *
+     * Combination: Used with getClusterIdsWithMinSize() for complete filtering.
+     *
+     * Performance: IN clause with indexed cluster_id column (<100ms for 100 IDs).
+     *
+     * @param clusterIds List of cluster IDs to fetch stops for
+     * @return Flow emitting list of StopEntity belonging to specified clusters
+     */
+    @Query("""
+        SELECT * FROM stops
+        WHERE cluster_id IN (:clusterIds)
+        ORDER BY start_timestamp DESC
+    """)
+    fun getStopsByClusterIds(clusterIds: List<Long>): Flow<List<StopEntity>>
 }

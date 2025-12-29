@@ -173,4 +173,69 @@ interface StopRepository {
      * @param stopIds List of stop primary keys to update
      */
     suspend fun updateClusterIds(clusterId: Long, stopIds: List<Long>)
+
+    // ========== Feature 011: Cluster Visualization Methods ==========
+
+    /**
+     * Get all stops that belong to clusters (cluster_id IS NOT NULL).
+     *
+     * Use Case: Fetch clustered stops for map visualization (Feature 011 - User Story 1).
+     *
+     * Filtering:
+     * - Excludes noise points identified by DBSCAN clustering (cluster_id == null)
+     * - Returns only stops assigned to clusters
+     *
+     * Reactivity:
+     * - Flow emits updates when stops table changes
+     * - UI automatically refreshes when new stops are clustered
+     *
+     * Performance: Indexed query on cluster_id (<100ms for 500 stops)
+     *
+     * @return Flow emitting list of clustered stops, ordered by start_timestamp descending
+     */
+    fun getClusteredStops(): Flow<List<Stop>>
+
+    /**
+     * Get clustered stops within a specific date range.
+     *
+     * Use Case: Filter clusters by date range (Feature 011 - User Story 3).
+     * Common filters: Last 7 days, last 30 days, last 90 days.
+     *
+     * Filtering:
+     * - Combines cluster_id filtering with date range filtering
+     * - Boundaries are inclusive (startMillis <= stop.startTime <= endMillis)
+     *
+     * Reactivity: Flow emits updates when stops table changes
+     *
+     * Performance: Composite index on (cluster_id, start_timestamp) for optimal filtering
+     *
+     * @param startMillis Start of date range (inclusive) in epoch milliseconds
+     * @param endMillis End of date range (inclusive) in epoch milliseconds
+     * @return Flow emitting list of clustered stops within date range
+     */
+    fun getClusteredStopsByDateRange(
+        startMillis: Long,
+        endMillis: Long
+    ): Flow<List<Stop>>
+
+    /**
+     * Get stops grouped by cluster ID.
+     *
+     * Use Case: Aggregate stops for ClusterSummary calculation (Feature 011).
+     *
+     * Filtering: Excludes noise points (cluster_id == null)
+     *
+     * Grouping:
+     * - Map key = cluster_id (1, 2, 3...)
+     * - Map value = List of Stop entities in that cluster
+     *
+     * Reactivity: Flow emits updates when stops table changes
+     *
+     * Performance:
+     * - Single query with in-memory grouping
+     * - <100ms for 500 stops across 50 clusters
+     *
+     * @return Flow emitting map of cluster ID to stops
+     */
+    fun getStopsGroupedByCluster(): Flow<Map<Long, List<Stop>>>
 }
