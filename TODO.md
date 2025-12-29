@@ -1,13 +1,26 @@
 # BikeRedlights - Project TODO
 
-> **Last Updated**: 2025-11-11 (Feature 007: Map UX Improvements - Ready for PR)
+> **Last Updated**: 2025-12-29 (Feature 009: Stop Detection & Recording - Phase 5 complete)
 > **Purpose**: Unified progress tracking for all features, tasks, and pending work
 
 ## 📋 In Progress
 
 _Features currently being developed_
 
-_(No features in progress)_
+### Feature 009: Stop Detection & Recording (v0.9.0)
+- **Started**: 2025-11-18 (post-Feature 008 completion)
+- **Type**: P1 Core Safety Feature (5 user stories for real-time stop detection and data collection)
+- **Description**: Detect when rider stops during active ride by monitoring GPS speed against configurable thresholds. Display live UI feedback popup, record stop data to database, and provide foundation for clustering (Feature 010).
+- **Status**: 🚧 IN PROGRESS - Phases 1-7 complete (40/75 tasks, 53%)
+- **Implementation Progress**:
+  - ✅ **Phase 1: Setup** (T001-T008) - Database schema, entities, DAOs, Room migration, Hilt bindings
+  - ✅ **Phase 2: Foundational** (T009-T015) - State machine, utils, unit tests, DAO instrumented tests
+  - ✅ **Phase 3: User Story 1 - Real-Time Detection** (T016-T025) - Stop detection in service, state machine integration, database persistence
+  - ✅ **Phase 4: User Story 2 - Live UI Popup** (T026-T033) - StopPopup composable, ViewModel integration, LiveRideScreen display
+  - ✅ **Phase 5: User Story 3 - Stop Count Display** (T034-T040) - Stop count StateFlow, RideStatistics integration, reactive UI updates
+  - ✅ **Phase 6: User Story 4 - Database Persistence** (T041-T053) - All DAO/Repository methods implemented, CASCADE tests complete
+  - ✅ **Phase 7: User Story 5 - Settings Integration** (T054-T062) - Thresholds read from DataStore, defaults applied, mid-ride isolation
+  - ⏳ **Phase 8: Polish & Validation** (T063-T075) - Testing, documentation, emulator validation (pending manual testing)
 
 ---
 
