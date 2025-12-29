@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -73,12 +75,14 @@ import com.google.maps.android.compose.rememberCameraPositionState
  * }
  * ```
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StopsMapScreen(
     viewModel: ClusterMapViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val sheetState = rememberModalBottomSheetState()
 
     StopsMapContent(
         uiState = uiState,
@@ -86,6 +90,15 @@ fun StopsMapScreen(
         onRetry = viewModel::retry,
         modifier = modifier
     )
+
+    // Show cluster detail bottom sheet when a cluster is selected (User Story 2)
+    if (uiState.selectedCluster != null) {
+        ClusterDetailBottomSheet(
+            cluster = uiState.selectedCluster!!,
+            onDismiss = viewModel::deselectCluster,
+            sheetState = sheetState
+        )
+    }
 }
 
 /**
