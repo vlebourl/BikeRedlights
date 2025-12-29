@@ -31,6 +31,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.bikeredlights.ui.components.GpsStatusIndicator as RealTimeGpsIndicator
 import com.example.bikeredlights.ui.components.map.BikeMap
 import com.example.bikeredlights.ui.components.map.LocationMarker
 import com.example.bikeredlights.ui.components.map.RoutePolyline
@@ -376,13 +377,29 @@ fun LiveRideScreen(
         }
 
         // Overlays (must be AFTER the main content to render on top)
-        // GPS Status Indicator (always visible at top-right)
-        GpsStatusIndicator(
-            uiState = uiState,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 16.dp, end = 16.dp)
-        )
+        // GPS Status Indicator - shows real-time GPS status only during recording (Feature 002)
+        // Uses RealTimeGpsIndicator for active recording states, local GpsStatusIndicator otherwise
+        val isRecordingActive = uiState is RideRecordingUiState.Recording ||
+                                uiState is RideRecordingUiState.Paused ||
+                                uiState is RideRecordingUiState.AutoPaused
+
+        if (isRecordingActive) {
+            // Show real-time GPS signal status during recording (green/yellow/red)
+            RealTimeGpsIndicator(
+                gpsStatus = gpsStatus,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 16.dp, end = 16.dp)
+            )
+        } else {
+            // Show UI-state based indicator when not recording
+            GpsStatusIndicator(
+                uiState = uiState,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 16.dp, end = 16.dp)
+            )
+        }
 
         // Stop Popup (Feature 009 - displays at very bottom of map section, just above "REC")
         // CRITICAL: This must be LAST in the Box to render on top of map
