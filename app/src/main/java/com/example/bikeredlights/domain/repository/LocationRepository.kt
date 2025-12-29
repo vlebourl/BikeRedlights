@@ -1,5 +1,6 @@
 package com.example.bikeredlights.domain.repository
 
+import com.example.bikeredlights.domain.model.GpsStatus
 import com.example.bikeredlights.domain.model.LocationData
 import kotlinx.coroutines.flow.Flow
 
@@ -63,4 +64,35 @@ interface LocationRepository {
      * @throws SecurityException if ACCESS_FINE_LOCATION permission not granted
      */
     fun getLocationUpdates(): Flow<LocationData>
+
+    /**
+     * Emits GPS status updates as a Flow.
+     *
+     * The Flow emits the current GPS signal status based on accuracy thresholds
+     * and update frequency. Status is derived from location updates:
+     * - [GpsStatus.Unavailable]: No permission, GPS disabled, or no updates for >10s
+     * - [GpsStatus.Acquiring]: First fix or accuracy >10m but ≤50m
+     * - [GpsStatus.Active]: Accuracy ≤10m with regular updates
+     *
+     * This Flow is typically collected alongside [getLocationUpdates] to provide
+     * real-time feedback about GPS signal quality to the user.
+     *
+     * Example usage:
+     * ```kotlin
+     * viewModelScope.launch {
+     *     locationRepository.gpsStatusUpdates()
+     *         .collect { status ->
+     *             when (status) {
+     *                 is GpsStatus.Unavailable -> showError()
+     *                 is GpsStatus.Acquiring -> showAcquiring()
+     *                 is GpsStatus.Active -> showActive(status.accuracy)
+     *             }
+     *         }
+     * }
+     * ```
+     *
+     * @return Flow<GpsStatus> that emits GPS status changes
+     * @see GpsStatus for the status states and thresholds
+     */
+    fun gpsStatusUpdates(): Flow<GpsStatus>
 }
