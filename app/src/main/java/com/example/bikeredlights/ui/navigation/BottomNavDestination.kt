@@ -3,13 +3,11 @@ package com.example.bikeredlights.ui.navigation
 /**
  * Bottom navigation destinations for the BikeRedlights app.
  *
- * Tab order (v0.2.0 - v0.5.0):
+ * Tab order (v0.11.0+):
  * 1. LIVE - Real-time speed tracking (default landing screen)
  * 2. RIDES - Ride history and statistics (added in Feature 3)
- * 3. SETTINGS - App settings and preferences
- *
- * Future (v0.6.0+):
- * 4. STOPS - Red light stop history (added in Feature 6)
+ * 3. STOPS - Stop cluster visualization (added in Feature 011)
+ * 4. SETTINGS - App settings and preferences
  *
  * Each destination corresponds to a top-level screen in the app.
  */
@@ -36,6 +34,16 @@ enum class BottomNavDestination(
         route = "rides",
         label = "Rides",
         icon = "list"  // Material Icons: list or history
+    ),
+
+    /**
+     * Stop clusters map screen (Feature 011).
+     * Shows clustered stops on interactive map with filtering.
+     */
+    STOPS(
+        route = "stops",
+        label = "Stops",
+        icon = "stop_circle"  // Material Icons: stop_circle (outlined)
     ),
 
     /**

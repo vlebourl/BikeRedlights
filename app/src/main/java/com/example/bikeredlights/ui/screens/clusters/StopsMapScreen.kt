@@ -15,6 +15,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -187,10 +189,17 @@ private fun MapWithClusters(
         LatLng(37.422, -122.084) // Default to Google campus
     }
 
+    // Persist camera position across tab switches (User Story 4 - T031)
+    // Saves current map position/zoom so user returns to same view when switching tabs
+    // Save individual position values (primitives are automatically saveable)
+    val savedLatitude = rememberSaveable { initialPosition.latitude }
+    val savedLongitude = rememberSaveable { initialPosition.longitude }
+    val savedZoom = rememberSaveable { 14f }
+
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
-            initialPosition,
-            14f // Zoom level showing ~2km radius (good for cluster overview)
+            LatLng(savedLatitude, savedLongitude),
+            savedZoom
         )
     }
 

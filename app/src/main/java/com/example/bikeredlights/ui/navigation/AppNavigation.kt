@@ -103,6 +103,13 @@ fun AppNavigation(
             )
         }
 
+        // Stops tab - Feature 011 cluster visualization
+        composable(BottomNavDestination.STOPS.route) {
+            StopsMapScreen(
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
         // Settings tab - Feature 2A home screen
         composable(BottomNavDestination.SETTINGS.route) {
             SettingsHomeScreen(
@@ -111,11 +118,6 @@ fun AppNavigation(
                 },
                 onStopDetectionClick = {
                     navController.navigate(SettingsDestination.STOP_DETECTION.route)
-                },
-                // TEMPORARY: Enable navigation to stops_temp for testing Feature 011 US2
-                // TODO: Remove this when US4 (Stops tab in bottom nav) is implemented
-                onViewClustersClick = {
-                    navController.navigate("stops_temp")
                 }
             )
         }
@@ -166,13 +168,6 @@ fun AppNavigation(
             )
         }
 
-        // TEMPORARY ROUTE - Feature 011 testing (will be replaced by bottom nav in US4)
-        // TODO: Remove this route when implementing User Story 4 (Stops tab in bottom navigation)
-        composable("stops_temp") {
-            StopsMapScreen(
-                modifier = Modifier.fillMaxSize()
-            )
-        }
     }
 }
 
