@@ -18,14 +18,17 @@ import androidx.core.app.ServiceCompat
 import com.example.bikeredlights.MainActivity
 import com.example.bikeredlights.R
 import com.example.bikeredlights.domain.model.RideRecordingState
+import com.example.bikeredlights.domain.model.StopDetectionState
 import com.example.bikeredlights.data.repository.SettingsRepository
 import com.example.bikeredlights.domain.repository.LocationRepository
 import com.example.bikeredlights.domain.repository.RideRecordingStateRepository
 import com.example.bikeredlights.domain.repository.RideRepository
+import com.example.bikeredlights.domain.repository.StopRepository
 import com.example.bikeredlights.domain.repository.TrackPointRepository
 import com.example.bikeredlights.domain.usecase.CalculateDistanceUseCase
 import com.example.bikeredlights.domain.usecase.RecordTrackPointUseCase
 import com.example.bikeredlights.domain.usecase.StartRideUseCase
+import com.example.bikeredlights.domain.util.StopDetectionStateMachine
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -99,7 +102,11 @@ class RideRecordingService : Service() {
     @Inject
     lateinit var settingsRepository: SettingsRepository
 
+    @Inject
+    lateinit var stopRepository: StopRepository
+
     private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
+    private var stopDetectionStateMachine: StopDetectionStateMachine? = null
     private var locationJob: Job? = null
     private var durationUpdateJob: Job? = null
     private var gpsAccuracyObserverJob: Job? = null  // T082: Observe GPS accuracy changes
@@ -135,6 +142,14 @@ class RideRecordingService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // CRITICAL: Call startForeground() IMMEDIATELY to avoid crash
+        // Android requires startForeground() within 5-10 seconds of startForegroundService()
+        // Must happen BEFORE any async operations (database, network, etc.)
+        if (intent?.action == ACTION_START_RECORDING) {
+            val initialNotification = buildNotification("Starting ride...")
+            startForegroundService(initialNotification)
+        }
+
         when (intent?.action) {
             ACTION_START_RECORDING -> {
                 startRecording()
@@ -190,9 +205,52 @@ class RideRecordingService : Service() {
             currentState = RideRecordingState.Recording(rideId)
             rideRecordingStateRepository.updateRecordingState(currentState)
 
-            // Start foreground service
+            // Update notification (foreground already started in onStartCommand)
             val notification = buildNotification("Recording...")
-            startForegroundService(notification)
+            notificationManager.notify(NOTIFICATION_ID, notification)
+
+            // Feature 009: Initialize stop detection state machine (T017)
+            val stopDetectionSettings = try {
+                settingsRepository.stopDetectionConfig.first()
+            } catch (e: Exception) {
+                com.example.bikeredlights.domain.model.settings.StopDetectionConfig()
+            }
+
+            stopDetectionStateMachine = StopDetectionStateMachine(
+                stopRepository = stopRepository,
+                speedThresholdKmh = stopDetectionSettings.speedThresholdKmh,
+                durationThresholdSeconds = stopDetectionSettings.durationThresholdSeconds,
+                scope = serviceScope
+            )
+            stopDetectionStateMachine?.startRide(rideId)
+
+            // Feature 009: Collect stop detection events and update repository StateFlows (T020)
+            android.util.Log.d("RideRecordingService", "📡 Starting event collection for stop detection")
+            serviceScope.launch {
+                stopDetectionStateMachine?.events?.collect { event ->
+                    android.util.Log.d("RideRecordingService", "📨 Received stop event: $event")
+                    when (event) {
+                        is com.example.bikeredlights.domain.util.StopEvent.StopDetected -> {
+                            android.util.Log.d("RideRecordingService",
+                                "🔄 Updating repository with stop #${event.stopNumber} (ID: ${event.stopId})")
+                            // Update stop number when stop is confirmed
+                            (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
+                                ?.updateCurrentStopNumber(event.stopNumber)
+                            android.util.Log.d("RideRecordingService",
+                                "✅ Repository updated - Stop #${event.stopNumber} detected (ID: ${event.stopId})")
+                        }
+                        is com.example.bikeredlights.domain.util.StopEvent.StopEnded -> {
+                            android.util.Log.d("RideRecordingService",
+                                "🔄 Clearing stop state for ID: ${event.stopId}")
+                            // Clear stop state when stop ends
+                            (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
+                                ?.resetStopState()
+                            android.util.Log.d("RideRecordingService",
+                                "✅ Repository updated - Stop ended (ID: ${event.stopId})")
+                        }
+                    }
+                }
+            }
 
             // Start GPS tracking
             startLocationTracking(rideId)
@@ -356,6 +414,11 @@ class RideRecordingService : Service() {
             (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
                 ?.resetCurrentBearing()
 
+            // Feature 009: End stop detection and cleanup (T022)
+            stopDetectionStateMachine?.stopRide()
+            (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
+                ?.resetStopState()
+
             // Update state to Stopped
             currentState = RideRecordingState.Stopped(rideId)
             rideRecordingStateRepository.updateRecordingState(currentState)
@@ -455,6 +518,16 @@ class RideRecordingService : Service() {
                     val currentBearing = locationData.bearing
                     (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
                         ?.updateCurrentBearing(currentBearing)
+
+                    // Feature 009: Process GPS speed through stop detection state machine (T018)
+                    if (!isManuallyPaused) {
+                        stopDetectionStateMachine?.processSpeed(
+                            speedKmh = (currentSpeed * 3.6).toFloat(),  // Convert m/s to km/h
+                            latitude = locationData.latitude,
+                            longitude = locationData.longitude,
+                            timestamp = locationData.timestamp
+                        )
+                    }
 
                     // Check for auto-resume (before pause gate)
                     // This allows auto-resume to execute during AutoPaused state
@@ -721,6 +794,17 @@ class RideRecordingService : Service() {
             else -> {
                 // ManuallyPaused, Stopped, or Idle: Don't update
                 // Manual pause is handled by ViewModel when resuming/stopping
+            }
+        }
+
+        // Feature 009: Update stop duration if currently stopped (T020)
+        val stopDetectionState = stopDetectionStateMachine?.getCurrentState()
+        if (stopDetectionState?.isStopConfirmed == true) {
+            val stopStartTime = stopDetectionState.stopConfirmedTime // Use confirmation time, not detection time
+            if (stopStartTime != null) {
+                val stopDurationSeconds = ((System.currentTimeMillis() - stopStartTime) / 1000).toInt()
+                (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
+                    ?.updateCurrentStopDuration(stopDurationSeconds)
             }
         }
     }

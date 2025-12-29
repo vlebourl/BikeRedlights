@@ -41,3 +41,8 @@ bin/
 out/
 *.class
 bikeredlights-signing-keys/
+
+# Auto Claude data directory
+.auto-claude/
+.claude_settings.json
+.worktrees/

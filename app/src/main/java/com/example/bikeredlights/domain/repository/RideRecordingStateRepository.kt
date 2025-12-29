@@ -112,4 +112,44 @@ interface RideRecordingStateRepository {
      * @return StateFlow emitting current bearing in degrees (null when unavailable)
      */
     fun getCurrentBearing(): StateFlow<Float?>
+
+    /**
+     * Get current stop number as a StateFlow (Feature 009 - Stop Detection).
+     *
+     * **Flow Behavior**:
+     * - Hot Flow (StateFlow)
+     * - Always has a value (defaults to null)
+     * - Emits when stop is confirmed or ended
+     * - null when not stopped
+     *
+     * **Lifecycle**:
+     * - null when no ride is recording
+     * - null while moving (not stopped)
+     * - Stop number (1, 2, 3...) when stopped
+     * - null when stop ends (rider starts moving)
+     * - null when ride is stopped
+     *
+     * @return StateFlow emitting current stop number (null when not stopped)
+     */
+    fun getCurrentStopNumber(): StateFlow<Int?>
+
+    /**
+     * Get current stop duration in seconds as a StateFlow (Feature 009 - Stop Detection).
+     *
+     * **Flow Behavior**:
+     * - Hot Flow (StateFlow)
+     * - Always has a value (defaults to null)
+     * - Emits every second during active stop
+     * - null when not stopped
+     *
+     * **Lifecycle**:
+     * - null when no ride is recording
+     * - null while moving (not stopped)
+     * - Duration in seconds when stopped (increments every second)
+     * - null when stop ends (rider starts moving)
+     * - null when ride is stopped
+     *
+     * @return StateFlow emitting current stop duration in seconds (null when not stopped)
+     */
+    fun getCurrentStopDuration(): StateFlow<Int?>
 }

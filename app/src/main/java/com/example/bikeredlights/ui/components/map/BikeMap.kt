@@ -1,6 +1,7 @@
 package com.example.bikeredlights.ui.components.map
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -9,6 +10,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import com.google.android.gms.maps.model.CameraPosition
@@ -46,6 +48,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
  * @param mapType Type of map tiles (NORMAL, SATELLITE, HYBRID, TERRAIN)
  * @param showMyLocationButton Whether to show the "My Location" FAB (default true)
  * @param showZoomControls Whether to show zoom +/- buttons (default true)
+ * @param navigationMode When true, positions rider in lower third of map for better forward visibility (default true)
  * @param content Slot for map content (Markers, Polylines, etc.)
  *
  * Example usage:
@@ -78,6 +81,7 @@ fun BikeMap(
     mapType: MapType = MapType.NORMAL,
     showMyLocationButton: Boolean = true,
     showZoomControls: Boolean = true,
+    navigationMode: Boolean = true,
     content: @Composable () -> Unit = {}
 ) {
     val isDarkMode = isSystemInDarkTheme()
@@ -169,6 +173,7 @@ fun BikeMap(
         cameraPositionState = cameraPositionState,
         properties = mapProperties,
         uiSettings = mapUiSettings,
+        contentPadding = if (navigationMode) PaddingValues(top = 280.dp) else PaddingValues(),
         content = content
     )
 }

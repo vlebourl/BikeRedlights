@@ -57,6 +57,7 @@ import kotlinx.coroutines.isActive
  * @param ride Current ride with statistics
  * @param currentSpeed Current speed in m/s from latest GPS update
  * @param pausedDuration Real-time pause duration (ZERO when not paused) (Feature 007 - v0.6.1)
+ * @param stopCount Number of stops detected during current ride (Feature 009 - v0.9.0)
  * @param unitsSystem Units system for display (Metric or Imperial)
  * @param modifier Modifier for this composable
  */
@@ -65,6 +66,7 @@ fun RideStatistics(
     ride: Ride,
     currentSpeed: Double = 0.0,
     pausedDuration: java.time.Duration = java.time.Duration.ZERO,
+    stopCount: Int = 0,
     unitsSystem: UnitsSystem = UnitsSystem.METRIC,
     modifier: Modifier = Modifier
 ) {
@@ -202,23 +204,27 @@ fun RideStatistics(
                     )
                 }
 
-                // Immobile time (placeholder - not yet tracked)
+                // Stop count (stop detection) - Feature 009 Phase 5 (v0.9.0)
+                // Displays number of confirmed stops during current ride
+                // - Stop confirmed when: speed < threshold (3 km/h) for duration (15s)
+                // - Increments in real-time as stops are detected
+                // - Resets to 0 when new ride starts
                 Column(
                     modifier = Modifier.weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Immobile",
+                        text = "Stops",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "00:00:00", // TODO: Track immobile time (stopped at lights while recording)
+                        text = stopCount.toString(),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) // De-emphasized
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

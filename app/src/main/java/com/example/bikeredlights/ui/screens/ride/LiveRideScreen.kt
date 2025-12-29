@@ -36,6 +36,7 @@ import com.example.bikeredlights.ui.components.ride.KeepScreenOn
 import com.example.bikeredlights.ui.components.ride.RideControls
 import com.example.bikeredlights.ui.components.ride.RideStatistics
 import com.example.bikeredlights.ui.components.ride.SaveRideDialog
+import com.example.bikeredlights.ui.components.ride.StopPopup
 import com.example.bikeredlights.ui.viewmodel.NavigationEvent
 import com.example.bikeredlights.ui.viewmodel.RideRecordingUiState
 import com.example.bikeredlights.ui.viewmodel.RideRecordingViewModel
@@ -82,6 +83,11 @@ fun LiveRideScreen(
 
     // Map bearing for directional orientation (Feature 007 - v0.6.1)
     val mapBearing by viewModel.currentBearing.collectAsStateWithLifecycle()
+
+    // Stop detection state (Feature 009)
+    val currentStopNumber by viewModel.currentStopNumber.collectAsStateWithLifecycle()
+    val currentStopDuration by viewModel.currentStopDuration.collectAsStateWithLifecycle()
+    val stopCount by viewModel.stopCount.collectAsStateWithLifecycle()
 
     // Map state (Feature 006)
     val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
@@ -215,16 +221,9 @@ fun LiveRideScreen(
     Box(
         modifier = modifier.fillMaxSize()
     ) {
-        // GPS Status Indicator (always visible at top-right to avoid overlap)
-        GpsStatusIndicator(
-            uiState = uiState,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 16.dp, end = 16.dp)
-        )
-
         // Main content with split-screen layout (Feature 006)
         // Map on top, stats/controls on bottom - Material 3 design
+        // IMPORTANT: This must be FIRST in the Box so overlays render on top
         when (uiState) {
             is RideRecordingUiState.Idle -> {
                 // Show map even in Idle state with "Ready to ride?" message
@@ -258,6 +257,7 @@ fun LiveRideScreen(
                         ride = ride,
                         currentSpeed = currentSpeed,
                         pausedDuration = pausedDuration,
+                        stopCount = stopCount,
                         unitsSystem = unitsSystem,
                         onPauseRide = { viewModel.pauseRide() },
                         onStopRide = { viewModel.stopRide() },
@@ -277,6 +277,7 @@ fun LiveRideScreen(
                         ride = ride,
                         currentSpeed = currentSpeed,
                         pausedDuration = pausedDuration,
+                        stopCount = stopCount,
                         unitsSystem = unitsSystem,
                         onResumeRide = { viewModel.resumeRide() },
                         onStopRide = { viewModel.stopRide() },
@@ -296,6 +297,7 @@ fun LiveRideScreen(
                         ride = ride,
                         currentSpeed = currentSpeed,
                         pausedDuration = pausedDuration,
+                        stopCount = stopCount,
                         unitsSystem = unitsSystem,
                         onResumeRide = { viewModel.resumeRide() },
                         onStopRide = { viewModel.stopRide() },
@@ -316,6 +318,7 @@ fun LiveRideScreen(
                         ride = ride,
                         currentSpeed = currentSpeed,
                         pausedDuration = pausedDuration,
+                        stopCount = stopCount,
                         unitsSystem = unitsSystem,
                         onPauseRide = { }, // No action while dialog is shown
                         onStopRide = { }, // No action while dialog is shown
@@ -324,6 +327,27 @@ fun LiveRideScreen(
                 }
             }
         }
+
+        // Overlays (must be AFTER the main content to render on top)
+        // GPS Status Indicator (always visible at top-right)
+        GpsStatusIndicator(
+            uiState = uiState,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 16.dp, end = 16.dp)
+        )
+
+        // Stop Popup (Feature 009 - displays at very bottom of map section, just above "REC")
+        // CRITICAL: This must be LAST in the Box to render on top of map
+        // Positioned at center of screen vertically (50% = boundary between map/stats)
+        // with upward offset to position at bottom of map section
+        StopPopup(
+            stopNumber = currentStopNumber,
+            durationSeconds = currentStopDuration,
+            modifier = Modifier
+                .align(Alignment.Center) // Center of entire screen
+                .offset(y = (-32).dp) // Upward offset to position at bottom of map, above "REC"
+        )
     }
 }
 
@@ -603,6 +627,7 @@ private fun RecordingContent(
     ride: com.example.bikeredlights.domain.model.Ride,
     currentSpeed: Double,
     pausedDuration: java.time.Duration,
+    stopCount: Int,
     unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     onPauseRide: () -> Unit,
     onStopRide: () -> Unit,
@@ -639,6 +664,7 @@ private fun RecordingContent(
             ride = ride,
             currentSpeed = currentSpeed, // Real-time GPS speed (Feature 005)
             pausedDuration = pausedDuration, // Real-time pause counter (Feature 007)
+            stopCount = stopCount, // Real-time stop count (Feature 009)
             unitsSystem = unitsSystem,
             modifier = Modifier
                 .weight(1f)
@@ -668,6 +694,7 @@ private fun PausedContent(
     ride: com.example.bikeredlights.domain.model.Ride,
     currentSpeed: Double,
     pausedDuration: java.time.Duration,
+    stopCount: Int,
     unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     onResumeRide: () -> Unit,
     onStopRide: () -> Unit,
@@ -704,6 +731,7 @@ private fun PausedContent(
             ride = ride,
             currentSpeed = currentSpeed, // 0.0 when paused (reset by service)
             pausedDuration = pausedDuration, // Real-time pause counter (Feature 007)
+            stopCount = stopCount, // Real-time stop count (Feature 009)
             unitsSystem = unitsSystem,
             modifier = Modifier
                 .weight(1f)
@@ -733,6 +761,7 @@ private fun AutoPausedContent(
     ride: com.example.bikeredlights.domain.model.Ride,
     currentSpeed: Double,
     pausedDuration: java.time.Duration,
+    stopCount: Int,
     unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     onResumeRide: () -> Unit,
     onStopRide: () -> Unit,
@@ -770,6 +799,7 @@ private fun AutoPausedContent(
             ride = ride,
             currentSpeed = currentSpeed, // Real-time (may trigger auto-resume if > 1 km/h)
             pausedDuration = pausedDuration, // Real-time pause counter (Feature 007)
+            stopCount = stopCount, // Real-time stop count (Feature 009)
             unitsSystem = unitsSystem,
             modifier = Modifier
                 .weight(1f)

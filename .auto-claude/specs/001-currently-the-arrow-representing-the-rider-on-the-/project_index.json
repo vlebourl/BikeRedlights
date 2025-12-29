@@ -1,0 +1,12 @@
+{
+  "project_root": "/Users/vlb/AndroidStudioProjects/BikeRedlights",
+  "project_type": "single",
+  "services": {},
+  "infrastructure": {
+    "ci": "GitHub Actions",
+    "ci_workflows": [
+      "pr-checks.yml"
+    ]
+  },
+  "conventions": {}
+}

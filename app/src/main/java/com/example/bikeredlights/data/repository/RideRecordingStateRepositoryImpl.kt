@@ -84,6 +84,30 @@ class RideRecordingStateRepositoryImpl @Inject constructor(
     private val _currentBearing = MutableStateFlow<Float?>(null)
 
     /**
+     * In-memory current stop number for real-time stop detection (Feature 009).
+     *
+     * **Design Rationale**:
+     * - Ephemeral state (not persisted to DataStore)
+     * - null when not stopped
+     * - Stop number (1, 2, 3...) when stopped
+     * - Resets to null when stop ends
+     * - Thread-safe StateFlow for concurrent access
+     */
+    private val _currentStopNumber = MutableStateFlow<Int?>(null)
+
+    /**
+     * In-memory current stop duration for real-time stop tracking (Feature 009).
+     *
+     * **Design Rationale**:
+     * - Ephemeral state (not persisted to DataStore)
+     * - null when not stopped
+     * - Duration in seconds when stopped (updated every second by service)
+     * - Resets to null when stop ends
+     * - Thread-safe StateFlow for concurrent access
+     */
+    private val _currentStopDuration = MutableStateFlow<Int?>(null)
+
+    /**
      * DataStore preference keys.
      */
     private companion object {
@@ -161,6 +185,14 @@ class RideRecordingStateRepositoryImpl @Inject constructor(
 
     override fun getCurrentBearing(): StateFlow<Float?> {
         return _currentBearing.asStateFlow()
+    }
+
+    override fun getCurrentStopNumber(): StateFlow<Int?> {
+        return _currentStopNumber.asStateFlow()
+    }
+
+    override fun getCurrentStopDuration(): StateFlow<Int?> {
+        return _currentStopDuration.asStateFlow()
     }
 
     /**
@@ -247,6 +279,75 @@ class RideRecordingStateRepositoryImpl @Inject constructor(
      */
     internal suspend fun resetCurrentBearing() {
         _currentBearing.value = null
+    }
+
+    /**
+     * Update current stop number from stop detection state machine (Feature 009).
+     *
+     * **Internal Method**: Called by RideRecordingService when stop is confirmed.
+     *
+     * **Preconditions**:
+     * - stopNumber must be positive when not null
+     *
+     * **Side Effects**:
+     * - Updates _currentStopNumber StateFlow
+     * - Emits new stop number to all collectors
+     *
+     * @param stopNumber Current stop number (1, 2, 3...) or null when not stopped
+     * @throws IllegalArgumentException if stopNumber is not null and not positive
+     */
+    internal suspend fun updateCurrentStopNumber(stopNumber: Int?) {
+        if (stopNumber != null) {
+            require(stopNumber > 0) { "Stop number must be positive, got: $stopNumber" }
+        }
+        android.util.Log.d("RideStateRepo", "🔢 Updating currentStopNumber: $stopNumber (before: ${_currentStopNumber.value})")
+        _currentStopNumber.value = stopNumber
+        android.util.Log.d("RideStateRepo", "✅ currentStopNumber StateFlow updated: ${_currentStopNumber.value}")
+    }
+
+    /**
+     * Update current stop duration from stop detection state machine (Feature 009).
+     *
+     * **Internal Method**: Called by RideRecordingService every second during active stop.
+     *
+     * **Preconditions**:
+     * - duration must be non-negative when not null
+     *
+     * **Side Effects**:
+     * - Updates _currentStopDuration StateFlow
+     * - Emits new duration to all collectors
+     *
+     * @param duration Current stop duration in seconds or null when not stopped
+     * @throws IllegalArgumentException if duration is not null and negative
+     */
+    internal suspend fun updateCurrentStopDuration(duration: Int?) {
+        if (duration != null) {
+            require(duration >= 0) { "Stop duration must be non-negative, got: $duration seconds" }
+        }
+        android.util.Log.d("RideStateRepo", "⏱️ Updating currentStopDuration: $duration seconds")
+        _currentStopDuration.value = duration
+    }
+
+    /**
+     * Reset stop state to null (Feature 009).
+     *
+     * **Internal Method**: Called by RideRecordingService when stop ends or ride stops.
+     *
+     * **Use Cases**:
+     * - Stop ends: Rider starts moving again
+     * - Ride stops: Clear all stop state
+     * - Ride discarded: Clear all stop state
+     *
+     * **Side Effects**:
+     * - Resets _currentStopNumber to null
+     * - Resets _currentStopDuration to null
+     * - Emits null to all collectors
+     */
+    internal suspend fun resetStopState() {
+        android.util.Log.d("RideStateRepo", "🔄 Resetting stop state (currentStopNumber: ${_currentStopNumber.value}, currentStopDuration: ${_currentStopDuration.value})")
+        _currentStopNumber.value = null
+        _currentStopDuration.value = null
+        android.util.Log.d("RideStateRepo", "✅ Stop state reset complete")
     }
 
     /**

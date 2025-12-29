@@ -9,6 +9,61 @@ _Features and changes completed but not yet released_
 
 ---
 
+## v0.9.0 - Stop Detection & Recording (2025-12-29)
+
+### 🛑 Stop Detection & Real-Time Monitoring
+
+**Status**: ✅ COMPLETE - Full stop detection system with live UI feedback and database persistence
+**Focus**: Safety-critical feature for tracking stops at traffic lights and intersections
+**APK Size**: TBD (release build pending)
+**Tested On**: Manual validation deferred to post-merge
+
+### ✨ Features Added
+
+**Feature 009: Stop Detection & Recording** ([spec](specs/009-stop-detection/spec.md) | [plan](specs/009-stop-detection/plan.md) | [tasks](specs/009-stop-detection/tasks.md))
+
+- **User Story 1 (P1): Real-Time Stop Detection During Active Ride** ✅
+  - Detects when rider stops by monitoring GPS speed against configurable thresholds
+  - 3-second consecutive filtering to avoid GPS noise false positives
+  - Records stop start timestamp and location when duration threshold is met
+  - Integrates with settings from Feature 008 (speed threshold: 1-5 km/h, duration: 5-30s)
+  - Stop data persisted to Room database with CASCADE delete on ride deletion
+
+- **User Story 2 (P1): Live Stop Status UI During Ride** ✅
+  - Semi-transparent popup showing "🛑 Stop #N" with live duration counter
+  - Auto-dismisses with fade-out animation when rider starts moving
+  - Updates every second during active stop
+  - Provides visual feedback for user trust
+
+- **User Story 3 (P2): Stop Count Display on Live Tab** ✅
+  - "Stops: N" counter on Live tab statistics row
+  - Updates in real-time as stops are detected
+  - Resets to 0 when new ride starts
+  - Reactive Flow for immediate UI updates
+
+- **User Story 4 (P1): Stop Data Persistence in Database** ✅
+  - All stop data persisted permanently to Room database
+  - Unique stopNumber per ride (1, 2, 3...)
+  - CASCADE delete when ride is deleted
+  - Foreign key constraints and data integrity enforced
+  - cluster_id field (NULL) prepared for Feature 010 (clustering)
+
+- **User Story 5 (P1): Integration with Settings Thresholds** ✅
+  - Reads speed and duration thresholds from DataStore on ride start
+  - Supports defaults (2.0 km/h, 15s) if not configured
+  - Thresholds frozen at ride start (mid-ride changes don't affect active ride)
+  - Settings consumption tested with custom and default values
+
+### 🏗️ Architecture (Feature 009)
+
+- **MVVM + Clean Architecture**: State machine in domain layer, ViewModel coordinates UI state, Service owns detection lifecycle
+- **Room Database**: New `stops` table with foreign key to `rides`, indexes on `ride_id`, `cluster_id`, `start_timestamp`
+- **Reactive State**: StateFlow for stop count, stop number, stop duration - all update in real-time
+- **Jetpack Compose**: StopPopup composable with Material 3 Card, AnimatedVisibility for fade-in/fade-out
+- **Testing**: Unit tests (state machine), instrumented tests (DAO CASCADE delete, UNIQUE constraints), repository tests
+
+---
+
 ## v0.8.0 - Stop Detection Settings (2025-11-18)
 
 ### ⚙️ Configurable Stop Detection Parameters
