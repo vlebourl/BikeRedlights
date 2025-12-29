@@ -1,0 +1,41 @@
+{
+  "feature": "rider-position-lower-on-map",
+  "spec_name": "rider-position-lower-on-map",
+  "workflow_type": "simple",
+  "total_phases": 1,
+  "recommended_workers": 1,
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Implementation",
+      "description": "Add contentPadding to BikeMap to offset rider position to lower third of screen",
+      "depends_on": [],
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Add navigationMode parameter and contentPadding to GoogleMap in BikeMap.kt",
+          "service": "ui",
+          "status": "pending",
+          "files_to_create": [],
+          "files_to_modify": ["app/src/main/java/com/example/bikeredlights/ui/components/map/BikeMap.kt"],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "run": "Build app, start ride, verify rider arrow appears in lower third of map with more road visible ahead"
+          }
+        }
+      ]
+    }
+  ],
+  "qa_signoff": {
+    "status": "pending",
+    "tests_passed": "",
+    "issues": ""
+  },
+  "metadata": {
+    "created_at": "2025-12-29T09:47:14.689Z",
+    "updated_at": "2025-12-29T10:00:00.000Z",
+    "complexity": "simple",
+    "estimated_sessions": 1
+  }
+}
