@@ -7,9 +7,12 @@ import com.example.bikeredlights.domain.model.settings.AutoPauseConfig
 import com.example.bikeredlights.domain.model.settings.GpsAccuracy
 import com.example.bikeredlights.domain.model.settings.StopDetectionConfig
 import com.example.bikeredlights.domain.model.settings.UnitsSystem
+import com.example.bikeredlights.domain.usecase.ClusterStopsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -22,11 +25,17 @@ import javax.inject.Inject
  * State is reactive (StateFlow) for automatic UI updates.
  *
  * @param settingsRepository Repository for settings persistence
+ * @param clusterStopsUseCase Use case for manual clustering trigger (Feature 010 testing)
  */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val clusterStopsUseCase: ClusterStopsUseCase
 ) : ViewModel() {
+
+    // Feature 010 - Clustering test status
+    private val _clusteringStatus = MutableStateFlow<ClusteringStatus>(ClusteringStatus.Idle)
+    val clusteringStatus: StateFlow<ClusteringStatus> = _clusteringStatus.asStateFlow()
 
     /**
      * Combined settings UI state.
@@ -149,6 +158,55 @@ class SettingsViewModel @Inject constructor(
             settingsRepository.setStopDetectionConfig(config)
         }
     }
+
+    // Feature 010 - Manual Clustering Trigger (Testing)
+
+    /**
+     * Manually trigger stop clustering (Feature 010 testing).
+     *
+     * Runs ClusterStopsUseCase with current clustering radius from settings.
+     * Updates clusteringStatus StateFlow for UI feedback.
+     *
+     * This is a TEST FEATURE for validating clustering logic with existing stops.
+     */
+    fun runClustering() {
+        viewModelScope.launch {
+            try {
+                _clusteringStatus.value = ClusteringStatus.Running
+
+                // Fetch current radius from settings
+                val radiusMeters = stopDetectionConfig.value.clusteringRadiusMeters
+
+                // Run clustering
+                clusterStopsUseCase.invoke(
+                    epsilonMeters = radiusMeters.toFloat(),
+                    minPts = 3
+                )
+
+                _clusteringStatus.value = ClusteringStatus.Success
+            } catch (e: Exception) {
+                _clusteringStatus.value = ClusteringStatus.Error(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    /**
+     * Reset clustering status back to Idle.
+     * Call after user dismisses success/error message.
+     */
+    fun resetClusteringStatus() {
+        _clusteringStatus.value = ClusteringStatus.Idle
+    }
+}
+
+/**
+ * Status of manual clustering operation (Feature 010 testing).
+ */
+sealed class ClusteringStatus {
+    object Idle : ClusteringStatus()
+    object Running : ClusteringStatus()
+    object Success : ClusteringStatus()
+    data class Error(val message: String) : ClusteringStatus()
 }
 
 /**

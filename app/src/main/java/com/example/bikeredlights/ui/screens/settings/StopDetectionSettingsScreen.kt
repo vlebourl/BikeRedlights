@@ -2,11 +2,21 @@ package com.example.bikeredlights.ui.screens.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -17,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -38,7 +49,9 @@ import com.example.bikeredlights.ui.theme.BikeRedlightsTheme
  *
  * @param config Current stop detection configuration
  * @param unitsSystem Current units system (for km/h ↔ mph conversion)
+ * @param clusteringStatus Status of manual clustering operation (Feature 010 testing)
  * @param onConfigChange Callback when user changes any setting
+ * @param onRunClustering Callback to manually trigger clustering (Feature 010 testing)
  * @param onNavigateBack Callback when user presses back button
  * @param modifier Modifier for customizing layout and behavior
  */
@@ -47,7 +60,9 @@ import com.example.bikeredlights.ui.theme.BikeRedlightsTheme
 fun StopDetectionSettingsScreen(
     config: StopDetectionConfig,
     unitsSystem: UnitsSystem,
+    clusteringStatus: ClusteringStatus,
     onConfigChange: (StopDetectionConfig) -> Unit,
+    onRunClustering: () -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -137,6 +152,80 @@ fun StopDetectionSettingsScreen(
                         "${meters}m"
                     }
                 )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Feature 010 - Manual Clustering Test Button
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = "Testing (Feature 010)",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Text(
+                            text = "Run clustering on existing stops to test DBSCAN algorithm. Check results in Database Inspector.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Button(
+                            onClick = onRunClustering,
+                            enabled = clusteringStatus !is ClusteringStatus.Running,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            when (clusteringStatus) {
+                                is ClusteringStatus.Running -> {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.width(16.dp).height(16.dp),
+                                        strokeWidth = 2.dp,
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Running...")
+                                }
+                                else -> {
+                                    Icon(
+                                        imageVector = Icons.Default.PlayArrow,
+                                        contentDescription = null
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Run Clustering")
+                                }
+                            }
+                        }
+
+                        // Status message
+                        when (clusteringStatus) {
+                            is ClusteringStatus.Success -> {
+                                Text(
+                                    text = "✓ Clustering completed successfully! Check Database Inspector for cluster_id assignments.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            is ClusteringStatus.Error -> {
+                                Text(
+                                    text = "✗ Error: ${clusteringStatus.message}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                            else -> {}
+                        }
+                    }
+                }
             }
         }
     }
@@ -152,7 +241,9 @@ private fun StopDetectionSettingsScreenPreview() {
         StopDetectionSettingsScreen(
             config = StopDetectionConfig(),
             unitsSystem = UnitsSystem.METRIC,
+            clusteringStatus = ClusteringStatus.Idle,
             onConfigChange = {},
+            onRunClustering = {},
             onNavigateBack = {}
         )
     }
@@ -168,7 +259,9 @@ private fun StopDetectionSettingsScreenPreviewImperial() {
         StopDetectionSettingsScreen(
             config = StopDetectionConfig(),
             unitsSystem = UnitsSystem.IMPERIAL,
+            clusteringStatus = ClusteringStatus.Idle,
             onConfigChange = {},
+            onRunClustering = {},
             onNavigateBack = {}
         )
     }
@@ -184,7 +277,9 @@ private fun StopDetectionSettingsScreenPreviewDark() {
         StopDetectionSettingsScreen(
             config = StopDetectionConfig(),
             unitsSystem = UnitsSystem.METRIC,
+            clusteringStatus = ClusteringStatus.Success,
             onConfigChange = {},
+            onRunClustering = {},
             onNavigateBack = {}
         )
     }
