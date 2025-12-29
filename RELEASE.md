@@ -7,6 +7,46 @@
 
 _Features and changes completed but not yet released_
 
+### ✨ Features Added
+
+**Feature 010: Stop Clustering** ([spec](specs/010-stop-clustering/spec.md) | [plan](specs/010-stop-clustering/plan.md) | [tasks](specs/010-stop-clustering/tasks.md))
+
+- **User Story 1 (P1 - MVP): Automatic Stop Clustering** ✅
+  - Groups nearby stops across multiple rides using DBSCAN geospatial clustering algorithm
+  - Configurable clustering radius (default: 20m) consumed from Feature 008 settings
+  - Updates `cluster_id` field in existing `stops` table (no database migration needed)
+  - Enables analytics: "You stopped at this intersection 15 times this month"
+  - Background re-clustering via WorkManager when radius setting changes
+  - Performance: <20ms for 100 stops, <200ms for 1000 stops
+
+### 🏗️ Architecture (Feature 010)
+
+- **Haversine Formula**: GPS distance calculation (±0.5% accuracy) for geospatial clustering
+- **DBSCAN Algorithm**: Density-based clustering (epsilon=radius, minPts=3) with O(n²) complexity
+- **ClusterStopsUseCase**: Orchestrates fetch all stops → cluster → batch update cluster IDs
+- **WorkManager**: ReclusterStopsWorker with @HiltWorker, exponential backoff retry on failure
+- **Room DAO**: Batch queries for getAllStops() and updateClusterIds() with transaction safety
+- **Settings Integration**: SettingsRepositoryImpl triggers WorkManager on radius change
+
+### 🧪 Testing (Feature 010)
+
+- **Unit Tests**: 33 tests passing (HaversineDistance: 11, DBSCAN: 17, UseCase: 2, Worker: 3)
+- **Test Coverage**: Distance calculations, clustering edge cases, WorkManager integration
+- **Emulator Testing**: ✅ COMPLETE
+  - Manual test button in Stop Detection Settings screen validated
+  - Test data: 18 stops from 2 rides (Ride 1: 2 stops, Ride 2: 16 stops)
+  - **Clustering Results**: 1 cluster found (4 stops at same intersection)
+  - **Cluster 1**: Stops 12-15 (lat ~46.206°, lon ~6.142°) within 20m radius
+  - **Other stops**: Individual clusters (noise - no nearby neighbors within 20m)
+  - **Data Validation**: Stop model correctly rejected corrupt duration data (29s vs 92s calculated)
+  - **Database Verification**: All cluster_id assignments persisted correctly
+- **Manual Test Button**: Material 3 UI with status feedback (Idle → Running → Success/Error)
+
+### 📦 Database Changes (Feature 010)
+
+- **Version**: Remains at 2 (cluster_id column added in Feature 009, Migration_1_2.kt)
+- **No migration needed**: cluster_id already exists, defaults to NULL for unclustered stops
+
 ---
 
 ## v0.9.0 - Stop Detection & Recording (2025-12-29)

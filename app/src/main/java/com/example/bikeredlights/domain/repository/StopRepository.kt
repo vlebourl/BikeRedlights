@@ -143,4 +143,34 @@ interface StopRepository {
      * @param rideId Foreign key to rides table
      */
     suspend fun deleteStopsByRideId(rideId: Long)
+
+    // ========== Feature 010: Stop Clustering Methods ==========
+
+    /**
+     * Get all stops across all rides for clustering (Feature 010).
+     *
+     * Use Case: Full re-clustering on settings change or manual trigger.
+     *
+     * Ordering: Chronological by start_timestamp for consistent clustering results.
+     *
+     * Performance: Returns ALL stops (could be 1000+ for active users).
+     * Expected load time: <100ms for 1000 stops.
+     *
+     * @return List of all stops ordered by start_timestamp ASC
+     */
+    suspend fun getAllStops(): List<Stop>
+
+    /**
+     * Batch update cluster IDs for multiple stops (Feature 010 clustering).
+     *
+     * Use Case: ClusterStopsUseCase assigns all stops in a cluster to same cluster_id.
+     *
+     * Performance: Single SQL UPDATE with IN clause for efficiency.
+     *
+     * Transaction: Implementation should use database transaction for atomicity.
+     *
+     * @param clusterId Cluster ID to assign (1, 2, 3... from DBSCAN result)
+     * @param stopIds List of stop primary keys to update
+     */
+    suspend fun updateClusterIds(clusterId: Long, stopIds: List<Long>)
 }

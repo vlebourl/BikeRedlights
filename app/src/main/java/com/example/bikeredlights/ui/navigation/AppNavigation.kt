@@ -142,12 +142,17 @@ fun AppNavigation(
         composable(SettingsDestination.STOP_DETECTION.route) {
             val stopDetectionConfig by settingsViewModel.stopDetectionConfig.collectAsStateWithLifecycle()
             val uiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
+            val clusteringStatus by settingsViewModel.clusteringStatus.collectAsStateWithLifecycle()
 
             StopDetectionSettingsScreen(
                 config = stopDetectionConfig,
                 unitsSystem = uiState.unitsSystem,
+                clusteringStatus = clusteringStatus,
                 onConfigChange = { config ->
                     settingsViewModel.updateStopDetectionConfig(config)
+                },
+                onRunClustering = {
+                    settingsViewModel.runClustering()
                 },
                 onNavigateBack = {
                     navController.popBackStack()
