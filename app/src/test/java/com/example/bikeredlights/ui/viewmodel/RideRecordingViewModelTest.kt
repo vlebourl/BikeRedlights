@@ -41,6 +41,7 @@ class RideRecordingViewModelTest {
     private lateinit var finishRideUseCase: FinishRideUseCase
     private lateinit var getRoutePolylineUseCase: com.example.bikeredlights.domain.usecase.GetRoutePolylineUseCase
     private lateinit var settingsRepository: com.example.bikeredlights.data.repository.SettingsRepository
+    private lateinit var stopRepository: com.example.bikeredlights.domain.repository.StopRepository
     private lateinit var viewModel: RideRecordingViewModel
 
     private lateinit var recordingStateFlow: MutableStateFlow<RideRecordingState>
@@ -56,6 +57,7 @@ class RideRecordingViewModelTest {
         finishRideUseCase = mockk()
         getRoutePolylineUseCase = mockk(relaxed = true)
         settingsRepository = mockk(relaxed = true)
+        stopRepository = mockk(relaxed = true)
 
         // Mock recording state flow
         recordingStateFlow = MutableStateFlow<RideRecordingState>(RideRecordingState.Idle)
@@ -472,7 +474,8 @@ class RideRecordingViewModelTest {
             trackPointRepository = trackPointRepository,
             finishRideUseCase = finishRideUseCase,
             getRoutePolylineUseCase = getRoutePolylineUseCase,
-            settingsRepository = settingsRepository
+            settingsRepository = settingsRepository,
+            stopRepository = stopRepository
         )
     }
 
