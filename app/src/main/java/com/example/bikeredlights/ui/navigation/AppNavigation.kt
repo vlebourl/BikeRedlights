@@ -10,6 +10,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.bikeredlights.ui.screens.clusters.StopsMapScreen
 import com.example.bikeredlights.ui.screens.history.RideDetailScreen
 import com.example.bikeredlights.ui.screens.history.RideHistoryScreen
 import com.example.bikeredlights.ui.screens.ride.LiveRideScreen
@@ -157,6 +158,14 @@ fun AppNavigation(
                 onNavigateBack = {
                     navController.popBackStack()
                 }
+            )
+        }
+
+        // TEMPORARY ROUTE - Feature 011 testing (will be replaced by bottom nav in US4)
+        // TODO: Remove this route when implementing User Story 4 (Stops tab in bottom navigation)
+        composable("stops_temp") {
+            StopsMapScreen(
+                modifier = Modifier.fillMaxSize()
             )
         }
     }
