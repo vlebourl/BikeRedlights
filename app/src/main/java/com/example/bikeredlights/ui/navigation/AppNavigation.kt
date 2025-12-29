@@ -111,6 +111,11 @@ fun AppNavigation(
                 },
                 onStopDetectionClick = {
                     navController.navigate(SettingsDestination.STOP_DETECTION.route)
+                },
+                // TEMPORARY: Enable navigation to stops_temp for testing Feature 011 US2
+                // TODO: Remove this when US4 (Stops tab in bottom nav) is implemented
+                onViewClustersClick = {
+                    navController.navigate("stops_temp")
                 }
             )
         }

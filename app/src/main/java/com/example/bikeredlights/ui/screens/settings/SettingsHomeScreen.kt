@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsBike
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.PinDrop
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +29,7 @@ import com.example.bikeredlights.ui.theme.BikeRedlightsTheme
  * Currently displays:
  * - "Ride & Tracking" card (Units, GPS Accuracy, Auto-pause settings)
  * - "Stop Detection" card (Speed threshold, Duration threshold, Clustering radius)
+ * - "View Clusters Map" card (TEMPORARY - for testing Feature 011 US2)
  *
  * Future cards (deferred to later features):
  * - "App Behavior" (theme, language, notifications)
@@ -35,6 +37,7 @@ import com.example.bikeredlights.ui.theme.BikeRedlightsTheme
  *
  * @param onRideTrackingClick Callback when user taps "Ride & Tracking" card
  * @param onStopDetectionClick Callback when user taps "Stop Detection" card
+ * @param onViewClustersClick Callback when user taps "View Clusters Map" card (TEMPORARY)
  * @param modifier Modifier for customizing layout and behavior
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,6 +45,7 @@ import com.example.bikeredlights.ui.theme.BikeRedlightsTheme
 fun SettingsHomeScreen(
     onRideTrackingClick: () -> Unit,
     onStopDetectionClick: () -> Unit,
+    onViewClustersClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -82,6 +86,17 @@ fun SettingsHomeScreen(
                     icon = Icons.Default.PinDrop,
                     onClick = onStopDetectionClick
                 )
+
+                // TEMPORARY: View Clusters Map card (for testing Feature 011 US2)
+                // TODO: Remove this when US4 (Stops tab in bottom nav) is implemented
+                if (onViewClustersClick != null) {
+                    SettingCard(
+                        title = "View Clusters Map",
+                        subtitle = "TESTING: Feature 011 US2",
+                        icon = Icons.Default.Map,
+                        onClick = onViewClustersClick
+                    )
+                }
 
                 // Future cards will be added here:
                 // - "App Behavior" card (future)
