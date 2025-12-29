@@ -125,12 +125,16 @@ class ClusterMapViewModel @Inject constructor(
     /**
      * Select a cluster for detailed view (User Story 2).
      *
+     * Finds cluster by ID in current state and sets selectedCluster.
      * Sets selectedCluster in state, triggering bottom sheet display.
      *
-     * @param cluster ClusterSummary to select
+     * @param clusterId Cluster ID to select
      */
-    fun selectCluster(cluster: ClusterSummary) {
-        _uiState.update { it.copy(selectedCluster = cluster) }
+    fun selectCluster(clusterId: Long) {
+        val cluster = _uiState.value.clusters.find { it.clusterId == clusterId }
+        if (cluster != null) {
+            _uiState.update { it.copy(selectedCluster = cluster) }
+        }
     }
 
     /**
