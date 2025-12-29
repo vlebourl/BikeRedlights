@@ -87,6 +87,7 @@ fun LiveRideScreen(
     // Stop detection state (Feature 009)
     val currentStopNumber by viewModel.currentStopNumber.collectAsStateWithLifecycle()
     val currentStopDuration by viewModel.currentStopDuration.collectAsStateWithLifecycle()
+    val stopCount by viewModel.stopCount.collectAsStateWithLifecycle()
 
     // Map state (Feature 006)
     val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
@@ -275,6 +276,7 @@ fun LiveRideScreen(
                         ride = ride,
                         currentSpeed = currentSpeed,
                         pausedDuration = pausedDuration,
+                        stopCount = stopCount,
                         unitsSystem = unitsSystem,
                         onResumeRide = { viewModel.resumeRide() },
                         onStopRide = { viewModel.stopRide() },
@@ -294,6 +296,7 @@ fun LiveRideScreen(
                         ride = ride,
                         currentSpeed = currentSpeed,
                         pausedDuration = pausedDuration,
+                        stopCount = stopCount,
                         unitsSystem = unitsSystem,
                         onResumeRide = { viewModel.resumeRide() },
                         onStopRide = { viewModel.stopRide() },
@@ -658,6 +661,7 @@ private fun RecordingContent(
             ride = ride,
             currentSpeed = currentSpeed, // Real-time GPS speed (Feature 005)
             pausedDuration = pausedDuration, // Real-time pause counter (Feature 007)
+            stopCount = stopCount, // Real-time stop count (Feature 009)
             unitsSystem = unitsSystem,
             modifier = Modifier
                 .weight(1f)
@@ -687,6 +691,7 @@ private fun PausedContent(
     ride: com.example.bikeredlights.domain.model.Ride,
     currentSpeed: Double,
     pausedDuration: java.time.Duration,
+    stopCount: Int,
     unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     onResumeRide: () -> Unit,
     onStopRide: () -> Unit,
@@ -723,6 +728,7 @@ private fun PausedContent(
             ride = ride,
             currentSpeed = currentSpeed, // 0.0 when paused (reset by service)
             pausedDuration = pausedDuration, // Real-time pause counter (Feature 007)
+            stopCount = stopCount, // Real-time stop count (Feature 009)
             unitsSystem = unitsSystem,
             modifier = Modifier
                 .weight(1f)
@@ -752,6 +758,7 @@ private fun AutoPausedContent(
     ride: com.example.bikeredlights.domain.model.Ride,
     currentSpeed: Double,
     pausedDuration: java.time.Duration,
+    stopCount: Int,
     unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
     onResumeRide: () -> Unit,
     onStopRide: () -> Unit,
@@ -789,6 +796,7 @@ private fun AutoPausedContent(
             ride = ride,
             currentSpeed = currentSpeed, // Real-time (may trigger auto-resume if > 1 km/h)
             pausedDuration = pausedDuration, // Real-time pause counter (Feature 007)
+            stopCount = stopCount, // Real-time stop count (Feature 009)
             unitsSystem = unitsSystem,
             modifier = Modifier
                 .weight(1f)
