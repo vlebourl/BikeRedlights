@@ -17,7 +17,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import com.example.bikeredlights.domain.model.GpsStatus
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -77,6 +79,51 @@ fun LiveRideScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val unitsSystem by viewModel.unitsSystem.collectAsStateWithLifecycle()
     val currentSpeed by viewModel.currentSpeed.collectAsStateWithLifecycle()
+
+    // GPS status for snackbar notifications (Feature 002 - GPS Error Notifications)
+    val gpsStatus by viewModel.gpsStatus.collectAsStateWithLifecycle()
+
+    // Snackbar state for GPS status change notifications
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
+    // Track previous GPS status to detect transitions
+    var previousGpsStatus by remember { mutableStateOf<GpsStatus?>(null) }
+
+    // Show snackbar on GPS status transitions (only during active recording)
+    LaunchedEffect(gpsStatus, uiState) {
+        val isActiveRecording = uiState is RideRecordingUiState.Recording ||
+                                uiState is RideRecordingUiState.Paused ||
+                                uiState is RideRecordingUiState.AutoPaused
+
+        if (isActiveRecording && previousGpsStatus != null && previousGpsStatus != gpsStatus) {
+            val message = when {
+                // GPS signal lost (transition to Unavailable)
+                gpsStatus is GpsStatus.Unavailable -> "GPS signal lost"
+                // GPS signal recovered (transition from Unavailable to Active)
+                previousGpsStatus is GpsStatus.Unavailable && gpsStatus is GpsStatus.Active -> "GPS signal restored"
+                // GPS signal recovering (transition from Unavailable to Acquiring)
+                previousGpsStatus is GpsStatus.Unavailable && gpsStatus is GpsStatus.Acquiring -> "Acquiring GPS signal..."
+                // GPS became active from acquiring
+                previousGpsStatus is GpsStatus.Acquiring && gpsStatus is GpsStatus.Active -> "GPS signal acquired"
+                else -> null
+            }
+
+            message?.let {
+                // Dismiss any existing snackbar before showing new one
+                snackbarHostState.currentSnackbarData?.dismiss()
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = it,
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
+        }
+
+        // Update previous status for next comparison
+        previousGpsStatus = gpsStatus
+    }
 
     // Real-time pause counter (Feature 007 - v0.6.1)
     val pausedDuration by viewModel.pausedDuration.collectAsStateWithLifecycle()
@@ -347,6 +394,15 @@ fun LiveRideScreen(
             modifier = Modifier
                 .align(Alignment.Center) // Center of entire screen
                 .offset(y = (-32).dp) // Upward offset to position at bottom of map, above "REC"
+        )
+
+        // Snackbar Host for GPS status notifications (Feature 002)
+        // Positioned at bottom center, above navigation bar
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp)
         )
     }
 }
