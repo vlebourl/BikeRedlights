@@ -1,6 +1,7 @@
 package com.example.bikeredlights.ui.components.clusters
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import com.example.bikeredlights.domain.model.ClusterMarkerData
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.maps.android.compose.Marker
@@ -59,8 +60,12 @@ fun ClusterMarker(
     markerData: ClusterMarkerData,
     onClick: (Long) -> Unit
 ) {
+    val markerState = remember(markerData.position) {
+        MarkerState(position = markerData.position)
+    }
+
     Marker(
-        state = MarkerState(position = markerData.position),
+        state = markerState,
         title = "${markerData.stopCount} stops",
         snippet = "Cluster #${markerData.clusterId}",
         // Set marker color based on cluster size
