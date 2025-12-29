@@ -7,7 +7,18 @@
 
 _Features and changes completed but not yet released_
 
-### ✨ Features Added (v0.9.0)
+---
+
+## v0.9.0 - Stop Detection & Recording (2025-12-29)
+
+### 🛑 Stop Detection & Real-Time Monitoring
+
+**Status**: ✅ COMPLETE - Full stop detection system with live UI feedback and database persistence
+**Focus**: Safety-critical feature for tracking stops at traffic lights and intersections
+**APK Size**: TBD (release build pending)
+**Tested On**: Manual validation deferred to post-merge
+
+### ✨ Features Added
 
 **Feature 009: Stop Detection & Recording** ([spec](specs/009-stop-detection/spec.md) | [plan](specs/009-stop-detection/plan.md) | [tasks](specs/009-stop-detection/tasks.md))
 
