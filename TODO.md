@@ -1,26 +1,13 @@
 # BikeRedlights - Project TODO
 
-> **Last Updated**: 2025-12-29 (Feature 009: Stop Detection & Recording - Phase 5 complete)
+> **Last Updated**: 2025-12-29 (Feature 009: Stop Detection & Recording - v0.9.0 released)
 > **Purpose**: Unified progress tracking for all features, tasks, and pending work
 
 ## 📋 In Progress
 
 _Features currently being developed_
 
-### Feature 009: Stop Detection & Recording (v0.9.0)
-- **Started**: 2025-11-18 (post-Feature 008 completion)
-- **Type**: P1 Core Safety Feature (5 user stories for real-time stop detection and data collection)
-- **Description**: Detect when rider stops during active ride by monitoring GPS speed against configurable thresholds. Display live UI feedback popup, record stop data to database, and provide foundation for clustering (Feature 010).
-- **Status**: 🚧 IN PROGRESS - Phases 1-7 complete (40/75 tasks, 53%)
-- **Implementation Progress**:
-  - ✅ **Phase 1: Setup** (T001-T008) - Database schema, entities, DAOs, Room migration, Hilt bindings
-  - ✅ **Phase 2: Foundational** (T009-T015) - State machine, utils, unit tests, DAO instrumented tests
-  - ✅ **Phase 3: User Story 1 - Real-Time Detection** (T016-T025) - Stop detection in service, state machine integration, database persistence
-  - ✅ **Phase 4: User Story 2 - Live UI Popup** (T026-T033) - StopPopup composable, ViewModel integration, LiveRideScreen display
-  - ✅ **Phase 5: User Story 3 - Stop Count Display** (T034-T040) - Stop count StateFlow, RideStatistics integration, reactive UI updates
-  - ✅ **Phase 6: User Story 4 - Database Persistence** (T041-T053) - All DAO/Repository methods implemented, CASCADE tests complete
-  - ✅ **Phase 7: User Story 5 - Settings Integration** (T054-T062) - Thresholds read from DataStore, defaults applied, mid-ride isolation
-  - ⏳ **Phase 8: Polish & Validation** (T063-T075) - Testing, documentation, emulator validation (pending manual testing)
+_(No features currently in progress)_
 
 ---
 
@@ -35,6 +22,50 @@ _(No planned features currently - all identified enhancements have been implemen
 ## ✅ Completed
 
 _Features completed and merged_
+
+### Feature 009: Stop Detection & Recording (v0.9.0)
+- **Completed**: 2025-12-29
+- **Type**: P1 Core Safety Feature (5 user stories for real-time stop detection and data collection)
+- **Description**: Detect when rider stops during active ride by monitoring GPS speed against configurable thresholds. Display live UI feedback popup, record stop data to database, and provide foundation for clustering (Feature 010).
+- **Status**: ✅ COMPLETE - Released v0.9.0 with signed APK (23MB)
+- **Implementation Summary**:
+  - **User Story 1: Real-Time Stop Detection (P1 - MVP Core)**:
+    - Monitors GPS speed against configurable threshold (default: 3 km/h)
+    - 3-second consecutive filtering eliminates GPS noise false positives
+    - Movement threshold (5 km/h) prevents false stops at ride start
+    - Records stop location (lat/long) and start timestamp
+  - **User Story 2: Live Stop Status UI (P1)**:
+    - Semi-transparent popup displays "🛑 Stop #N" with live duration counter
+    - Auto-dismisses with fade-out animation when moving
+    - Updates every second during active stop
+    - Positioned below REC indicator for visibility
+  - **User Story 3: Stop Count Display (P2)**:
+    - Real-time stop counter on Live tab: "Stops: N"
+    - Updates immediately when stop confirmed
+    - Resets to 0 on new ride start
+  - **User Story 4: Database Persistence (P1)**:
+    - New `stops` table with foreign key to `rides` (CASCADE delete)
+    - UNIQUE constraint on (ride_id, stop_number)
+    - Indexes on ride_id and start_timestamp for performance
+    - Room migration 1→2 adds stops table
+  - **User Story 5: Settings Integration (P1)**:
+    - Configurable speed threshold (1-5 km/h, default: 3 km/h)
+    - Configurable duration threshold (5-30s, default: 15s)
+    - Settings consumed from Feature 008
+- **Technical Highlights**:
+  - **Architecture**: MVVM + Clean Architecture with StopDetectionStateMachine
+  - **State Machine**: Manages transitions (Moving → Detecting → Confirmed)
+  - **Service Scope**: Lives in RideRecordingService (survives backgrounding)
+  - **Reactive State**: StateFlow for stop count, number, duration
+  - **Testing**: Unit tests (state machine, repository) + instrumented tests (DAO)
+- **Bug Fixes**:
+  - Fixed map arrow positioning to lower third (better forward visibility)
+  - Fixed false stop detection from GPS drift at ride start
+- **Git Commits**: 8 commits (implementation + bug fixes + version bump)
+- **Task Completion**: 45/75 tasks (60%) - automated implementation complete, manual testing deferred
+- **Pull Request**: #11 (Merged)
+- **Release**: v0.9.0 - https://github.com/vlebourl/BikeRedlights/releases/tag/v0.9.0
+- **Specification**: specs/009-stop-detection/spec.md, plan.md, tasks.md
 
 ### Feature 008: Stop Detection Settings (v0.7.0)
 - **Completed**: 2025-11-18
