@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -22,6 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.bikeredlights.domain.model.ClusterMarkerData
 import com.example.bikeredlights.domain.model.MarkerColor
+import com.example.bikeredlights.ui.components.clusters.ClusterFilterControls
 import com.example.bikeredlights.ui.components.clusters.ClusterMarker
 import com.example.bikeredlights.ui.components.map.BikeMap
 import com.example.bikeredlights.ui.viewmodel.ClusterMapUiState
@@ -88,6 +90,8 @@ fun StopsMapScreen(
         uiState = uiState,
         onClusterClick = viewModel::selectCluster,
         onRetry = viewModel::retry,
+        onFilterChange = viewModel::applyFilter,
+        onClearFilters = viewModel::clearFilters,
         modifier = modifier
     )
 
@@ -109,6 +113,8 @@ fun StopsMapScreen(
  * @param uiState Current UI state from ViewModel
  * @param onClusterClick Callback when cluster marker is tapped (receives cluster ID)
  * @param onRetry Callback when retry button is tapped (error state)
+ * @param onFilterChange Callback when user changes filter (US3)
+ * @param onClearFilters Callback when user clears filters (US3)
  * @param modifier Modifier for layout
  */
 @Composable
@@ -116,6 +122,8 @@ private fun StopsMapContent(
     uiState: ClusterMapUiState,
     onClusterClick: (Long) -> Unit,
     onRetry: () -> Unit,
+    onFilterChange: (com.example.bikeredlights.domain.model.StopClusterFilter) -> Unit,
+    onClearFilters: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -147,6 +155,17 @@ private fun StopsMapContent(
                 )
             }
         }
+
+        // Filter controls overlay (User Story 3)
+        // Positioned at top of screen, above map
+        ClusterFilterControls(
+            currentFilter = uiState.activeFilter,
+            onFilterChange = onFilterChange,
+            onClearFilters = onClearFilters,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .statusBarsPadding()
+        )
     }
 }
 
