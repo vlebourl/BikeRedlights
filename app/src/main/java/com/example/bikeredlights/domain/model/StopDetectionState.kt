@@ -31,6 +31,7 @@ package com.example.bikeredlights.domain.model
  * @property isStopConfirmed True when duration threshold met, false during detection phase
  * @property detectionStartTime Timestamp when speed first dropped below threshold (used for threshold checking only)
  * @property stopConfirmedTime Timestamp when stop was confirmed (used for UI duration calculation)
+ * @property hasStartedMoving True once rider has reached movement threshold (prevents false stops at ride start)
  */
 data class StopDetectionState(
     val currentSpeed: Float = 0f,
@@ -41,7 +42,8 @@ data class StopDetectionState(
     val activeStopId: Long? = null,
     val isStopConfirmed: Boolean = false,
     val detectionStartTime: Long? = null,
-    val stopConfirmedTime: Long? = null
+    val stopConfirmedTime: Long? = null,
+    val hasStartedMoving: Boolean = false
 ) {
     /**
      * Check if currently in Moving state (not detecting, not stopped).
@@ -88,7 +90,8 @@ data class StopDetectionState(
             activeStopId = null,
             isStopConfirmed = false,
             detectionStartTime = null,
-            stopConfirmedTime = null
+            stopConfirmedTime = null,
+            hasStartedMoving = false
         )
     }
 
@@ -102,5 +105,12 @@ data class StopDetectionState(
          * Maximum consecutive seconds counter value (caps at 3).
          */
         const val MAX_CONSECUTIVE_SECONDS = 3
+
+        /**
+         * Movement threshold in km/h to determine if rider has actually started moving.
+         * Must be higher than stop threshold to avoid false positives from GPS noise.
+         * Default: 5 km/h (typical walking pace - ensures rider is cycling)
+         */
+        const val MOVEMENT_THRESHOLD_KMH = 5f
     }
 }

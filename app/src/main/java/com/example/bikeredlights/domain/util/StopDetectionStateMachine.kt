@@ -112,6 +112,11 @@ class StopDetectionStateMachine @Inject constructor(
      * - **Detecting → Confirmed**: 3 consecutive seconds below threshold + duration threshold met (insert to database)
      * - **Confirmed → Moving**: 3 consecutive seconds above threshold (end stop, update database)
      *
+     * **Movement Detection**:
+     * - Stop detection is DISABLED until rider reaches movement threshold (5 km/h)
+     * - Prevents false stop detection at ride start due to GPS noise
+     * - Once moving, flag persists for entire ride
+     *
      * @param speedKmh Current GPS speed in km/h (from Location.getSpeed() * 3.6)
      * @param latitude Current latitude (for stop location)
      * @param longitude Current longitude (for stop location)
@@ -127,6 +132,19 @@ class StopDetectionStateMachine @Inject constructor(
 
         // Update current speed
         state = state.copy(currentSpeed = speedKmh)
+
+        // Check if rider has started moving (one-time transition)
+        if (!state.hasStartedMoving && speedKmh >= StopDetectionState.MOVEMENT_THRESHOLD_KMH) {
+            android.util.Log.i("StopDetection", "🚴 RIDE STARTED! Speed reached ${speedKmh}km/h (threshold: ${StopDetectionState.MOVEMENT_THRESHOLD_KMH}km/h) - stop detection now enabled")
+            state = state.copy(hasStartedMoving = true)
+        }
+
+        // Skip stop detection until rider has actually started moving
+        // This prevents false stop #1 at ride start due to GPS noise (0-2 km/h while stationary)
+        if (!state.hasStartedMoving) {
+            android.util.Log.d("StopDetection", "Waiting for movement... current speed: ${speedKmh}km/h (need ${StopDetectionState.MOVEMENT_THRESHOLD_KMH}km/h)")
+            return
+        }
 
         when {
             // Case 1: Speed below threshold
