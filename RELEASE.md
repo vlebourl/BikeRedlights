@@ -9,6 +9,103 @@ _Features and changes completed but not yet released_
 
 ---
 
+## v0.12.0 - GPS Notifications & Ride Review Enhancements (2025-12-30)
+
+### 📡 GPS Error Notifications + Enhanced Ride Review
+
+**Status**: ✅ COMPLETE - GPS status monitoring and ride review improvements
+**Focus**: User-facing GPS error notifications and stop metrics in ride summary
+**APK Size**: TBD (release build pending)
+**Tested On**: Production testing pending
+
+### ✨ Features Added
+
+**Feature 012: GPS Error User Notifications**
+
+- **User Story 1: GPS Status Monitoring** ✅
+  - Real-time GPS status tracking (signal strength, accuracy)
+  - GPS status Flow exposed through LocationRepository
+  - StateFlow integration in RideRecordingViewModel
+  - Service-level GPS status collection in RideRecordingService
+
+- **User Story 2: User Notifications for GPS Errors** ✅
+  - Snackbar notifications for poor GPS signal
+  - Notifications for low accuracy warnings
+  - GpsStatusIndicator integration in LiveRideScreen during recording
+  - User-friendly messaging (avoids technical jargon)
+
+- **User Story 3: Testing & Quality** ✅
+  - 410-line comprehensive unit test suite (LocationRepositoryImplGpsStatusTest.kt)
+  - Tests for GPS status accuracy thresholds
+  - Tests for state management and Flow behavior
+  - Edge case coverage (zero accuracy, large values, deduplication)
+
+**Feature 013: Ride Review Enhancements**
+
+- **User Story 1: Stop Metrics Display** ✅
+  - Stop count display in ride summary (e.g., "6 stops")
+  - Total stop duration display in HH:MM:SS format
+  - StateFlows for stopCount and totalStopDuration in RideReviewViewModel
+  - StopRepository injection for data retrieval
+
+- **User Story 2: Improved Summary UI** ✅
+  - Removed inappropriate RideStatistics component from review screen
+  - Added dedicated Stops row in SummarySection
+  - Added Stop Time row with formatted duration
+  - Clean, focused post-ride review experience
+
+### 🐛 Bugs Fixed
+
+- **Stop Detection Timer Fix**
+  - Backdate stopConfirmedTime in confirmStop() method
+  - Improved stop timing accuracy for better analytics
+
+### 🏗️ Architecture (Features 012-013)
+
+- **MVVM + Clean Architecture**: Service → Repository → ViewModel → UI data flow
+- **State Management**: Kotlin Flow + StateFlow with lifecycle-aware collection
+- **Repository Pattern**: LocationRepository and StopRepository extensions
+- **Testing**: MockK for Android dependencies, Turbine for Flow testing
+- **UI Components**: Material 3 Snackbar for notifications, updated SummarySection
+
+### 🧪 Testing (Features 012-013)
+
+- **Unit Tests**: ✅ 410-line comprehensive test suite for GPS status logic
+- **Code Quality**: Clean architecture patterns, separation of concerns
+- **Production Testing**: Pending emulator/physical device validation
+
+### 📦 Files Changed (Features 012-013)
+
+**Modified Files** (12 files):
+- `LocationRepositoryImpl.kt` - GPS status tracking implementation
+- `RideRecordingStateRepositoryImpl.kt` - Error state management
+- `LocationRepository.kt` - GPS status Flow interface
+- `RideRecordingStateRepository.kt` - State repository interface
+- `StopDetectionStateMachine.kt` - Stop timing fixes
+- `RideRecordingService.kt` - GPS status collection
+- `LiveRideScreen.kt` - GPS status indicators
+- `RideReviewScreen.kt` - Stop metrics display
+- `RideRecordingViewModel.kt` - GPS status StateFlow
+- `RideReviewViewModel.kt` - Stop metrics StateFlows
+
+**New Files** (1 file):
+- `LocationRepositoryImplGpsStatusTest.kt` - 410-line unit test suite
+
+**Stats**: 12 files changed, 930 insertions(+), 36 deletions(-)
+
+### 🔧 Technical Details
+
+- **GPS Status Thresholds**: Unavailable (no signal), Acquiring (50m-10m), Active (≤10m)
+- **Flow Integration**: Real-time GPS status updates via Kotlin Flow
+- **Error Handling**: Graceful degradation for GPS signal loss
+- **State Preservation**: StateFlow ensures UI state survives configuration changes
+
+### 💥 Breaking Changes
+
+None - all changes are backward compatible with v0.11.0.
+
+---
+
 ## v0.11.0 - Stop Cluster Visualization (2025-12-29)
 
 ### 🗺️ Interactive Cluster Map with 4-Tab Navigation
