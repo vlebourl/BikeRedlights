@@ -18,7 +18,6 @@ import com.example.bikeredlights.domain.model.Ride
 import com.example.bikeredlights.ui.components.map.BikeMap
 import com.example.bikeredlights.ui.components.map.RoutePolyline
 import com.example.bikeredlights.ui.components.map.StartEndMarkers
-import com.example.bikeredlights.ui.components.ride.RideStatistics
 import com.example.bikeredlights.ui.components.ride.formatDuration
 import com.example.bikeredlights.ui.viewmodel.RideReviewUiState
 import com.example.bikeredlights.ui.viewmodel.RideReviewViewModel
@@ -32,14 +31,14 @@ import java.util.*
  *
  * **Features**:
  * - Display ride name and date
- * - Show comprehensive statistics (duration, distance, speeds)
- * - Map placeholder message (for v0.4.0)
+ * - Show comprehensive summary statistics (duration, distance, speeds)
+ * - Map showing complete ride route
  * - Back navigation to Live tab
  *
  * **UI Layout**:
  * - Top app bar with back button and ride name
- * - Map placeholder section
- * - Statistics card (reuses RideStatistics composable)
+ * - Map section showing complete route
+ * - Summary card with ride statistics
  * - Bottom padding for safe area
  *
  * **State Management**:
@@ -70,6 +69,8 @@ fun RideReviewScreen(
     val polylineData by viewModel.polylineData.collectAsStateWithLifecycle()
     val mapBounds by viewModel.mapBounds.collectAsStateWithLifecycle()
     val markers by viewModel.markers.collectAsStateWithLifecycle()
+    val stopCount by viewModel.stopCount.collectAsStateWithLifecycle()
+    val totalStopDuration by viewModel.totalStopDuration.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -111,6 +112,8 @@ fun RideReviewScreen(
                         polylineData = polylineData,
                         mapBounds = mapBounds,
                         markers = markers,
+                        stopCount = stopCount,
+                        totalStopDuration = totalStopDuration,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -184,6 +187,8 @@ private fun RideReviewContent(
     polylineData: com.example.bikeredlights.domain.model.PolylineData?,
     mapBounds: com.example.bikeredlights.domain.model.MapBounds?,
     markers: List<com.example.bikeredlights.domain.model.MarkerData>,
+    stopCount: Int,
+    totalStopDuration: Int,
     modifier: Modifier = Modifier
 ) {
     val cameraPositionState = rememberCameraPositionState()
@@ -231,16 +236,13 @@ private fun RideReviewContent(
             }
         }
 
-        // Ride statistics (reuse component from live screen)
-        RideStatistics(
-            ride = ride,
-            currentSpeed = 0.0,  // Not applicable for completed ride
-            unitsSystem = unitsSystem,
-            modifier = Modifier.fillMaxWidth()
-        )
-
         // Summary section
-        SummarySection(ride, unitsSystem)
+        SummarySection(
+            ride = ride,
+            unitsSystem = unitsSystem,
+            stopCount = stopCount,
+            totalStopDuration = totalStopDuration
+        )
     }
 }
 
@@ -251,6 +253,8 @@ private fun RideReviewContent(
 private fun SummarySection(
     ride: Ride,
     unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
+    stopCount: Int,
+    totalStopDuration: Int,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -304,6 +308,19 @@ private fun SummarySection(
             SummaryRow(
                 label = "Max Speed",
                 value = String.format("%.1f %s", maxSpeed, speedUnit)
+            )
+
+            // Stop count
+            SummaryRow(
+                label = "Stops",
+                value = "$stopCount stops"
+            )
+
+            // Total stop duration (convert seconds to milliseconds for formatDuration)
+            val stopDurationMillis = totalStopDuration.toLong() * 1000L
+            SummaryRow(
+                label = "Stop Time",
+                value = formatDuration(stopDurationMillis)
             )
         }
     }
