@@ -1,15 +1,15 @@
 {
-  "active": true,
-  "spec": "004-ride-summary-page-has-several-bugs",
-  "state": "building",
+  "active": false,
+  "spec": "002-gps-error-user-notifications",
+  "state": "completed",
   "subtasks": {
-    "completed": 4,
+    "completed": 5,
     "total": 5,
-    "in_progress": 1,
+    "in_progress": 0,
     "failed": 0
   },
   "phase": {
-    "current": "Manual Verification",
+    "current": "Merged to main",
     "id": null,
     "total": 1
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 5,
-    "started_at": "2025-12-30T09:18:24.568778"
+    "number": 6,
+    "started_at": "2025-12-30T10:41:00.000000"
   },
-  "last_update": "2025-12-30T09:27:22.587212"
+  "last_update": "2025-12-30T10:41:00.000000"
 }
