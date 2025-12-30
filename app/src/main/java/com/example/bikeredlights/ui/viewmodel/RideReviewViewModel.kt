@@ -8,8 +8,10 @@ import com.example.bikeredlights.domain.model.MapBounds
 import com.example.bikeredlights.domain.model.MarkerData
 import com.example.bikeredlights.domain.model.PolylineData
 import com.example.bikeredlights.domain.model.Ride
+import com.example.bikeredlights.domain.model.Stop
 import com.example.bikeredlights.domain.model.TrackPoint
 import com.example.bikeredlights.domain.repository.RideRepository
+import com.example.bikeredlights.domain.repository.StopRepository
 import com.example.bikeredlights.domain.repository.TrackPointRepository
 import com.example.bikeredlights.domain.usecase.CalculateMapBoundsUseCase
 import com.example.bikeredlights.domain.usecase.FormatMapMarkersUseCase
@@ -49,6 +51,7 @@ class RideReviewViewModel @Inject constructor(
     private val rideRepository: RideRepository,
     private val settingsRepository: SettingsRepository,
     private val trackPointRepository: TrackPointRepository,
+    private val stopRepository: StopRepository,
     private val getRoutePolylineUseCase: GetRoutePolylineUseCase,
     private val calculateMapBoundsUseCase: CalculateMapBoundsUseCase,
     private val formatMapMarkersUseCase: FormatMapMarkersUseCase
@@ -106,6 +109,17 @@ class RideReviewViewModel @Inject constructor(
      */
     val markers: StateFlow<List<MarkerData>> = trackPoints.map { points ->
         formatMapMarkersUseCase(points)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    /**
+     * Stops for the ride, used to display stop count and total duration.
+     */
+    val stops: StateFlow<List<Stop>> = _currentRideId.map { rideId ->
+        rideId?.let { stopRepository.getStopsByRideId(it) } ?: emptyList()
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
