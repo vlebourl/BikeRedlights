@@ -127,6 +127,30 @@ class RideReviewViewModel @Inject constructor(
     )
 
     /**
+     * Number of stops during the ride.
+     * Derived from stops list for reactive updates.
+     */
+    val stopCount: StateFlow<Int> = stops.map { stopList ->
+        stopList.size
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 0
+    )
+
+    /**
+     * Total duration of all stops in seconds.
+     * Sums durationSeconds from all stops, treating null durations as 0.
+     */
+    val totalStopDuration: StateFlow<Int> = stops.map { stopList ->
+        stopList.sumOf { stop -> stop.durationSeconds ?: 0 }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 0
+    )
+
+    /**
      * Load ride from database by ID.
      *
      * - Fetches ride from repository
