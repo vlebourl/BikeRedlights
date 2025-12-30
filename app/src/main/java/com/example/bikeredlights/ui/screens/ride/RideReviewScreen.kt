@@ -69,6 +69,8 @@ fun RideReviewScreen(
     val polylineData by viewModel.polylineData.collectAsStateWithLifecycle()
     val mapBounds by viewModel.mapBounds.collectAsStateWithLifecycle()
     val markers by viewModel.markers.collectAsStateWithLifecycle()
+    val stopCount by viewModel.stopCount.collectAsStateWithLifecycle()
+    val totalStopDuration by viewModel.totalStopDuration.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -110,6 +112,8 @@ fun RideReviewScreen(
                         polylineData = polylineData,
                         mapBounds = mapBounds,
                         markers = markers,
+                        stopCount = stopCount,
+                        totalStopDuration = totalStopDuration,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -183,6 +187,8 @@ private fun RideReviewContent(
     polylineData: com.example.bikeredlights.domain.model.PolylineData?,
     mapBounds: com.example.bikeredlights.domain.model.MapBounds?,
     markers: List<com.example.bikeredlights.domain.model.MarkerData>,
+    stopCount: Int,
+    totalStopDuration: Int,
     modifier: Modifier = Modifier
 ) {
     val cameraPositionState = rememberCameraPositionState()
@@ -231,7 +237,12 @@ private fun RideReviewContent(
         }
 
         // Summary section
-        SummarySection(ride, unitsSystem)
+        SummarySection(
+            ride = ride,
+            unitsSystem = unitsSystem,
+            stopCount = stopCount,
+            totalStopDuration = totalStopDuration
+        )
     }
 }
 
@@ -242,6 +253,8 @@ private fun RideReviewContent(
 private fun SummarySection(
     ride: Ride,
     unitsSystem: com.example.bikeredlights.domain.model.settings.UnitsSystem,
+    stopCount: Int,
+    totalStopDuration: Int,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -295,6 +308,19 @@ private fun SummarySection(
             SummaryRow(
                 label = "Max Speed",
                 value = String.format("%.1f %s", maxSpeed, speedUnit)
+            )
+
+            // Stop count
+            SummaryRow(
+                label = "Stops",
+                value = "$stopCount stops"
+            )
+
+            // Total stop duration (convert seconds to milliseconds for formatDuration)
+            val stopDurationMillis = totalStopDuration.toLong() * 1000L
+            SummaryRow(
+                label = "Stop Time",
+                value = formatDuration(stopDurationMillis)
             )
         }
     }
