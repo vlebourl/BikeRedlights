@@ -110,6 +110,7 @@ class RideRecordingService : Service() {
     private var locationJob: Job? = null
     private var durationUpdateJob: Job? = null
     private var gpsAccuracyObserverJob: Job? = null  // T082: Observe GPS accuracy changes
+    private var gpsStatusJob: Job? = null  // Feature 002: Collect GPS status for user notifications
     private var currentRideId: Long? = null
     private var currentState: RideRecordingState = RideRecordingState.Idle
     private var pauseStartTime: Long = 0  // Timestamp when manual pause started (Bug #2 fix)
@@ -185,6 +186,7 @@ class RideRecordingService : Service() {
         locationJob?.cancel()
         durationUpdateJob?.cancel()
         gpsAccuracyObserverJob?.cancel()
+        gpsStatusJob?.cancel()
     }
 
     /**
@@ -260,6 +262,9 @@ class RideRecordingService : Service() {
 
             // Start GPS accuracy observer (T082)
             startGpsAccuracyObserver(rideId)
+
+            // Feature 002: Start GPS status collection for user notifications
+            startGpsStatusCollection()
         }
     }
 
@@ -405,6 +410,9 @@ class RideRecordingService : Service() {
             // Stop GPS accuracy observer (T082)
             gpsAccuracyObserverJob?.cancel()
 
+            // Stop GPS status collection (Feature 002)
+            gpsStatusJob?.cancel()
+
             // Reset current speed to 0.0 on stop (Feature 005)
             (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
                 ?.resetCurrentSpeed()
@@ -413,6 +421,10 @@ class RideRecordingService : Service() {
             // Note: Bearing is retained during pause, only reset on stop
             (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
                 ?.resetCurrentBearing()
+
+            // Reset GPS status to Unavailable on stop (Feature 002 - GPS Error Notifications)
+            (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
+                ?.resetGpsStatus()
 
             // Feature 009: End stop detection and cleanup (T022)
             stopDetectionStateMachine?.stopRide()
@@ -450,6 +462,7 @@ class RideRecordingService : Service() {
                     startLocationTracking(state.rideId)
                     startDurationUpdates(state.rideId)
                     startGpsAccuracyObserver(state.rideId)  // T082
+                    startGpsStatusCollection()  // Feature 002
                 }
                 is RideRecordingState.ManuallyPaused -> {
                     // Resume in paused state
@@ -466,6 +479,7 @@ class RideRecordingService : Service() {
                     startForegroundService(notification)
                     startLocationTracking(state.rideId)
                     startGpsAccuracyObserver(state.rideId)  // T082
+                    startGpsStatusCollection()  // Feature 002
                 }
                 else -> {
                     // No active ride, stop service
@@ -487,7 +501,11 @@ class RideRecordingService : Service() {
             locationRepository.getLocationUpdates()
                 .catch { exception ->
                     // Handle location errors (e.g., permission denied, GPS disabled)
-                    // TODO: Emit error to ViewModel for user notification
+                    // Feature 002: Emit GPS unavailable status for user notification
+                    android.util.Log.e("RideRecordingService",
+                        "Location error: ${exception.message}", exception)
+                    (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
+                        ?.updateGpsStatus(com.example.bikeredlights.domain.model.GpsStatus.Unavailable)
                 }
                 .collect { locationData ->
                     // Get current state
@@ -841,6 +859,44 @@ class RideRecordingService : Service() {
                         android.util.Log.d("RideRecordingService",
                             "GPS accuracy changed to ${newAccuracy.name}, restarted location tracking")
                     }
+                }
+        }
+    }
+
+    /**
+     * Start GPS status collection (Feature 002 - GPS Error Notifications).
+     *
+     * Collects GPS status updates from LocationRepository and emits them to
+     * RideRecordingStateRepository for ViewModel observation.
+     *
+     * **GPS Status Types**:
+     * - Unavailable: accuracy >50m or no updates for >10 seconds
+     * - Acquiring: accuracy 10-50m (weak signal, acquiring fix)
+     * - Active: accuracy ≤10m (good signal)
+     *
+     * **Lifecycle**:
+     * - Started when ride recording begins
+     * - Continues during pause (GPS tracking still active for auto-resume detection)
+     * - Stopped when ride is stopped
+     * - Restarted on process death recovery
+     *
+     * **UI Flow**:
+     * - Service collects from LocationRepository.gpsStatusUpdates()
+     * - Emits to RideRecordingStateRepository._currentGpsStatus
+     * - ViewModel observes via getCurrentGpsStatus()
+     * - UI shows snackbar notifications on status changes
+     */
+    private fun startGpsStatusCollection() {
+        gpsStatusJob?.cancel()
+
+        gpsStatusJob = serviceScope.launch {
+            locationRepository.gpsStatusUpdates()
+                .distinctUntilChanged()  // Only emit on actual status changes
+                .collect { status ->
+                    android.util.Log.d("RideRecordingService",
+                        "📡 GPS status update received: $status")
+                    (rideRecordingStateRepository as? com.example.bikeredlights.data.repository.RideRecordingStateRepositoryImpl)
+                        ?.updateGpsStatus(status)
                 }
         }
     }
