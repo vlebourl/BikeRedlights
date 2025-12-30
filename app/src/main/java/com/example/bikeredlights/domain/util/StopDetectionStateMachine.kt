@@ -239,17 +239,17 @@ class StopDetectionStateMachine @Inject constructor(
         if (state.isStopConfirmed) return // Already confirmed
 
         val stopNumber = state.currentStopNumber
-        val confirmationTime = System.currentTimeMillis()
 
         // Update state immediately (synchronous) with temporary stopId
         // This ensures tests and UI see state change right away
-        // IMPORTANT: Set stopConfirmedTime to NOW (not startTimestamp) for accurate UI duration
+        // IMPORTANT: Backdate stopConfirmedTime to startTimestamp so UI timer shows
+        // the full stop duration (e.g., "10s" when threshold is 10s, not "0s")
         state = state.copy(
             isStopConfirmed = true,
             activeStopId = -1L, // Temporary until database insert completes
             speedBelowThresholdCount = 0,
             speedAboveThresholdCount = 0,
-            stopConfirmedTime = confirmationTime // Used for UI duration calculation
+            stopConfirmedTime = startTimestamp // Backdated to show full stop duration in UI
         )
 
         // Create stop entity
@@ -289,7 +289,7 @@ class StopDetectionStateMachine @Inject constructor(
      */
     private fun endCurrentStop() {
         val stopId = state.activeStopId ?: return // No active stop
-        val startTime = state.stopConfirmedTime ?: return // Invalid state - use confirmed time, not detection time
+        val startTime = state.stopConfirmedTime ?: return // Invalid state - stopConfirmedTime is backdated to actual stop start
         val endTime = System.currentTimeMillis()
         val duration = StopDetectionUtils.calculateDuration(startTime, endTime)
 
