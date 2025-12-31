@@ -388,16 +388,16 @@ fun LiveRideScreen(
             RealTimeGpsIndicator(
                 gpsStatus = gpsStatus,
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 16.dp, end = 16.dp)
+                    .align(Alignment.TopStart)
+                    .padding(top = 16.dp, start = 16.dp)
             )
         } else {
             // Show UI-state based indicator when not recording
             GpsStatusIndicator(
                 uiState = uiState,
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 16.dp, end = 16.dp)
+                    .align(Alignment.TopStart)
+                    .padding(top = 16.dp, start = 16.dp)
             )
         }
 
