@@ -9,6 +9,23 @@ _Features and changes completed but not yet released_
 
 ---
 
+## v0.12.1 - UI Bug Fix (2025-12-31)
+
+### 🐛 Bugs Fixed
+
+- **GPS Status Indicator Position** (UI Bug Fix)
+  - **Problem**: GPS status indicator overlapped with center map FAB button on LiveRideScreen
+  - **Solution**: Moved GPS status indicator from top-right (TopEnd) to top-left (TopStart) corner
+  - **Impact**: Both RealTimeGpsIndicator (during recording) and GpsStatusIndicator (when not recording) now positioned at top-left with start padding
+  - **Files Modified**: `LiveRideScreen.kt` (1 file, 4 insertions, 4 deletions)
+  - **Tested On**: Verified visual positioning
+
+### 💥 Breaking Changes
+
+None - backward compatible with v0.12.0.
+
+---
+
 ## v0.12.0 - GPS Notifications & Ride Review Enhancements (2025-12-30)
 
 ### 📡 GPS Error Notifications + Enhanced Ride Review

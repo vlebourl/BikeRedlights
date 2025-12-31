@@ -27,9 +27,9 @@ android {
         applicationId = "com.example.bikeredlights"
         minSdk = 34
         targetSdk = 35
-        // v0.12.0 = 0*10000 + 12*100 + 0 = 1200
-        versionCode = 1200
-        versionName = "0.12.0"
+        // v0.12.1 = 0*10000 + 12*100 + 1 = 1201
+        versionCode = 1201
+        versionName = "0.12.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
